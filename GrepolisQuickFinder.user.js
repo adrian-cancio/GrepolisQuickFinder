@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder
 // @namespace    https://grepolis.com/
-// @version      2.0.0
+// @version      2.1.0
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation. Automatically localized based on the current world/market.
 // @author       Cancio
 // @match        https://*.grepolis.com/game/*
@@ -13,7 +13,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.0.0';
+    const VERSION = '2.1.0';
 
     /*
      * ============================================================
@@ -357,7 +357,7 @@
             noResults: 'Neboli n\u00e1jden\u00e9 \u017eiadne v\u00fdsledky.',
             errorLoadingData: 'Chyba pri na\u010d\u00edtan\u00ed d\u00e1t: {error}',
             badgePlayer: 'Hr\u00e1\u010d',
-            badgeAlliance: 'Alianc',
+            badgeAlliance: 'Aliancia',
             badgeTown: 'Mesto',
             badgeCoordinate: 'S\u00faradnice',
             ptsSuffix: 'bodov',
@@ -455,7 +455,7 @@
         playerById: new Map(),
         allianceById: new Map(),
         townById: new Map(),
-        townByCoord: new Map(),
+        townsByCoord: new Map(),
         townsByPlayer: new Map(),
     };
 
@@ -555,7 +555,7 @@
      */
 
     function parseCoordinates(query) {
-        const match = query.match(/^\s*(\d{1,3})\s*[:|,]\s*(\d{1,3})\s*$/);
+        const match = query.match(/^\s*(\d{1,3})\s*[:,]\s*(\d{1,3})\s*$/);
         if (!match) {
             return null;
         }
@@ -683,7 +683,16 @@
 
             towns.push(town);
             byId.set(id, town);
-            byCoord.set(`${islandX}:${islandY}`, town);
+
+            // islandX:islandY is the ISLAND coordinate, not the town's
+            // exact position: a single island can host up to 20 towns,
+            // so several towns share the same key. We keep a list per
+            // island; a lone town on its island is then the only case
+            // where coordinates resolve to a single, unambiguous town.
+            if (!byCoord.has(`${islandX}:${islandY}`)) {
+                byCoord.set(`${islandX}:${islandY}`, []);
+            }
+            byCoord.get(`${islandX}:${islandY}`).push(town);
 
             if (!byPlayer.has(playerId)) {
                 byPlayer.set(playerId, []);
@@ -693,7 +702,7 @@
 
         DATA.towns = towns;
         DATA.townById = byId;
-        DATA.townByCoord = byCoord;
+        DATA.townsByCoord = byCoord;
         DATA.townsByPlayer = byPlayer;
     }
 
@@ -733,7 +742,16 @@
             console.error('[QF] Error loading world data:', error);
         } finally {
             state.loading = false;
-            render();
+
+            // A query typed while the index was still loading was
+            // discarded by performSearch() (it had nothing to search
+            // against yet). Re-run it now that the index is ready, so
+            // the user doesn't see a spurious "No results found."
+            if (state.query && !state.loadError) {
+                performSearch(state.query, ++searchToken);
+            } else {
+                render();
+            }
         }
     }
 
@@ -793,8 +811,14 @@
             return null;
         }
 
-        const town = DATA.townByCoord.get(`${coords.x}:${coords.y}`);
-        if (town) {
+        const matching = DATA.townsByCoord.get(`${coords.x}:${coords.y}`);
+        const unique = matching && matching.length === 1;
+
+        // Only a lone town on its island can be resolved unambiguously.
+        // Islands with several towns would pick one at random, so those
+        // fall through to a plain coordinate result that jumps the map.
+        if (unique) {
+            const town = matching[0];
             const player = DATA.playerById.get(town.playerId);
             return {
                 type: 'town',

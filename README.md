@@ -99,8 +99,9 @@ QF.openIndex(0);             // selects and opens result at index 0
    the expected language for that market.
 3. Search a known player, alliance, and town name; confirm results and that
    `Enter`/click opens the correct in-game window.
-4. Search a coordinate pair (`x:y`); confirm it opens the town info window (if
-   a town exists there) or jumps the map (if empty).
+4. Search a coordinate pair (`x:y`); confirm it opens the town info window when
+   the island holds a single town, and jumps the map otherwise (shared islands
+   and empty coordinates).
 
 There is no automated test suite; this is a browser-only userscript and
 changes are verified live against a running Grepolis world (see the checklist
