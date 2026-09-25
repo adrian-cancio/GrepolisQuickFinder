@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder
 // @namespace    https://grepolis.com/
-// @version      2.3.0
+// @version      2.4.0
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market.
 // @author       Cancio
 // @match        https://*.grepolis.com/game/*
@@ -13,7 +13,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.3.0';
+    const VERSION = '2.4.0';
 
     /*
      * ============================================================
@@ -130,7 +130,7 @@
             commandGhostHelp: '>ghost [minPts] [near] \u2014 ghost towns by points or distance',
             commandDistHelp: '>dist X:Y [X:Y] \u2014 island distance',
             commandIslandHelp: '>island X:Y \u2014 every town on an island',
-            commandNearHelp: '>near [X:Y] [radius] \u2014 towns around a point',
+            commandNearHelp: '>near [X:Y] [radius] \u2014 islands around a point',
             commandOceanHelp: '>ocean M34 [alliance] \u2014 ocean snapshot',
             commandHelpHint: '>help \u2014 show this list',
             commandUnknown: 'Unknown command: {cmd}',
@@ -208,7 +208,7 @@
             commandGhostHelp: '>ghost [minPts] [near] \u2014 fantasmas por puntos o distancia',
             commandDistHelp: '>dist X:Y [X:Y] \u2014 distancia de islas',
             commandIslandHelp: '>island X:Y \u2014 todas las ciudades de una isla',
-            commandNearHelp: '>near [X:Y] [radio] \u2014 ciudades alrededor de un punto',
+            commandNearHelp: '>near [X:Y] [radio] \u2014 islas alrededor de un punto',
             commandOceanHelp: '>ocean M34 [alianza] \u2014 resumen del oc\u00e9ano',
             commandHelpHint: '>help \u2014 mostrar esta lista',
             commandUnknown: 'Comando desconocido: {cmd}',
@@ -294,6 +294,32 @@
             scopeHelpTitle: 'Bereiche',
             scopeHelpDesc: '@p Spieler \u00b7 @a Allianzen \u00b7 @t St\u00e4dte \u00b7 @c Koordinaten',
             externalStats: 'In GrepoLife \u00f6ffnen',
+            commandIslandHelp: '>island X:Y \u2014 alle St\u00e4dte einer Insel',
+            commandNearHelp: '>near [X:Y] [Radius] \u2014 Inseln um einen Punkt',
+            commandOceanHelp: '>ocean M34 [Allianz] \u2014 Ozean-\u00dcbersicht',
+            distBandSame: 'gleiche Insel',
+            distBandAdjacent: 'benachbarte Inseln',
+            distBandRegional: 'regional',
+            distBandFar: 'weite Entfernung',
+            badgeIsland: 'Insel',
+            badgeCommand: 'Befehl',
+            segmentIslands: 'Inseln',
+            ghostLabel: 'Geist',
+            islandTowns: '{n} St\u00e4dte',
+            islandAlliances: '{n} Allianzen',
+            islandGhosts: '{n} Geisterst\u00e4dte',
+            openIslandMap: 'Insel auf der Karte \u00f6ffnen',
+            nearSummary: '{islands} Inseln \u00b7 {towns} St\u00e4dte innerhalb {n}',
+            nearNeedOrigin: 'Gib einen Radius an, oder Koordinaten plus Radius. Deine aktive Stadt wird verwendet, wenn sie erkannt werden kann.',
+            oceanEmpty: 'In diesem Ozean ist nichts indexiert.',
+            oceanNeed: 'Verwende >ocean M34 oder >ocean M34 Allianzname.',
+            oceanSummary: '{players} Spieler \u00b7 {alliances} Allianzen \u00b7 {towns} St\u00e4dte \u00b7 {ghosts} Geisterst\u00e4dte',
+            playerTownsTitle: 'St\u00e4dte',
+            allianceSpreadTitle: 'Wo sie sitzen',
+            allianceMembersTitle: 'Mitglieder',
+            drillTowns: 'Städte anzeigen',
+            sortPoints: 'nach Punkten',
+            sortDistance: 'nach Entfernung',
         },
         fr: {
             searchPlaceholder: 'Rechercher des joueurs, alliances ou villes...',
@@ -346,6 +372,32 @@
             scopeHelpTitle: 'Port\u00e9es',
             scopeHelpDesc: '@p joueurs \u00b7 @a alliances \u00b7 @t villes \u00b7 @c coordonn\u00e9es',
             externalStats: 'Ouvrir dans GrepoLife',
+            commandIslandHelp: '>island X:Y \u2014 toutes les villes d\u2019une \u00eele',
+            commandNearHelp: '>near [X:Y] [rayon] \u2014 \u00eeles autour d\u2019un point',
+            commandOceanHelp: '>ocean M34 [alliance] \u2014 aper\u00e7u d\u2019oc\u00e9an',
+            distBandSame: 'm\u00eame \u00eele',
+            distBandAdjacent: '\u00eeles adjacentes',
+            distBandRegional: 'r\u00e9gional',
+            distBandFar: 'longue distance',
+            badgeIsland: '\u00cele',
+            badgeCommand: 'Commande',
+            segmentIslands: '\u00celes',
+            ghostLabel: 'Fant\u00f4me',
+            islandTowns: '{n} villes',
+            islandAlliances: '{n} alliances',
+            islandGhosts: '{n} fant\u00f4mes',
+            openIslandMap: 'Ouvrir l\u2019\u00eele sur la carte',
+            nearSummary: '{islands} \u00eeles \u00b7 {towns} villes dans un rayon de {n}',
+            nearNeedOrigin: 'Donnez un rayon, ou des coordonn\u00e9es plus un rayon. La ville active est utilis\u00e9e si elle peut \u00eatre d\u00e9tect\u00e9e.',
+            oceanEmpty: 'Rien d\u2019index\u00e9 dans cet oc\u00e9an.',
+            oceanNeed: 'Utilisez >ocean M34 ou >ocean M34 NomAlliance.',
+            oceanSummary: '{players} joueurs \u00b7 {alliances} alliances \u00b7 {towns} villes \u00b7 {ghosts} fant\u00f4mes',
+            playerTownsTitle: 'Villes',
+            allianceSpreadTitle: 'O\u00f9 ils se trouvent',
+            allianceMembersTitle: 'Membres',
+            drillTowns: 'afficher les villes',
+            sortPoints: 'par points',
+            sortDistance: 'par distance',
         },
         it: {
             searchPlaceholder: 'Cerca giocatori, alleanze o citt\u00e0...',
@@ -398,6 +450,32 @@
             scopeHelpTitle: 'Ambiti',
             scopeHelpDesc: '@p giocatori \u00b7 @a alleanze \u00b7 @t citt\u00e0 \u00b7 @c coordinate',
             externalStats: 'Apri in GrepoLife',
+            commandIslandHelp: '>island X:Y \u2014 tutte le citt\u00e0 di un\u2019isola',
+            commandNearHelp: '>near [X:Y] [raggio] \u2014 isole attorno a un punto',
+            commandOceanHelp: '>ocean M34 [alleanza] \u2014 riepilogo dell\u2019oceano',
+            distBandSame: 'stessa isola',
+            distBandAdjacent: 'isole adiacenti',
+            distBandRegional: 'regionale',
+            distBandFar: 'lunga distanza',
+            badgeIsland: 'Isola',
+            badgeCommand: 'Comando',
+            segmentIslands: 'Isole',
+            ghostLabel: 'Fantasma',
+            islandTowns: '{n} citt\u00e0',
+            islandAlliances: '{n} alleanze',
+            islandGhosts: '{n} fantasmi',
+            openIslandMap: 'Apri l\u2019isola sulla mappa',
+            nearSummary: '{islands} isole \u00b7 {towns} citt\u00e0 entro {n}',
+            nearNeedOrigin: 'Indica un raggio, o coordinate pi\u00f9 un raggio. Se rilevabile, viene usata la tua citt\u00e0 attiva.',
+            oceanEmpty: 'Nulla di indicizzato in quell\u2019oceano.',
+            oceanNeed: 'Usa >ocean M34 oppure >ocean M34 NomeAlleanza.',
+            oceanSummary: '{players} giocatori \u00b7 {alliances} alleanze \u00b7 {towns} citt\u00e0 \u00b7 {ghosts} fantasmi',
+            playerTownsTitle: 'Citt\u00e0',
+            allianceSpreadTitle: 'Dove si trovano',
+            allianceMembersTitle: 'Membri',
+            drillTowns: 'mostra città',
+            sortPoints: 'per punti',
+            sortDistance: 'per distanza',
         },
         nl: {
             searchPlaceholder: 'Zoek spelers, allianties of steden...',
@@ -450,6 +528,32 @@
             scopeHelpTitle: 'Bereiken',
             scopeHelpDesc: '@p spelers \u00b7 @a allianties \u00b7 @t steden \u00b7 @c co\u00f6rdinaten',
             externalStats: 'Openen in GrepoLife',
+            commandIslandHelp: '>island X:Y \u2014 alle steden op een eiland',
+            commandNearHelp: '>near [X:Y] [straal] \u2014 eilanden rond een punt',
+            commandOceanHelp: '>ocean M34 [alliantie] \u2014 overzicht van een oceaan',
+            distBandSame: 'zelfde eiland',
+            distBandAdjacent: 'aangrenzende eilanden',
+            distBandRegional: 'regionaal',
+            distBandFar: 'lange afstand',
+            badgeIsland: 'Eiland',
+            badgeCommand: 'Opdracht',
+            segmentIslands: 'Eilanden',
+            ghostLabel: 'Spook',
+            islandTowns: '{n} steden',
+            islandAlliances: '{n} allianties',
+            islandGhosts: '{n} spooksteden',
+            openIslandMap: 'Eiland op de kaart openen',
+            nearSummary: '{islands} eilanden \u00b7 {towns} steden binnen {n}',
+            nearNeedOrigin: 'Geef een straal, of co\u00f6rdinaten plus een straal. Je actieve stad wordt gebruikt als deze kan worden gedetecteerd.',
+            oceanEmpty: 'Niets ge\u00efndexeerd in die oceaan.',
+            oceanNeed: 'Gebruik >ocean M34 of >ocean M34 Alliantienaam.',
+            oceanSummary: '{players} spelers \u00b7 {alliances} allianties \u00b7 {towns} steden \u00b7 {ghosts} spooksteden',
+            playerTownsTitle: 'Steden',
+            allianceSpreadTitle: 'Waar ze zitten',
+            allianceMembersTitle: 'Leden',
+            drillTowns: 'steden tonen',
+            sortPoints: 'op punten',
+            sortDistance: 'op afstand',
         },
         pl: {
             searchPlaceholder: 'Szukaj graczy, sojuszy lub miast...',
@@ -502,6 +606,32 @@
             scopeHelpTitle: 'Zakresy',
             scopeHelpDesc: '@p gracze \u00b7 @a sojusze \u00b7 @t miasta \u00b7 @c wsp\u00f3\u0142rz\u0119dne',
             externalStats: 'Otw\u00f3rz w GrepoLife',
+            commandIslandHelp: '>island X:Y \u2014 wszystkie miasta na wyspie',
+            commandNearHelp: '>near [X:Y] [promie\u0144] \u2014 wyspy wok\u00f3\u0142 punktu',
+            commandOceanHelp: '>ocean M34 [sojusz] \u2014 podgl\u0105d oceanu',
+            distBandSame: 'ta sama wyspa',
+            distBandAdjacent: 's\u0105siednie wyspy',
+            distBandRegional: 'regionalna',
+            distBandFar: 'du\u017ca odleg\u0142o\u015b\u0107',
+            badgeIsland: 'Wyspa',
+            badgeCommand: 'Polecenie',
+            segmentIslands: 'Wyspy',
+            ghostLabel: 'Duch',
+            islandTowns: '{n} miast',
+            islandAlliances: '{n} sojuszy',
+            islandGhosts: '{n} miast-widm',
+            openIslandMap: 'Otw\u00f3rz wysp\u0119 na mapie',
+            nearSummary: '{islands} wysp \u00b7 {towns} miast w promieniu {n}',
+            nearNeedOrigin: 'Podaj promie\u0144 lub wsp\u00f3\u0142rz\u0119dne i promie\u0144. U\u017cywane jest aktywne miasto, je\u015bli mo\u017cna je wykry\u0107.',
+            oceanEmpty: 'Nic nie zaindeksowano w tym oceanie.',
+            oceanNeed: 'U\u017cyj >ocean M34 lub >ocean M34 NazwaSojuszu.',
+            oceanSummary: '{players} graczy \u00b7 {alliances} sojuszy \u00b7 {towns} miast \u00b7 {ghosts} miast-widm',
+            playerTownsTitle: 'Miasta',
+            allianceSpreadTitle: 'Gdzie si\u0119 znajduj\u0105',
+            allianceMembersTitle: 'Cz\u0142onkowie',
+            drillTowns: 'pokaż miasta',
+            sortPoints: 'wg punktów',
+            sortDistance: 'wg odległości',
         },
         pt: {
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
@@ -554,6 +684,32 @@
             scopeHelpTitle: '\u00c2mbitos',
             scopeHelpDesc: '@p jogadores \u00b7 @a alian\u00e7as \u00b7 @t cidades \u00b7 @c coordenadas',
             externalStats: 'Abrir no GrepoLife',
+            commandIslandHelp: '>island X:Y \u2014 todas as cidades de uma ilha',
+            commandNearHelp: '>near [X:Y] [raio] \u2014 ilhas em torno de um ponto',
+            commandOceanHelp: '>ocean M34 [alian\u00e7a] \u2014 resumo do oceano',
+            distBandSame: 'mesma ilha',
+            distBandAdjacent: 'ilhas adjacentes',
+            distBandRegional: 'regional',
+            distBandFar: 'longa dist\u00e2ncia',
+            badgeIsland: 'Ilha',
+            badgeCommand: 'Comando',
+            segmentIslands: 'Ilhas',
+            ghostLabel: 'Fantasma',
+            islandTowns: '{n} cidades',
+            islandAlliances: '{n} alian\u00e7as',
+            islandGhosts: '{n} fantasmas',
+            openIslandMap: 'Abrir a ilha no mapa',
+            nearSummary: '{islands} ilhas \u00b7 {towns} cidades num raio de {n}',
+            nearNeedOrigin: 'Indique um raio, ou coordenadas mais um raio. A cidade ativa \u00e9 usada quando pode ser detetada.',
+            oceanEmpty: 'Nada indexado nesse oceano.',
+            oceanNeed: 'Use >ocean M34 ou >ocean M34 NomeDaAlian\u00e7a.',
+            oceanSummary: '{players} jogadores \u00b7 {alliances} alian\u00e7as \u00b7 {towns} cidades \u00b7 {ghosts} fantasmas',
+            playerTownsTitle: 'Cidades',
+            allianceSpreadTitle: 'Onde est\u00e3o',
+            allianceMembersTitle: 'Membros',
+            drillTowns: 'ver cidades',
+            sortPoints: 'por pontos',
+            sortDistance: 'por distância',
         },
         br: {
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
@@ -606,6 +762,32 @@
             scopeHelpTitle: '\u00c2mbitos',
             scopeHelpDesc: '@p jogadores \u00b7 @a alian\u00e7as \u00b7 @t cidades \u00b7 @c coordenadas',
             externalStats: 'Abrir no GrepoLife',
+            commandIslandHelp: '>island X:Y \u2014 todas as cidades de uma ilha',
+            commandNearHelp: '>near [X:Y] [raio] \u2014 ilhas ao redor de um ponto',
+            commandOceanHelp: '>ocean M34 [alian\u00e7a] \u2014 resumo do oceano',
+            distBandSame: 'mesma ilha',
+            distBandAdjacent: 'ilhas adjacentes',
+            distBandRegional: 'regional',
+            distBandFar: 'longa dist\u00e2ncia',
+            badgeIsland: 'Ilha',
+            badgeCommand: 'Comando',
+            segmentIslands: 'Ilhas',
+            ghostLabel: 'Fantasma',
+            islandTowns: '{n} cidades',
+            islandAlliances: '{n} alian\u00e7as',
+            islandGhosts: '{n} fantasmas',
+            openIslandMap: 'Abrir a ilha no mapa',
+            nearSummary: '{islands} ilhas \u00b7 {towns} cidades num raio de {n}',
+            nearNeedOrigin: 'Informe um raio, ou coordenadas mais um raio. A cidade ativa \u00e9 usada quando pode ser detectada.',
+            oceanEmpty: 'Nada indexado nesse oceano.',
+            oceanNeed: 'Use >ocean M34 ou >ocean M34 NomeDaAlian\u00e7a.',
+            oceanSummary: '{players} jogadores \u00b7 {alliances} alian\u00e7as \u00b7 {towns} cidades \u00b7 {ghosts} fantasmas',
+            playerTownsTitle: 'Cidades',
+            allianceSpreadTitle: 'Onde est\u00e3o',
+            allianceMembersTitle: 'Membros',
+            drillTowns: 'ver cidades',
+            sortPoints: 'por pontos',
+            sortDistance: 'por distância',
         },
         tr: {
             searchPlaceholder: 'Oyuncu, ittifak veya \u015fehir ara...',
@@ -658,6 +840,32 @@
             scopeHelpTitle: 'Kapsamlar',
             scopeHelpDesc: '@p oyuncular \u00b7 @a ittifaklar \u00b7 @t \u015fehirler \u00b7 @c koordinatlar',
             externalStats: 'GrepoLife\u2019da a\u00e7',
+            commandIslandHelp: '>island X:Y \u2014 bir adadaki t\u00fcm \u015fehirler',
+            commandNearHelp: '>near [X:Y] [yar\u0131\u00e7ap] \u2014 bir noktan\u0131n etraf\u0131ndaki adalar',
+            commandOceanHelp: '>ocean M34 [ittifak] \u2014 okyanus \u00f6zeti',
+            distBandSame: 'ayn\u0131 ada',
+            distBandAdjacent: 'kom\u015fu adalar',
+            distBandRegional: 'b\u00f6lgesel',
+            distBandFar: 'uzun mesafe',
+            badgeIsland: 'Ada',
+            badgeCommand: 'Komut',
+            segmentIslands: 'Adalar',
+            ghostLabel: 'Hayalet',
+            islandTowns: '{n} \u015fehir',
+            islandAlliances: '{n} ittifak',
+            islandGhosts: '{n} hayalet',
+            openIslandMap: 'Aday\u0131 haritada a\u00e7',
+            nearSummary: '{islands} ada \u00b7 {towns} \u015fehir {n} yar\u0131\u00e7ap i\u00e7inde',
+            nearNeedOrigin: 'Bir yar\u0131\u00e7ap ver, ya da koordinat art\u0131 yar\u0131\u00e7ap. Alg\u0131lanabiliyorsa aktif \u015fehrin kullan\u0131l\u0131r.',
+            oceanEmpty: 'Bu okyanusta hi\u00e7bir \u015fey indekslenmedi.',
+            oceanNeed: '>ocean M34 veya >ocean M34 \u0130ttifakAd\u0131 kullan.',
+            oceanSummary: '{players} oyuncu \u00b7 {alliances} ittifak \u00b7 {towns} \u015fehir \u00b7 {ghosts} hayalet',
+            playerTownsTitle: '\u015eehirler',
+            allianceSpreadTitle: 'Nerede bulunuyorlar',
+            allianceMembersTitle: '\u00dcyeler',
+            drillTowns: 'şehirleri göster',
+            sortPoints: 'puana göre',
+            sortDistance: 'mesafeye göre',
         },
         ru: {
             searchPlaceholder: '\u041f\u043e\u0438\u0441\u043a \u0438\u0433\u0440\u043e\u043a\u043e\u0432, \u0430\u043b\u044c\u044f\u043d\u0441\u043e\u0432 \u0438\u043b\u0438 \u0433\u043e\u0440\u043e\u0434\u043e\u0432...',
@@ -710,6 +918,32 @@
             scopeHelpTitle: '\u041e\u0431\u043b\u0430\u0441\u0442\u0438',
             scopeHelpDesc: '@p \u0438\u0433\u0440\u043e\u043a\u0438 \u00b7 @a \u0430\u043b\u044c\u044f\u043d\u0441\u044b \u00b7 @t \u0433\u043e\u0440\u043e\u0434\u0430 \u00b7 @c \u043a\u043e\u043e\u0440\u0434\u0438\u043d\u0430\u0442\u044b',
             externalStats: '\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0432 GrepoLife',
+            commandIslandHelp: '>island X:Y \u2014 \u0432\u0441\u0435 \u0433\u043e\u0440\u043e\u0434\u0430 \u043e\u0441\u0442\u0440\u043e\u0432\u0430',
+            commandNearHelp: '>near [X:Y] [\u0440\u0430\u0434\u0438\u0443\u0441] \u2014 \u043e\u0441\u0442\u0440\u043e\u0432\u0430 \u0432\u043e\u043a\u0440\u0443\u0433 \u0442\u043e\u0447\u043a\u0438',
+            commandOceanHelp: '>ocean M34 [\u0430\u043b\u044c\u044f\u043d\u0441] \u2014 \u0441\u0432\u043e\u0434\u043a\u0430 \u043f\u043e \u043e\u043a\u0435\u0430\u043d\u0443',
+            distBandSame: '\u043e\u0434\u0438\u043d \u043e\u0441\u0442\u0440\u043e\u0432',
+            distBandAdjacent: '\u0441\u043e\u0441\u0435\u0434\u043d\u0438\u0435 \u043e\u0441\u0442\u0440\u043e\u0432\u0430',
+            distBandRegional: '\u0440\u0435\u0433\u0438\u043e\u043d\u0430\u043b\u044c\u043d\u043e',
+            distBandFar: '\u0434\u0430\u043b\u044c\u043d\u044f\u044f \u0434\u0438\u0441\u0442\u0430\u043d\u0446\u0438\u044f',
+            badgeIsland: '\u041e\u0441\u0442\u0440\u043e\u0432',
+            badgeCommand: '\u041a\u043e\u043c\u0430\u043d\u0434\u0430',
+            segmentIslands: '\u041e\u0441\u0442\u0440\u043e\u0432\u0430',
+            ghostLabel: '\u041f\u0440\u0438\u0437\u0440\u0430\u043a',
+            islandTowns: '{n} \u0433\u043e\u0440\u043e\u0434\u043e\u0432',
+            islandAlliances: '{n} \u0430\u043b\u044c\u044f\u043d\u0441\u043e\u0432',
+            islandGhosts: '{n} \u043f\u0440\u0438\u0437\u0440\u0430\u043a\u043e\u0432',
+            openIslandMap: '\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u043e\u0441\u0442\u0440\u043e\u0432 \u043d\u0430 \u043a\u0430\u0440\u0442\u0435',
+            nearSummary: '{islands} \u043e\u0441\u0442\u0440\u043e\u0432\u043e\u0432 \u00b7 {towns} \u0433\u043e\u0440\u043e\u0434\u043e\u0432 \u0432 \u0440\u0430\u0434\u0438\u0443\u0441\u0435 {n}',
+            nearNeedOrigin: '\u0423\u043a\u0430\u0436\u0438\u0442\u0435 \u0440\u0430\u0434\u0438\u0443\u0441 \u0438\u043b\u0438 \u043a\u043e\u043e\u0440\u0434\u0438\u043d\u0430\u0442\u044b \u0438 \u0440\u0430\u0434\u0438\u0443\u0441. \u0415\u0441\u043b\u0438 \u0432\u043e\u0437\u043c\u043e\u0436\u043d\u043e, \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0441\u044f \u0432\u0430\u0448 \u0430\u043a\u0442\u0438\u0432\u043d\u044b\u0439 \u0433\u043e\u0440\u043e\u0434.',
+            oceanEmpty: '\u0412 \u044d\u0442\u043e\u043c \u043e\u043a\u0435\u0430\u043d\u0435 \u043d\u0438\u0447\u0435\u0433\u043e \u043d\u0435 \u043f\u0440\u043e\u0438\u043d\u0434\u0435\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u043d\u043e.',
+            oceanNeed: '\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0439\u0442\u0435 >ocean M34 \u0438\u043b\u0438 >ocean M34 \u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435\u0410\u043b\u044c\u044f\u043d\u0441\u0430.',
+            oceanSummary: '{players} \u0438\u0433\u0440\u043e\u043a\u043e\u0432 \u00b7 {alliances} \u0430\u043b\u044c\u044f\u043d\u0441\u043e\u0432 \u00b7 {towns} \u0433\u043e\u0440\u043e\u0434\u043e\u0432 \u00b7 {ghosts} \u043f\u0440\u0438\u0437\u0440\u0430\u043a\u043e\u0432',
+            playerTownsTitle: '\u0413\u043e\u0440\u043e\u0434\u0430',
+            allianceSpreadTitle: '\u0413\u0434\u0435 \u043e\u043d\u0438 \u043d\u0430\u0445\u043e\u0434\u044f\u0442\u0441\u044f',
+            allianceMembersTitle: '\u0423\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u0438',
+            drillTowns: 'показать города',
+            sortPoints: 'по очкам',
+            sortDistance: 'по расстоянию',
         },
         el: {
             searchPlaceholder: '\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03c0\u03b1\u03b9\u03ba\u03c4\u03ce\u03bd, \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03b9\u03ce\u03bd \u03ae \u03c0\u03cc\u03bb\u03b5\u03c9\u03bd...',
@@ -762,6 +996,32 @@
             scopeHelpTitle: '\u03a0\u03b5\u03b4\u03af\u03b1',
             scopeHelpDesc: '@p \u03c0\u03b1\u03af\u03ba\u03c4\u03b5\u03c2 \u00b7 @a \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b5\u03c2 \u00b7 @t \u03c0\u03cc\u03bb\u03b5\u03b9\u03c2 \u00b7 @c \u03c3\u03c5\u03bd\u03c4\u03b5\u03c4\u03b1\u03b3\u03bc\u03ad\u03bd\u03b5\u03c2',
             externalStats: '\u0386\u03bd\u03bf\u03b9\u03b3\u03bc\u03b1 \u03c3\u03c4\u03bf GrepoLife',
+            commandIslandHelp: '>island X:Y \u2014 \u03cc\u03bb\u03b5\u03c2 \u03bf\u03b9 \u03c0\u03cc\u03bb\u03b5\u03b9\u03c2 \u03b5\u03bd\u03cc\u03c2 \u03bd\u03b7\u03c3\u03b9\u03bf\u03cd',
+            commandNearHelp: '>near [X:Y] [\u03b1\u03ba\u03c4\u03af\u03bd\u03b1] \u2014 \u03bd\u03b7\u03c3\u03b9\u03ac \u03b3\u03cd\u03c1\u03c9 \u03b1\u03c0\u03cc \u03ad\u03bd\u03b1 \u03c3\u03b7\u03bc\u03b5\u03af\u03bf',
+            commandOceanHelp: '>ocean M34 [\u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b1] \u2014 \u03b5\u03c0\u03b9\u03c3\u03ba\u03cc\u03c0\u03b7\u03c3\u03b7 \u03c9\u03ba\u03b5\u03b1\u03bd\u03bf\u03cd',
+            distBandSame: '\u03af\u03b4\u03b9\u03bf \u03bd\u03b7\u03c3\u03af',
+            distBandAdjacent: '\u03b3\u03b5\u03b9\u03c4\u03bf\u03bd\u03b9\u03ba\u03ac \u03bd\u03b7\u03c3\u03b9\u03ac',
+            distBandRegional: '\u03c0\u03b5\u03c1\u03b9\u03c6\u03b5\u03c1\u03b5\u03b9\u03b1\u03ba\u03cc',
+            distBandFar: '\u03bc\u03b5\u03b3\u03ac\u03bb\u03b7 \u03b1\u03c0\u03cc\u03c3\u03c4\u03b1\u03c3\u03b7',
+            badgeIsland: '\u039d\u03b7\u03c3\u03af',
+            badgeCommand: '\u0395\u03bd\u03c4\u03bf\u03bb\u03ae',
+            segmentIslands: '\u039d\u03b7\u03c3\u03b9\u03ac',
+            ghostLabel: '\u03a6\u03ac\u03bd\u03c4\u03b1\u03c3\u03bc\u03b1',
+            islandTowns: '{n} \u03c0\u03cc\u03bb\u03b5\u03b9\u03c2',
+            islandAlliances: '{n} \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b5\u03c2',
+            islandGhosts: '{n} \u03c6\u03b1\u03bd\u03c4\u03ac\u03c3\u03bc\u03b1\u03c4\u03b1',
+            openIslandMap: '\u0386\u03bd\u03bf\u03b9\u03b3\u03bc\u03b1 \u03bd\u03b7\u03c3\u03b9\u03bf\u03cd \u03c3\u03c4\u03bf\u03bd \u03c7\u03ac\u03c1\u03c4\u03b7',
+            nearSummary: '{islands} \u03bd\u03b7\u03c3\u03b9\u03ac \u00b7 {towns} \u03c0\u03cc\u03bb\u03b5\u03b9\u03c2 \u03b5\u03bd\u03c4\u03cc\u03c2 {n}',
+            nearNeedOrigin: '\u0394\u03ce\u03c3\u03b5 \u03bc\u03b9\u03b1 \u03b1\u03ba\u03c4\u03af\u03bd\u03b1, \u03ae \u03c3\u03c5\u03bd\u03c4\u03b5\u03c4\u03b1\u03b3\u03bc\u03ad\u03bd\u03b5\u03c2 \u03ba\u03b1\u03b9 \u03b1\u03ba\u03c4\u03af\u03bd\u03b1. \u0397 \u03b5\u03bd\u03b5\u03c1\u03b3\u03ae \u03c0\u03cc\u03bb\u03b7 \u03c3\u03bf\u03c5 \u03c7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03b5\u03af\u03c4\u03b1\u03b9 \u03cc\u03c4\u03b1\u03bd \u03bc\u03c0\u03bf\u03c1\u03b5\u03af \u03bd\u03b1 \u03b1\u03bd\u03b9\u03c7\u03bd\u03b5\u03c5\u03b8\u03b5\u03af.',
+            oceanEmpty: '\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03b5\u03b9 \u03c4\u03af\u03c0\u03bf\u03c4\u03b1 \u03ba\u03b1\u03c4\u03b1\u03c7\u03c9\u03c1\u03b9\u03c3\u03bc\u03ad\u03bd\u03bf \u03c3\u03b5 \u03b1\u03c5\u03c4\u03cc\u03bd \u03c4\u03bf\u03bd \u03c9\u03ba\u03b5\u03b1\u03bd\u03cc.',
+            oceanNeed: '\u03a7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03af\u03b7\u03c3\u03b5 >ocean M34 \u03ae >ocean M34 \u038c\u03bd\u03bf\u03bc\u03b1\u03a3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b1\u03c2.',
+            oceanSummary: '{players} \u03c0\u03b1\u03af\u03ba\u03c4\u03b5\u03c2 \u00b7 {alliances} \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b5\u03c2 \u00b7 {towns} \u03c0\u03cc\u03bb\u03b5\u03b9\u03c2 \u00b7 {ghosts} \u03c6\u03b1\u03bd\u03c4\u03ac\u03c3\u03bc\u03b1\u03c4\u03b1',
+            playerTownsTitle: '\u03a0\u03cc\u03bb\u03b5\u03b9\u03c2',
+            allianceSpreadTitle: '\u03a0\u03bf\u03cd \u03b2\u03c1\u03af\u03c3\u03ba\u03bf\u03bd\u03c4\u03b1\u03b9',
+            allianceMembersTitle: '\u039c\u03ad\u03bb\u03b7',
+            drillTowns: 'εμφάνιση πόλεων',
+            sortPoints: 'κατά πόντους',
+            sortDistance: 'κατά απόσταση',
         },
         hu: {
             searchPlaceholder: 'J\u00e1t\u00e9kosok, sz\u00f6vets\u00e9gek vagy v\u00e1rosok keres\u00e9se...',
@@ -814,6 +1074,32 @@
             scopeHelpTitle: 'Tartom\u00e1nyok',
             scopeHelpDesc: '@p j\u00e1t\u00e9kosok \u00b7 @a sz\u00f6vets\u00e9gek \u00b7 @t v\u00e1rosok \u00b7 @c koordin\u00e1t\u00e1k',
             externalStats: 'Megnyit\u00e1s a GrepoLife-ban',
+            commandIslandHelp: '>island X:Y \u2014 egy sziget \u00f6sszes v\u00e1rosa',
+            commandNearHelp: '>near [X:Y] [sug\u00e1r] \u2014 szigetek egy pont k\u00f6r\u00fcl',
+            commandOceanHelp: '>ocean M34 [sz\u00f6vets\u00e9g] \u2014 \u00f3ce\u00e1n \u00e1ttekint\u00e9s',
+            distBandSame: 'ugyanaz a sziget',
+            distBandAdjacent: 'szomsz\u00e9dos szigetek',
+            distBandRegional: 'region\u00e1lis',
+            distBandFar: 'nagy t\u00e1vols\u00e1g',
+            badgeIsland: 'Sziget',
+            badgeCommand: 'Parancs',
+            segmentIslands: 'Szigetek',
+            ghostLabel: 'Szellem',
+            islandTowns: '{n} v\u00e1ros',
+            islandAlliances: '{n} sz\u00f6vets\u00e9g',
+            islandGhosts: '{n} szellemv\u00e1ros',
+            openIslandMap: 'Sziget megnyit\u00e1sa a t\u00e9rk\u00e9pen',
+            nearSummary: '{islands} sziget \u00b7 {towns} v\u00e1ros {n} sug\u00e1ron bel\u00fcl',
+            nearNeedOrigin: 'Adj meg egy sug\u00e1rt, vagy koordin\u00e1t\u00e1kat plusz sug\u00e1rt. Ha felismerhet\u0151, az akt\u00edv v\u00e1rosod ker\u00fcl felhaszn\u00e1l\u00e1sra.',
+            oceanEmpty: 'Ebben az \u00f3ce\u00e1nban semmi sincs indexelve.',
+            oceanNeed: 'Haszn\u00e1ld: >ocean M34 vagy >ocean M34 Sz\u00f6vets\u00e9gN\u00e9v.',
+            oceanSummary: '{players} j\u00e1t\u00e9kos \u00b7 {alliances} sz\u00f6vets\u00e9g \u00b7 {towns} v\u00e1ros \u00b7 {ghosts} szellemv\u00e1ros',
+            playerTownsTitle: 'V\u00e1rosok',
+            allianceSpreadTitle: 'Hol tal\u00e1lhat\u00f3k',
+            allianceMembersTitle: 'Tagok',
+            drillTowns: 'városok megjelenítése',
+            sortPoints: 'pont szerint',
+            sortDistance: 'távolság szerint',
         },
         ro: {
             searchPlaceholder: 'Caut\u0103 juc\u0103tori, alian\u021be sau ora\u0219e...',
@@ -866,6 +1152,32 @@
             scopeHelpTitle: 'Domenii',
             scopeHelpDesc: '@p juc\u0103tori \u00b7 @a alian\u021be \u00b7 @t ora\u0219e \u00b7 @c coordonate',
             externalStats: 'Deschide \u00een GrepoLife',
+            commandIslandHelp: '>island X:Y \u2014 toate ora\u0219ele de pe o insul\u0103',
+            commandNearHelp: '>near [X:Y] [raz\u0103] \u2014 insule \u00een jurul unui punct',
+            commandOceanHelp: '>ocean M34 [alian\u021b\u0103] \u2014 rezumat al oceanului',
+            distBandSame: 'aceea\u0219i insul\u0103',
+            distBandAdjacent: 'insule adiacente',
+            distBandRegional: 'regional',
+            distBandFar: 'distan\u021b\u0103 mare',
+            badgeIsland: 'Insul\u0103',
+            badgeCommand: 'Comand\u0103',
+            segmentIslands: 'Insule',
+            ghostLabel: 'Fantom\u0103',
+            islandTowns: '{n} ora\u0219e',
+            islandAlliances: '{n} alian\u021be',
+            islandGhosts: '{n} fantome',
+            openIslandMap: 'Deschide insula pe hart\u0103',
+            nearSummary: '{islands} insule \u00b7 {towns} ora\u0219e \u00een raza de {n}',
+            nearNeedOrigin: 'D\u0103 o raz\u0103, sau coordonate plus o raz\u0103. Ora\u0219ul t\u0103u activ este folosit dac\u0103 poate fi detectat.',
+            oceanEmpty: 'Nimic indexat \u00een acel ocean.',
+            oceanNeed: 'Folose\u0219te >ocean M34 sau >ocean M34 NumeAlian\u021b\u0103.',
+            oceanSummary: '{players} juc\u0103tori \u00b7 {alliances} alian\u021be \u00b7 {towns} ora\u0219e \u00b7 {ghosts} fantome',
+            playerTownsTitle: 'Ora\u0219e',
+            allianceSpreadTitle: 'Unde se afl\u0103',
+            allianceMembersTitle: 'Membri',
+            drillTowns: 'arată orașele',
+            sortPoints: 'după puncte',
+            sortDistance: 'după distanță',
         },
         cs: {
             searchPlaceholder: 'Hledat hr\u00e1\u010de, aliance nebo m\u011bsta...',
@@ -918,6 +1230,32 @@
             scopeHelpTitle: 'Rozsahy',
             scopeHelpDesc: '@p hr\u00e1\u010di \u00b7 @a aliance \u00b7 @t m\u011bsta \u00b7 @c sou\u0159adnice',
             externalStats: 'Otev\u0159\u00edt v GrepoLife',
+            commandIslandHelp: '>island X:Y \u2014 v\u0161echna m\u011bsta na ostrov\u011b',
+            commandNearHelp: '>near [X:Y] [polom\u011br] \u2014 ostrovy kolem bodu',
+            commandOceanHelp: '>ocean M34 [aliance] \u2014 p\u0159ehled oce\u00e1nu',
+            distBandSame: 'stejn\u00fd ostrov',
+            distBandAdjacent: 'sousedn\u00ed ostrovy',
+            distBandRegional: 'region\u00e1ln\u00ed',
+            distBandFar: 'velk\u00e1 vzd\u00e1lenost',
+            badgeIsland: 'Ostrov',
+            badgeCommand: 'P\u0159\u00edkaz',
+            segmentIslands: 'Ostrovy',
+            ghostLabel: 'Duch',
+            islandTowns: '{n} m\u011bst',
+            islandAlliances: '{n} aliance',
+            islandGhosts: '{n} duch\u016f',
+            openIslandMap: 'Otev\u0159\u00edt ostrov na map\u011b',
+            nearSummary: '{islands} ostrov\u016f \u00b7 {towns} m\u011bst v okruhu {n}',
+            nearNeedOrigin: 'Zadejte polom\u011br, nebo sou\u0159adnice a polom\u011br. Pokud lze zjistit, pou\u017eije se va\u0161e aktivn\u00ed m\u011bsto.',
+            oceanEmpty: 'V tomto oce\u00e1nu nic nen\u00ed indexov\u00e1no.',
+            oceanNeed: 'Pou\u017eijte >ocean M34 nebo >ocean M34 N\u00e1zevAliance.',
+            oceanSummary: '{players} hr\u00e1\u010d\u016f \u00b7 {alliances} aliance \u00b7 {towns} m\u011bst \u00b7 {ghosts} duch\u016f',
+            playerTownsTitle: 'M\u011bsta',
+            allianceSpreadTitle: 'Kde se nach\u00e1z\u00ed',
+            allianceMembersTitle: '\u010clenov\u00e9',
+            drillTowns: 'zobrazit města',
+            sortPoints: 'podle bodů',
+            sortDistance: 'podle vzdálenosti',
         },
         sk: {
             searchPlaceholder: 'H\u013ead\u0165 hr\u00e1\u010dov, alianciu alebo mest\u00e1...',
@@ -970,6 +1308,32 @@
             scopeHelpTitle: 'Rozsahy',
             scopeHelpDesc: '@p hr\u00e1\u010di \u00b7 @a aliancie \u00b7 @t mest\u00e1 \u00b7 @c s\u00faradnice',
             externalStats: 'Otvori\u0165 v GrepoLife',
+            commandIslandHelp: '>island X:Y \u2014 v\u0161etky mest\u00e1 na ostrove',
+            commandNearHelp: '>near [X:Y] [polomer] \u2014 ostrovy okolo bodu',
+            commandOceanHelp: '>ocean M34 [aliancia] \u2014 preh\u013ead oce\u00e1nu',
+            distBandSame: 'rovnak\u00fd ostrov',
+            distBandAdjacent: 'susedn\u00e9 ostrovy',
+            distBandRegional: 'region\u00e1lne',
+            distBandFar: 've\u013ek\u00e1 vzdialenos\u0165',
+            badgeIsland: 'Ostrov',
+            badgeCommand: 'Pr\u00edkaz',
+            segmentIslands: 'Ostrovy',
+            ghostLabel: 'Duch',
+            islandTowns: '{n} miest',
+            islandAlliances: '{n} alianci\u00ed',
+            islandGhosts: '{n} duchov',
+            openIslandMap: 'Otvori\u0165 ostrov na mape',
+            nearSummary: '{islands} ostrovov \u00b7 {towns} miest v okruhu {n}',
+            nearNeedOrigin: 'Zadajte polomer, alebo s\u00faradnice a polomer. Ak mo\u017eno zisti\u0165, pou\u017eije sa va\u0161e akt\u00edvne mesto.',
+            oceanEmpty: 'V tomto oce\u00e1ne nie je ni\u010d indexovan\u00e9.',
+            oceanNeed: 'Pou\u017eite >ocean M34 alebo >ocean M34 N\u00e1zovAliancie.',
+            oceanSummary: '{players} hr\u00e1\u010dov \u00b7 {alliances} alianci\u00ed \u00b7 {towns} miest \u00b7 {ghosts} duchov',
+            playerTownsTitle: 'Mest\u00e1',
+            allianceSpreadTitle: 'Kde sa nach\u00e1dzaj\u00fa',
+            allianceMembersTitle: '\u010clenovia',
+            drillTowns: 'zobraziť mestá',
+            sortPoints: 'podľa bodov',
+            sortDistance: 'podľa vzdialenosti',
         },
     };
 
@@ -2348,7 +2712,7 @@
         // stripped before the actual query.
         let segment = state.segment;
         let searchQuery = query;
-        const scopeMatch = query.match(/^@([tpaoic])\s+(.+)/);
+        const scopeMatch = query.match(/^@([tpaic])\s+(.+)/);
         if (scopeMatch) {
             segment = CONFIG.SCOPE_ALIASES[scopeMatch[1]];
             state.segment = segment;
@@ -2724,7 +3088,7 @@
             <div id="qf-backdrop"></div>
             <div id="qf-window">
                 <div id="qf-input-row">
-                    <span id="qf-search-icon">&#8981;</span>
+                    <span id="qf-search-icon">${ICONS.search}</span>
                     <input
                         id="qf-input"
                         type="text"
@@ -2732,17 +3096,21 @@
                         spellcheck="false"
                         placeholder="${escapeHTML(translate('searchPlaceholder'))}"
                     >
-                    <kbd>ESC</kbd>
+                    <kbd id="qf-esc-key">ESC</kbd>
                 </div>
                 <div id="qf-segments" hidden></div>
                 <div id="qf-results"></div>
                 <div id="qf-footer">
-                    <span>${escapeHTML(translate('footerTab'))}</span>
-                    <span id="qf-footer-fav">${escapeHTML(translate('footerFav'))}</span>
-                    <span id="qf-footer-refresh">${escapeHTML(translate('footerRefresh'))}</span>
-                    <span id="qf-footer-help">${escapeHTML(translate('footerHelp'))}</span>
-                    <span id="qf-status"></span>
-                    <span id="qf-version">v${VERSION}</span>
+                    <div id="qf-footer-shortcuts">
+                        <span>${escapeHTML(translate('footerTab'))}</span>
+                        <span id="qf-footer-fav">${escapeHTML(translate('footerFav'))}</span>
+                        <span id="qf-footer-refresh">${escapeHTML(translate('footerRefresh'))}</span>
+                        <span id="qf-footer-help">${escapeHTML(translate('footerHelp'))}</span>
+                    </div>
+                    <div id="qf-footer-meta">
+                        <span id="qf-status"></span>
+                        <span id="qf-version">v${VERSION}</span>
+                    </div>
                 </div>
             </div>
         `;
@@ -2831,23 +3199,27 @@
             results.innerHTML = `
                 <div class="qf-loading">
                     <div class="qf-spinner"></div>
-                    ${escapeHTML(translate('loadingWorldData'))}
+                    <div class="qf-loading-text">${escapeHTML(translate('loadingWorldData'))}</div>
                 </div>
             `;
             return;
         }
 
         if (!state.results.length) {
-            results.innerHTML = `
-                <div class="qf-empty">
-                    ${escapeHTML(translate('noResults'))}
-                    ${
-                        state.loadError
-                            ? `<div class="qf-empty-hint">${escapeHTML(translate('errorLoadingData', { error: state.loadError }))}</div>`
-                            : ''
-                    }
-                </div>
-            `;
+            if (state.loadError) {
+                results.innerHTML = `
+                    <div class="qf-empty qf-empty-error">
+                        <div class="qf-empty-title">${escapeHTML(translate('dataError'))}</div>
+                        <div class="qf-empty-hint">${escapeHTML(translate('errorLoadingData', { error: state.loadError }))}</div>
+                    </div>
+                `;
+            } else {
+                results.innerHTML = `
+                    <div class="qf-empty">
+                        <div class="qf-empty-title">${escapeHTML(translate('noResults'))}</div>
+                    </div>
+                `;
+            }
             return;
         }
 
@@ -2890,6 +3262,7 @@
             }
         }
         status.textContent = text;
+        status.classList.toggle('qf-status-error', Boolean(state.loadError));
     }
 
     function renderHistory(container) {
@@ -2981,15 +3354,59 @@
 
     /*
      * ============================================================
+     * ICONS
+     * ============================================================
+     *
+     * Emoji glyphs render inconsistently across operating systems
+     * (different sizes/styles, and outright missing on systems with
+     * no emoji font installed, showing as a "tofu" box). Inline SVG
+     * icons avoid both problems and don't need any external asset
+     * or font dependency: they render identically everywhere and
+     * inherit their color from CSS via `currentColor`.
+     */
+
+    function svgIcon(inner) {
+        return `<svg class="qf-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${inner}</svg>`;
+    }
+
+    const ICONS = {
+        search: svgIcon('<circle cx="10" cy="10" r="6.5"></circle><line x1="20" y1="20" x2="15" y2="15"></line>'),
+        player: svgIcon('<circle cx="12" cy="8" r="3.4"></circle><path d="M5 20c0-4 3-6.5 7-6.5s7 2.5 7 6.5"></path>'),
+        alliance: svgIcon('<path d="M12 3l7 3v5c0 5-3.2 8.6-7 10-3.8-1.4-7-5-7-10V6l7-3z"></path>'),
+        town: svgIcon('<path d="M5 21V9l7-5 7 5v12"></path><path d="M10 21v-6h4v6"></path>'),
+        ghost: svgIcon('<path d="M6 21V11a6 6 0 0 1 12 0v10l-2.2-1.6L14 21l-2-1.6L10 21l-1.8-1.6L6 21z"></path><circle cx="9.5" cy="11" r="0.8" fill="currentColor" stroke="none"></circle><circle cx="14.5" cy="11" r="0.8" fill="currentColor" stroke="none"></circle>'),
+        island: svgIcon('<circle cx="12" cy="12" r="9"></circle><path d="M3 12h18"></path><path d="M12 3c2.5 2.5 3.8 6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-6-3.8-9S9.5 5.5 12 3z"></path>'),
+        command: svgIcon('<rect x="3" y="4" width="18" height="16" rx="2"></rect><polyline points="7 9 10.5 12 7 15"></polyline><line x1="12.5" y1="15" x2="17" y2="15"></line>'),
+        coordinate: svgIcon('<path d="M12 21s7-7.5 7-12a7 7 0 1 0-14 0c0 4.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle>'),
+        info: svgIcon('<circle cx="12" cy="12" r="9"></circle><line x1="12" y1="11" x2="12" y2="16"></line><circle cx="12" cy="7.7" r="0.9" fill="currentColor" stroke="none"></circle>'),
+        external: svgIcon('<path d="M14 4h6v6"></path><path d="M20 4l-9 9"></path><path d="M9 5H5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-4"></path>'),
+        starOutline: svgIcon('<path d="M12 3.3l2.6 5.4 5.9.7-4.3 4.1 1.1 5.9L12 16.6l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.7L12 3.3z"></path>'),
+        starFilled: svgIcon('<path d="M12 3.3l2.6 5.4 5.9.7-4.3 4.1 1.1 5.9L12 16.6l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.7L12 3.3z" fill="currentColor" stroke="none"></path>'),
+    };
+
+    /*
+     * ============================================================
      * RESULT ROW
      * ============================================================
      */
 
+    /*
+     * The first row of a player/alliance/island drill-down (a result
+     * set built by playerDetailRows/allianceDetailRows/islandRows)
+     * acts as a header/context line for everything listed below it,
+     * so it gets a slightly bolder visual treatment instead of
+     * blending in as just another selectable row.
+     */
+    function isDetailHeader(item, index) {
+        return index === 0 && state.detail && (item.type === 'player' || item.type === 'alliance' || item.type === 'island');
+    }
+
     function renderResult(item, index) {
         const selected = index === state.selected ? ' qf-selected' : '';
         const favorite = item.type !== 'info' && isFavorite(item) ? ' qf-favorite' : '';
+        const header = isDetailHeader(item, index) ? ' qf-result-header' : '';
 
-        let icon = '&bull;';
+        let icon = ICONS.coordinate;
         let badge = '';
         let badgeClass = '';
         let meta = '';
@@ -2999,7 +3416,7 @@
 
         switch (item.type) {
             case 'player': {
-                icon = '&#128100;'; // 👤
+                icon = ICONS.player;
                 badge = translate('badgePlayer');
                 badgeClass = 'qf-badge-player';
                 const player = item.data;
@@ -3014,13 +3431,13 @@
                 }
                 const url = externalStatsUrl('player', item.id);
                 if (url) {
-                    external = `<a class="qf-external" href="${url}" target="_blank" rel="noopener noreferrer" title="${escapeHTML(translate('externalStats'))}">&#128279;</a>`;
+                    external = `<a class="qf-external" href="${url}" target="_blank" rel="noopener noreferrer" title="${escapeHTML(translate('externalStats'))}">${ICONS.external}</a>`;
                 }
                 break;
             }
 
             case 'alliance': {
-                icon = '&#128737;'; // 🛡️
+                icon = ICONS.alliance;
                 badge = translate('badgeAlliance');
                 badgeClass = 'qf-badge-alliance';
                 const alliance = item.data;
@@ -3034,14 +3451,14 @@
                 }
                 const url = externalStatsUrl('alliance', item.id);
                 if (url) {
-                    external = `<a class="qf-external" href="${url}" target="_blank" rel="noopener noreferrer" title="${escapeHTML(translate('externalStats'))}">&#128279;</a>`;
+                    external = `<a class="qf-external" href="${url}" target="_blank" rel="noopener noreferrer" title="${escapeHTML(translate('externalStats'))}">${ICONS.external}</a>`;
                 }
                 break;
             }
 
             case 'town': {
                 const isGhost = item.data ? item.data.playerId === 0 : !item.playerName;
-                icon = isGhost ? '&#128123;' : '&#127961;'; // 👻 / 🏙️
+                icon = isGhost ? ICONS.ghost : ICONS.town;
                 badge = isGhost ? translate('ghostLabel') : translate('badgeTown');
                 badgeClass = isGhost ? 'qf-badge-coordinate' : 'qf-badge-town';
                 const owner = item.playerName ? ` &middot; ${escapeHTML(item.playerName)}` : '';
@@ -3060,7 +3477,7 @@
             }
 
             case 'island': {
-                icon = '&#127757;'; // 🌐
+                icon = ICONS.island;
                 badge = translate('badgeIsland');
                 badgeClass = 'qf-badge-coordinate';
                 const distance = Number.isFinite(item.distance) ? `${item.distance} &middot; ` : '';
@@ -3074,7 +3491,7 @@
             }
 
             case 'command-suggestion': {
-                icon = '&#128187;'; // 💻
+                icon = ICONS.command;
                 badge = translate('badgeCommand');
                 badgeClass = 'qf-badge-coordinate';
                 meta = escapeHTML(item.helpText);
@@ -3083,7 +3500,7 @@
             }
 
             case 'coordinate': {
-                icon = '&#128205;'; // 📍
+                icon = ICONS.coordinate;
                 badge = translate('badgeCoordinate');
                 badgeClass = 'qf-badge-coordinate';
                 meta = `${item.x}:${item.y}`;
@@ -3091,23 +3508,36 @@
             }
 
             case 'info':
-                icon = '&#8505;'; // ℹ️
+                icon = ICONS.info;
                 info = true;
                 break;
         }
 
-        // Star toggles between ★ (favorite) and ☆ (not) — clicking is handled in handleResultClick.
-        const star = !info
-            ? `<span class="qf-star" title="${escapeHTML(translate('favoritesTitle'))}">${isFavorite(item) ? '&#9733;' : '&#9734;'}</span>`
-            : '';
+        if (info) {
+            return `
+                <div class="qf-result-info" data-index="${index}">
+                    <span class="qf-result-info-icon">${icon}</span>
+                    <span class="qf-result-info-text">${escapeHTML(item.name)}</span>
+                </div>
+            `;
+        }
+
+        // Filled star (favorite) vs. outline star (not) — clicking is
+        // handled in handleResultClick.
+        const star = `<span class="qf-star" title="${escapeHTML(translate('favoritesTitle'))}">${isFavorite(item) ? ICONS.starFilled : ICONS.starOutline}</span>`;
 
         return `
-            <div class="qf-result${selected}${favorite}${info ? ' qf-result-info' : ''}" data-index="${index}"${title}>
+            <div class="qf-result${selected}${favorite}${header}" data-index="${index}"${title}>
                 <span class="qf-result-icon">${icon}</span>
-                <span class="qf-result-name">${escapeHTML(item.name)}${star}</span>
-                ${meta ? `<span class="qf-result-meta">${meta}</span>` : ''}
+                <div class="qf-result-body">
+                    <div class="qf-result-line1">
+                        <span class="qf-result-name">${escapeHTML(item.name)}</span>
+                        ${star}
+                        ${badge ? `<span class="qf-badge ${badgeClass}">${escapeHTML(badge)}</span>` : ''}
+                    </div>
+                    ${meta ? `<div class="qf-result-meta">${meta}</div>` : ''}
+                </div>
                 ${external}
-                ${badge ? `<span class="qf-badge ${badgeClass}">${escapeHTML(badge)}</span>` : ''}
             </div>
         `;
     }
@@ -3209,7 +3639,16 @@
             event.stopPropagation();
             if (item && item.type !== 'info') {
                 toggleFavorite(item);
-                performSearch(state.query);
+                // In the history view the row set must be rebuilt so a
+                // just-unfavorited item leaves the Favorites group; a
+                // fresh token keeps this in sync with any in-flight
+                // search. Otherwise a simple re-render is enough since
+                // favorite status doesn't change search result membership.
+                if (!state.query) {
+                    performSearch('', ++searchToken);
+                } else {
+                    render();
+                }
             }
             return;
         }
@@ -3340,11 +3779,25 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
         }
 
+        /*
+         * All icons in the palette are inline SVG (see the ICONS map),
+         * not emoji glyphs: emoji rendering varies wildly across
+         * operating systems in size/style, and is flat-out missing
+         * (shows as a "tofu" box) on systems with no emoji font
+         * installed. SVG icons need no font and render identically
+         * everywhere; they inherit their color from currentColor.
+         */
+        .qf-icon-svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
         #qf-backdrop {
             position: absolute;
             inset: 0;
-            background: rgba(0, 0, 0, .43);
-            backdrop-filter: blur(2px);
+            background: rgba(0, 0, 0, .6);
+            backdrop-filter: blur(3px);
         }
 
         #qf-window {
@@ -3355,61 +3808,95 @@
             width: min(720px, calc(100vw - 30px));
             overflow: hidden;
             color: #eee;
-            background: linear-gradient(180deg, #292929, #191919);
-            border: 1px solid rgba(255, 255, 255, .14);
-            border-radius: 9px;
-            box-shadow: 0 25px 90px rgba(0, 0, 0, .72);
+            background: linear-gradient(180deg, #2c2c2c, #1a1a1a);
+            border: 1px solid rgba(255, 255, 255, .16);
+            border-radius: 12px;
+            box-shadow: 0 30px 100px rgba(0, 0, 0, .8);
+            animation: qf-window-in .12s ease-out;
+        }
+
+        @keyframes qf-window-in {
+            from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
         #qf-input-row {
             display: flex;
             align-items: center;
-            height: 60px;
-            padding: 0 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, .1);
+            height: 64px;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .09);
         }
 
         #qf-search-icon {
-            width: 30px;
-            font-size: 25px;
-            opacity: .6;
-            text-align: center;
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            margin-right: 6px;
+            color: rgba(255, 255, 255, .45);
         }
 
         #qf-input {
             flex: 1;
             min-width: 0;
             height: 100%;
-            padding: 0 10px;
+            padding: 0 12px;
             border: 0;
             outline: 0;
             background: transparent;
-            color: #fff;
-            font-size: 18px;
+            color: #fdfdfd;
+            font-size: 19px;
+            font-weight: 400;
+            letter-spacing: .1px;
         }
 
         #qf-input::placeholder {
-            color: rgba(255, 255, 255, .35);
+            color: rgba(255, 255, 255, .32);
+            font-weight: 400;
         }
 
-        #qf-input-row kbd {
-            padding: 3px 7px;
-            border: 1px solid rgba(255, 255, 255, .15);
-            border-radius: 4px;
-            color: rgba(255, 255, 255, .4);
+        #qf-esc-key {
+            flex: 0 0 auto;
+            padding: 4px 8px;
+            border: 1px solid rgba(255, 255, 255, .16);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, .04);
+            color: rgba(255, 255, 255, .42);
             font-size: 10px;
+            font-weight: 600;
+            letter-spacing: .3px;
         }
 
         #qf-results {
             max-height: 480px;
             overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, .16) transparent;
+            padding: 6px 0;
+        }
+
+        #qf-results::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #qf-results::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .14);
+            border-radius: 4px;
+        }
+
+        #qf-results::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, .22);
         }
 
         #qf-segments {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
-            padding: 6px 14px;
+            gap: 7px;
+            padding: 10px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, .08);
         }
 
@@ -3419,166 +3906,296 @@
 
         .qf-chip {
             display: inline-flex;
-            align-items: center;
+            align-items: baseline;
             gap: 5px;
-            padding: 2px 9px;
-            border: 1px solid rgba(255, 255, 255, .14);
-            border-radius: 11px;
-            color: rgba(255, 255, 255, .6);
-            font-size: 10px;
+            padding: 5px 11px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 7px;
+            background: rgba(255, 255, 255, .03);
+            color: rgba(255, 255, 255, .58);
+            font-size: 11px;
             font-weight: 500;
             cursor: pointer;
             user-select: none;
+            transition: background-color .08s ease, border-color .08s ease, color .08s ease;
         }
 
         .qf-chip:hover {
             color: rgba(255, 255, 255, .85);
-            border-color: rgba(255, 255, 255, .3);
+            border-color: rgba(255, 255, 255, .28);
+            background: rgba(255, 255, 255, .06);
         }
 
         .qf-chip-active {
-            color: #1c1c1c;
+            color: #1c1608;
             background: #d7a33f;
             border-color: #d7a33f;
+            font-weight: 600;
         }
 
         .qf-chip-count {
-            opacity: .6;
+            opacity: .55;
+            font-size: 10px;
             font-weight: 600;
         }
 
         .qf-chip-active .qf-chip-count {
-            opacity: .75;
+            opacity: .65;
         }
 
         .qf-result {
+            position: relative;
             display: flex;
             align-items: center;
-            gap: 8px;
-            height: 27px;
-            padding: 0 12px;
+            gap: 10px;
+            min-height: 44px;
+            padding: 5px 20px;
             border-left: 2px solid transparent;
             cursor: pointer;
+            transition: background-color .06s ease;
         }
 
-        .qf-result:hover,
+        .qf-result:hover {
+            background: rgba(255, 255, 255, .045);
+        }
+
         .qf-selected {
-            background: rgba(255, 255, 255, .08);
+            background: rgba(215, 163, 63, .13);
             border-left-color: #d7a33f;
+        }
+
+        .qf-selected:hover {
+            background: rgba(215, 163, 63, .17);
+        }
+
+        .qf-result-header {
+            min-height: 50px;
+            background: rgba(255, 255, 255, .035);
+        }
+
+        .qf-result-header.qf-selected {
+            background: rgba(215, 163, 63, .15);
         }
 
         .qf-result-icon {
             flex: 0 0 auto;
-            width: 16px;
-            font-size: 12px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            color: rgba(255, 255, 255, .68);
             opacity: .9;
         }
 
+        .qf-result-body {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .qf-result-line1 {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            min-width: 0;
+        }
+
         .qf-result-name {
-            flex: 0 0 210px;
             min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            font-size: 13px;
+            color: #f2f2f2;
+            font-size: 13.5px;
             font-weight: 500;
             text-align: left;
         }
 
+        .qf-selected .qf-result-name,
+        .qf-result-header .qf-result-name {
+            color: #fff;
+            font-weight: 600;
+        }
+
         .qf-result-meta {
-            flex: 1 1 auto;
-            min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            color: rgba(255, 255, 255, .45);
+            color: rgba(255, 255, 255, .42);
             font-size: 11px;
-            text-align: center;
+            text-align: left;
+        }
+
+        .qf-selected .qf-result-meta {
+            color: rgba(255, 255, 255, .55);
         }
 
         .qf-badge {
             flex: 0 0 auto;
-            padding: 1px 6px;
-            border-radius: 3px;
-            color: rgba(255, 255, 255, .8);
-            background: rgba(255, 255, 255, .08);
-            font-size: 9px;
-            font-weight: 600;
+            margin-left: auto;
+            padding: 2px 7px;
+            border-radius: 4px;
+            color: rgba(255, 255, 255, .75);
+            background: rgba(255, 255, 255, .07);
+            font-size: 8.5px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .4px;
+            letter-spacing: .5px;
+            white-space: nowrap;
         }
 
-        .qf-badge-player { background: rgba(90, 160, 255, .18); color: #9cc4ff; }
-        .qf-badge-alliance { background: rgba(215, 163, 63, .2); color: #e6bd6c; }
-        .qf-badge-town { background: rgba(100, 200, 140, .18); color: #8fdba9; }
-        .qf-badge-coordinate { background: rgba(200, 120, 220, .18); color: #dda6ea; }
+        .qf-badge-player { background: rgba(90, 160, 255, .16); color: #9cc4ff; }
+        .qf-badge-alliance { background: rgba(215, 163, 63, .18); color: #e6bd6c; }
+        .qf-badge-town { background: rgba(100, 200, 140, .16); color: #8fdba9; }
+        .qf-badge-coordinate { background: rgba(200, 120, 220, .16); color: #dda6ea; }
 
         .qf-star {
-            margin-left: 4px;
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            padding: 3px;
+            margin: -2px -2px -2px 0;
+            border-radius: 4px;
+            color: rgba(255, 255, 255, .22);
+        }
+
+        .qf-result:hover .qf-star {
+            color: rgba(255, 255, 255, .45);
+        }
+
+        .qf-star:hover {
+            color: rgba(255, 255, 255, .8) !important;
+            background: rgba(255, 255, 255, .08);
+        }
+
+        .qf-favorite .qf-star {
             color: #d7a33f;
-            font-size: 10px;
+        }
+
+        .qf-favorite:hover .qf-star {
+            color: #e6bd6c;
         }
 
         .qf-external {
             flex: 0 0 auto;
-            margin-left: 2px;
-            color: rgba(255, 255, 255, .4);
-            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            padding: 4px;
+            border-radius: 5px;
+            color: rgba(255, 255, 255, .28);
             text-decoration: none;
         }
 
         .qf-external:hover {
             color: #d7a33f;
+            background: rgba(255, 255, 255, .06);
         }
 
         .qf-result-info {
-            font-style: italic;
-            color: rgba(255, 255, 255, .55);
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            padding: 6px 20px;
+            color: rgba(255, 255, 255, .5);
+            font-size: 11.5px;
+            font-style: normal;
+            cursor: default;
+        }
+
+        .qf-result-info-icon {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            opacity: .55;
+        }
+
+        .qf-result-info-text {
+            min-width: 0;
         }
 
         .qf-section {
-            padding: 8px 14px 3px;
-            color: rgba(255, 255, 255, .38);
+            padding: 14px 20px 6px;
+            color: rgba(255, 255, 255, .4);
             font-size: 10px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .8px;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255, 255, 255, .06);
+            margin-bottom: 2px;
+        }
+
+        .qf-section:first-child {
+            padding-top: 8px;
         }
 
         .qf-empty,
         .qf-loading {
-            padding: 40px 20px;
+            padding: 52px 24px;
             text-align: center;
             color: rgba(255, 255, 255, .5);
         }
 
         .qf-empty-title {
-            margin-bottom: 7px;
-            color: rgba(255, 255, 255, .75);
-            font-size: 15px;
+            margin-bottom: 9px;
+            color: rgba(255, 255, 255, .8);
+            font-size: 16px;
+            font-weight: 500;
         }
 
         .qf-empty-subtitle {
+            color: rgba(255, 255, 255, .45);
             font-size: 12px;
         }
 
         .qf-empty-hint {
-            margin-top: 12px;
-            font-size: 10px;
-            opacity: .65;
+            margin-top: 18px;
+            color: rgba(255, 255, 255, .35);
+            font-size: 11px;
+        }
+
+        .qf-empty-hint strong {
+            padding: 2px 7px;
+            border: 1px solid rgba(255, 255, 255, .14);
+            border-radius: 4px;
+            color: rgba(255, 255, 255, .6);
+            font-weight: 600;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        }
+
+        .qf-empty-error .qf-empty-title {
+            color: #e6a2a2;
+        }
+
+        .qf-empty-error .qf-empty-hint {
+            color: rgba(230, 162, 162, .7);
         }
 
         .qf-loading {
             font-size: 12px;
         }
 
+        .qf-loading-text {
+            color: rgba(255, 255, 255, .45);
+        }
+
         .qf-spinner {
             width: 22px;
             height: 22px;
-            margin: 0 auto 10px;
+            margin: 0 auto 14px;
             border: 2px solid rgba(255, 255, 255, .18);
-            border-top-color: rgba(255, 255, 255, .65);
+            border-top-color: rgba(215, 163, 63, .75);
             border-radius: 50%;
             animation: qf-spin .7s linear infinite;
         }
@@ -3589,35 +4206,54 @@
 
         #qf-footer {
             display: flex;
-            gap: 18px;
-            padding: 8px 14px;
-            background: rgba(0, 0, 0, .15);
+            flex-direction: column;
+            gap: 4px;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, .18);
             border-top: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        #qf-footer-shortcuts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            color: rgba(255, 255, 255, .34);
+            font-size: 10px;
+        }
+
+        #qf-footer-meta {
+            display: flex;
+            align-items: baseline;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        #qf-status {
             color: rgba(255, 255, 255, .32);
             font-size: 10px;
         }
 
-        #qf-status {
-            margin-left: auto;
-            color: rgba(255, 255, 255, .28);
-            font-size: 10px;
+        #qf-status.qf-status-error {
+            color: #e08a8a;
+            font-weight: 600;
         }
 
         #qf-version {
-            color: rgba(255, 255, 255, .18);
+            color: rgba(255, 255, 255, .14);
+            font-size: 9px;
         }
 
         .qf-help {
-            padding: 18px 20px;
+            padding: 22px 24px;
         }
 
         .qf-help-title {
-            margin: 14px 0 6px;
-            color: rgba(255, 255, 255, .6);
+            margin: 18px 0 8px;
+            color: rgba(255, 255, 255, .62);
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .6px;
+            letter-spacing: .8px;
         }
 
         .qf-help-title:first-child {
@@ -3627,30 +4263,32 @@
         .qf-help-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 11px;
+            font-size: 11.5px;
         }
 
         .qf-help-table td {
-            padding: 3px 8px 3px 0;
+            padding: 4px 10px 4px 0;
             vertical-align: top;
+            color: rgba(255, 255, 255, .68);
         }
 
         .qf-help-table td:first-child {
-            width: 38%;
+            width: 40%;
         }
 
         .qf-help-table kbd {
-            padding: 1px 6px;
-            border: 1px solid rgba(255, 255, 255, .18);
+            padding: 2px 7px;
+            border: 1px solid rgba(255, 255, 255, .16);
             border-radius: 4px;
-            background: rgba(255, 255, 255, .06);
+            background: rgba(255, 255, 255, .05);
             color: rgba(255, 255, 255, .8);
             font-size: 10px;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
         }
 
         .qf-help-text {
-            font-size: 11px;
-            line-height: 1.5;
+            font-size: 11.5px;
+            line-height: 1.6;
             color: rgba(255, 255, 255, .5);
         }
     `;
