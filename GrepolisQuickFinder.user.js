@@ -122,6 +122,7 @@
             bbcodeCopied: 'Copied',
             footerRefresh: 'Ctrl+R refresh',
             footerHelp: '? help',
+            menuItem: 'QuickFinder',
             dataFresh: 'Data fresh',
             dataFreshMin: 'Data {n} min old',
             dataFreshHour: 'Data {n} h old',
@@ -202,6 +203,7 @@
             bbcodeCopied: 'Copiado',
             footerRefresh: 'Ctrl+R recargar',
             footerHelp: '? ayuda',
+            menuItem: 'QuickFinder',
             dataFresh: 'Datos nuevos',
             dataFreshMin: 'Datos de hace {n} min',
             dataFreshHour: 'Datos de hace {n} h',
@@ -282,6 +284,7 @@
             bbcodeCopied: 'Kopiert',
             footerRefresh: 'Strg+R aktualisieren',
             footerHelp: '? Hilfe',
+            menuItem: 'QuickFinder',
             dataFresh: 'Daten aktuell',
             dataFreshMin: 'Daten {n} Min. alt',
             dataFreshHour: 'Daten {n} Std. alt',
@@ -362,6 +365,7 @@
             bbcodeCopied: 'Copi\u00e9',
             footerRefresh: 'Ctrl+R actualiser',
             footerHelp: '? aide',
+            menuItem: 'QuickFinder',
             dataFresh: 'Donn\u00e9es \u00e0 jour',
             dataFreshMin: 'Donn\u00e9es vieilles de {n} min',
             dataFreshHour: 'Donn\u00e9es vieilles de {n} h',
@@ -442,6 +446,7 @@
             bbcodeCopied: 'Copiato',
             footerRefresh: 'Ctrl+R aggiorna',
             footerHelp: '? aiuto',
+            menuItem: 'QuickFinder',
             dataFresh: 'Dati aggiornati',
             dataFreshMin: 'Dati di {n} min fa',
             dataFreshHour: 'Dati di {n} h fa',
@@ -522,6 +527,7 @@
             bbcodeCopied: 'Gekopieerd',
             footerRefresh: 'Ctrl+R verversen',
             footerHelp: '? help',
+            menuItem: 'QuickFinder',
             dataFresh: 'Gegevens actueel',
             dataFreshMin: 'Gegevens {n} min oud',
             dataFreshHour: 'Gegevens {n} u oud',
@@ -602,6 +608,7 @@
             bbcodeCopied: 'Skopiowano',
             footerRefresh: 'Ctrl+R od\u015bwie\u017c',
             footerHelp: '? pomoc',
+            menuItem: 'QuickFinder',
             dataFresh: 'Dane aktualne',
             dataFreshMin: 'Dane sprzed {n} min',
             dataFreshHour: 'Dane sprzed {n} godz.',
@@ -682,6 +689,7 @@
             bbcodeCopied: 'Copiado',
             footerRefresh: 'Ctrl+R atualizar',
             footerHelp: '? ajuda',
+            menuItem: 'QuickFinder',
             dataFresh: 'Dados atuais',
             dataFreshMin: 'Dados com {n} min',
             dataFreshHour: 'Dados com {n} h',
@@ -762,6 +770,7 @@
             bbcodeCopied: 'Copiado',
             footerRefresh: 'Ctrl+R atualizar',
             footerHelp: '? ajuda',
+            menuItem: 'QuickFinder',
             dataFresh: 'Dados atuais',
             dataFreshMin: 'Dados com {n} min',
             dataFreshHour: 'Dados com {n} h',
@@ -842,6 +851,7 @@
             bbcodeCopied: 'Kopyaland\u0131',
             footerRefresh: 'Ctrl+R yenile',
             footerHelp: '? yard\u0131m',
+            menuItem: 'QuickFinder',
             dataFresh: 'Veriler g\u00fcncel',
             dataFreshMin: 'Veriler {n} dk eski',
             dataFreshHour: 'Veriler {n} sa eski',
@@ -922,6 +932,7 @@
             bbcodeCopied: '\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e',
             footerRefresh: 'Ctrl+R \u043e\u0431\u043d\u043e\u0432\u0438\u0442\u044c',
             footerHelp: '? \u0441\u043f\u0440\u0430\u0432\u043a\u0430',
+            menuItem: 'QuickFinder',
             dataFresh: '\u0414\u0430\u043d\u043d\u044b\u0435 \u0430\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u044b',
             dataFreshMin: '\u0414\u0430\u043d\u043d\u044b\u0435 \u0437\u0430 {n} \u043c\u0438\u043d',
             dataFreshHour: '\u0414\u0430\u043d\u043d\u044b\u0435 \u0437\u0430 {n} \u0447',
@@ -1002,6 +1013,7 @@
             bbcodeCopied: '\u0391\u03bd\u03c4\u03b9\u03b3\u03c1\u03ac\u03c6\u03b7\u03ba\u03b5',
             footerRefresh: 'Ctrl+R \u03b1\u03bd\u03ac\u03ba\u03c4\u03b7\u03c3\u03b7',
             footerHelp: '? \u03b2\u03bf\u03ae\u03b8\u03b5\u03b9\u03b1',
+            menuItem: 'QuickFinder',
             dataFresh: '\u0394\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03b1 \u03b5\u03bd\u03b7\u03bc\u03b5\u03c1\u03c9\u03bc\u03ad\u03bd\u03b1',
             dataFreshMin: '\u0394\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03b1 {n} \u03bb\u03b5\u03c0\u03c4. \u03c0\u03c1\u03b9\u03bd',
             dataFreshHour: '\u0394\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03b1 {n} \u03c9\u03c1. \u03c0\u03c1\u03b9\u03bd',
@@ -1082,6 +1094,7 @@
             bbcodeCopied: 'M\u00e1solva',
             footerRefresh: 'Ctrl+R friss\u00edt\u00e9s',
             footerHelp: '? s\u00fag\u00f3',
+            menuItem: 'QuickFinder',
             dataFresh: 'Adatok frissek',
             dataFreshMin: 'Adatok {n} perce',
             dataFreshHour: 'Adatok {n} \u00f3r\u00e1ja',
@@ -1162,6 +1175,7 @@
             bbcodeCopied: 'Copiat',
             footerRefresh: 'Ctrl+R re\u00eencarc\u0103',
             footerHelp: '? ajutor',
+            menuItem: 'QuickFinder',
             dataFresh: 'Date actuale',
             dataFreshMin: 'Date vechi de {n} min',
             dataFreshHour: 'Date vechi de {n} h',
@@ -1242,6 +1256,7 @@
             bbcodeCopied: 'Zkop\u00edrov\u00e1no',
             footerRefresh: 'Ctrl+R obnovit',
             footerHelp: '? n\u00e1pov\u011bda',
+            menuItem: 'QuickFinder',
             dataFresh: 'Data \u010derstv\u00e1',
             dataFreshMin: 'Data star\u00e1 {n} min',
             dataFreshHour: 'Data star\u00e1 {n} h',
@@ -1322,6 +1337,7 @@
             bbcodeCopied: 'Skop\u00edrovan\u00e9',
             footerRefresh: 'Ctrl+R obnovi\u0165',
             footerHelp: '? pomoc',
+            menuItem: 'QuickFinder',
             dataFresh: 'D\u00e1ta \u010derstv\u00e9',
             dataFreshMin: 'D\u00e1ta star\u00e9 {n} min',
             dataFreshHour: 'D\u00e1ta star\u00e9 {n} h',
@@ -1546,7 +1562,6 @@
     };
 
     let favoriteSet = new Set();
-    let lastClosedByEnter = false;
 
     function storageGet(key) {
         try {
@@ -3222,7 +3237,6 @@
                 ok = openTown(item);
                 if (ok) {
                     addHistory(item);
-                    lastClosedByEnter = true;
                 }
                 return ok;
             case 'coordinate':
@@ -3235,7 +3249,6 @@
 
         if (ok) {
             addHistory(item);
-            lastClosedByEnter = true;
         }
         return ok;
     }
@@ -3905,14 +3918,13 @@
 
         const input = document.getElementById('qf-input');
 
-        if (lastClosedByEnter && state.query) {
+        if (state.query) {
             input.value = state.query;
             render();
             requestAnimationFrame(() => {
                 input.focus();
                 input.select();
             });
-            lastClosedByEnter = false;
         } else {
             state.query = '';
             state.fullResults = buildHistoryResults();
@@ -3922,7 +3934,6 @@
             state.segment = CONFIG.DEFAULT_SEGMENT;
             state.segmentCounts = null;
             state.showHelp = false;
-            lastClosedByEnter = false;
 
             input.value = '';
             render();
@@ -3930,16 +3941,64 @@
         }
     }
 
-    function close(resetState = false) {
-        if (resetState) {
-            lastClosedByEnter = false;
-        }
+    function close() {
         state.open = false;
 
         const overlay = document.getElementById('qf-overlay');
         if (overlay) {
             overlay.style.display = 'none';
         }
+    }
+
+    /*
+     * Main menu button injection for Grepolis UI (.nui_main_menu).
+     */
+    function injectMainMenuItem() {
+        const menuUl = document.querySelector('.nui_main_menu .content ul');
+        // Do not inject until Grepolis has rendered its main menu items (e.g., forum item exists)
+        if (!menuUl || !menuUl.querySelector('li.forum, li[data-option-id="forum"]')) {
+            return;
+        }
+
+        let qfLi = menuUl.querySelector('li.quickfinder');
+
+        // If QuickFinder is already the last item in menuUl, nothing to do
+        if (qfLi && menuUl.lastElementChild === qfLi) {
+            return;
+        }
+
+        // Remove 'last' class from any existing items so previous bottom item expands properly
+        menuUl.querySelectorAll('li.last').forEach((el) => el.classList.remove('last'));
+
+        if (!qfLi) {
+            qfLi = document.createElement('li');
+            qfLi.className = 'quickfinder main_menu_item last';
+            qfLi.setAttribute('data-option-id', 'quickfinder');
+            qfLi.innerHTML = `
+                <span class="content_wrapper">
+                    <span class="button_wrapper">
+                        <span class="button">
+                            <span class="icon qf-main-menu-icon"></span>
+                            <div class="ui_highlight" data-type="main_menu" data-subtype="quickfinder"></div>
+                            <span class="indicator" data-indicator-id="quickfinder" style="display: none;"></span>
+                        </span>
+                    </span>
+                    <span class="name_wrapper">
+                        <span class="name">${escapeHTML(translate('menuItem'))}</span>
+                    </span>
+                </span>
+            `;
+
+            qfLi.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                open();
+            });
+        }
+
+        // Move/append to the very end of menuUl and ensure 'last' class
+        menuUl.appendChild(qfLi);
+        qfLi.classList.add('last');
     }
 
     function toggle() {
@@ -4601,6 +4660,19 @@
             line-height: 1.6;
             color: rgba(255, 255, 255, .5);
         }
+
+        /* Main menu button icon styling */
+        .nui_main_menu .quickfinder .icon {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 32px !important;
+            height: 32px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='metal' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23fff2c6'/%3E%3Cstop offset='40%25' stop-color='%23eac05d'/%3E%3Cstop offset='100%25' stop-color='%239e701e'/%3E%3C/linearGradient%3E%3ClinearGradient id='handle' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23e5b565'/%3E%3Cstop offset='50%25' stop-color='%23ab7424'/%3E%3Cstop offset='100%25' stop-color='%235e3c0b'/%3E%3C/linearGradient%3E%3CradialGradient id='lens' cx='35%25' cy='35%25' r='65%25'%3E%3Cstop offset='0%25' stop-color='rgba(255, 248, 220, 0.45)'/%3E%3Cstop offset='70%25' stop-color='rgba(214, 163, 66, 0.15)'/%3E%3Cstop offset='100%25' stop-color='rgba(130, 90, 20, 0.3)'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath d='M15 15 L21 21' stroke='url(%23handle)' stroke-width='3.8' stroke-linecap='round'/%3E%3Ccircle cx='10.5' cy='10.5' r='6' fill='url(%23lens)'/%3E%3Ccircle cx='10.5' cy='10.5' r='6' fill='none' stroke='url(%23metal)' stroke-width='2.2'/%3E%3Ccircle cx='10.5' cy='10.5' r='5' fill='none' stroke='%23fff5d6' stroke-width='0.6' stroke-opacity='0.7'/%3E%3C/svg%3E") 7px 7px / 18px 18px no-repeat !important;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .7));
+        }
     `;
 
     document.head.appendChild(style);
@@ -4752,6 +4824,8 @@
     function init() {
         syncFavorites();
         createUI();
+        injectMainMenuItem();
+        setInterval(injectMainMenuItem, 1000);
         loadAll();
 
         console.info(`%c[Grepolis Quick Finder ${VERSION}] loaded`, 'color:#d6a342;font-weight:bold');
