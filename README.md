@@ -12,7 +12,7 @@ and coordinates, with real in-game navigation (no new tabs).
 - **Scope prefixes**: Target specific categories directly using `@p` (players), `@a` (alliances), `@t` (towns), `@i` (islands), or `@c` (coordinates). An exact `@p`/`@a` match drills into that player's towns or that alliance's member/ocean spread instead of a flat list.
 - **Island awareness**: Searching a coordinate that has more than one town (an island can host up to 20) resolves to an island row listing every town on it.
 - **BBCode Export**: Press `Ctrl+B` on any result row to instantly copy its BBCode (`[player]`, `[alliance]`, `[town]`, `[island]`) to your clipboard.
-- **History & Favorites**: Press `Ctrl+F` on any result to pin it as a favorite. Opening the palette with an empty search displays your pinned favorites and recent searches.
+- **History & Favorites**: Press `Ctrl+F` on any result to pin it as a favorite. Opening the palette with an empty search displays your pinned favorites and recent searches. Hover a recent entry to reveal a remove button, or use the "Clear" button on the Recent section header to wipe the whole recent list (favorites are unaffected either way).
 - **Command mode**: Type `>` to access utility commands:
   - `>goto <x>:<y>` — Jump directly to coordinates on the world map.
   - `>ghost [minPts] [near]` — List ghost towns sorted by points, or by distance from your active city with `near`.

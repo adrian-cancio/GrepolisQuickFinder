@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.6.0
+// @version      2.7.0
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market.
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.6.0';
+    const VERSION = '2.7.0';
 
     /*
      * ============================================================
@@ -153,6 +153,9 @@
             onIslandInfo: '{n} towns on this island',
             favoritesTitle: 'Favorites',
             recentTitle: 'Recent',
+            recentClearAll: 'Clear',
+            recentRemove: 'Remove from history',
+            recentCleared: 'Recent history cleared',
             footerTab: 'Tab filter',
             footerFav: 'Ctrl+F favorite',
             footerBBCode: 'Ctrl+B copy BBCode',
@@ -249,6 +252,9 @@
             onIslandInfo: '{n} ciudades en esta isla',
             favoritesTitle: 'Favoritos',
             recentTitle: 'Recientes',
+            recentClearAll: 'Vaciar',
+            recentRemove: 'Quitar del historial',
+            recentCleared: 'Historial reciente vaciado',
             footerTab: 'Tab filtrar',
             footerFav: 'Ctrl+F favoritos',
             footerBBCode: 'Ctrl+B copiar BBCode',
@@ -345,6 +351,9 @@
             onIslandInfo: '{n} St\u00e4dte auf dieser Insel',
             favoritesTitle: 'Favoriten',
             recentTitle: 'Zuletzt',
+            recentClearAll: 'Leeren',
+            recentRemove: 'Aus dem Verlauf entfernen',
+            recentCleared: 'Verlauf geleert',
             footerTab: 'Tab filter',
             footerFav: 'Strg+F Favorit',
             footerBBCode: 'Strg+B BBCode kopieren',
@@ -441,6 +450,9 @@
             onIslandInfo: '{n} villes sur cette \u00eele',
             favoritesTitle: 'Favoris',
             recentTitle: 'R\u00e9cents',
+            recentClearAll: 'Vider',
+            recentRemove: 'Retirer de l’historique',
+            recentCleared: 'Historique récent vidé',
             footerTab: 'Tab filtrer',
             footerFav: 'Ctrl+F favori',
             footerBBCode: 'Ctrl+B copier le BBCode',
@@ -537,6 +549,9 @@
             onIslandInfo: '{n} citt\u00e0 su quest\u2019isola',
             favoritesTitle: 'Preferiti',
             recentTitle: 'Recenti',
+            recentClearAll: 'Svuota',
+            recentRemove: 'Rimuovi dalla cronologia',
+            recentCleared: 'Cronologia recente svuotata',
             footerTab: 'Tab filtra',
             footerFav: 'Ctrl+F preferito',
             footerBBCode: 'Ctrl+B copia BBCode',
@@ -633,6 +648,9 @@
             onIslandInfo: '{n} steden op dit eiland',
             favoritesTitle: 'Favorieten',
             recentTitle: 'Recent',
+            recentClearAll: 'Wissen',
+            recentRemove: 'Verwijderen uit geschiedenis',
+            recentCleared: 'Recente geschiedenis gewist',
             footerTab: 'Tab filteren',
             footerFav: 'Ctrl+F favoriet',
             footerBBCode: 'Ctrl+B BBCode kopi\u00ebren',
@@ -729,6 +747,9 @@
             onIslandInfo: '{n} miast na tej wyspie',
             favoritesTitle: 'Ulubione',
             recentTitle: 'Ostatnie',
+            recentClearAll: 'Wyczyść',
+            recentRemove: 'Usuń z historii',
+            recentCleared: 'Historia wyczyszczona',
             footerTab: 'Tab filtr',
             footerFav: 'Ctrl+F ulubione',
             footerBBCode: 'Ctrl+B kopiuj BBCode',
@@ -825,6 +846,9 @@
             onIslandInfo: '{n} cidades nesta ilha',
             favoritesTitle: 'Favoritos',
             recentTitle: 'Recentes',
+            recentClearAll: 'Limpar',
+            recentRemove: 'Remover do histórico',
+            recentCleared: 'Histórico recente limpo',
             footerTab: 'Tab filtrar',
             footerFav: 'Ctrl+F favorito',
             footerBBCode: 'Ctrl+B copiar BBCode',
@@ -921,6 +945,9 @@
             onIslandInfo: '{n} cidades nesta ilha',
             favoritesTitle: 'Favoritos',
             recentTitle: 'Recentes',
+            recentClearAll: 'Limpar',
+            recentRemove: 'Remover do histórico',
+            recentCleared: 'Histórico recente limpo',
             footerTab: 'Tab filtrar',
             footerFav: 'Ctrl+F favorito',
             footerBBCode: 'Ctrl+B copiar BBCode',
@@ -1017,6 +1044,9 @@
             onIslandInfo: 'Bu adada {n} \u015fehir',
             favoritesTitle: 'Favoriler',
             recentTitle: 'Son',
+            recentClearAll: 'Temizle',
+            recentRemove: 'Geçmişden kaldır',
+            recentCleared: 'Son geçmiş temizlendi',
             footerTab: 'Tab filtrele',
             footerFav: 'Ctrl+F favori',
             footerBBCode: 'Ctrl+B BBCode kopyala',
@@ -1113,6 +1143,9 @@
             onIslandInfo: '{n} \u0433\u043e\u0440\u043e\u0434\u043e\u0432 \u043d\u0430 \u044d\u0442\u043e\u043c \u043e\u0441\u0442\u0440\u043e\u0432\u0435',
             favoritesTitle: '\u0418\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0435',
             recentTitle: '\u041d\u0435\u0434\u0430\u0432\u043d\u0438\u0435',
+            recentClearAll: 'Очистить',
+            recentRemove: 'Удалить из истории',
+            recentCleared: 'История очищена',
             footerTab: 'Tab \u0444\u0438\u043b\u044c\u0442\u0440',
             footerFav: 'Ctrl+F \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0435',
             footerBBCode: 'Ctrl+B \u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c BBCode',
@@ -1209,6 +1242,9 @@
             onIslandInfo: '{n} \u03c0\u03cc\u03bb\u03b5\u03b9\u03c2 \u03c3\u03b5 \u03b1\u03c5\u03c4\u03cc \u03c4\u03bf \u03bd\u03b7\u03c3\u03af',
             favoritesTitle: '\u0391\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03b1',
             recentTitle: '\u03a0\u03c1\u03cc\u03c3\u03c6\u03b1\u03c4\u03b1',
+            recentClearAll: 'Εκκαθάριση',
+            recentRemove: 'Αφαίρεση από το ιστορικό',
+            recentCleared: 'Το πρόσφατο ιστορικό εκκαθαρίστηκε',
             footerTab: 'Tab \u03c6\u03af\u03bb\u03c4\u03c1\u03bf',
             footerFav: 'Ctrl+F \u03b1\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03bf',
             footerBBCode: 'Ctrl+B \u03b1\u03bd\u03c4\u03b9\u03b3\u03c1\u03b1\u03c6\u03ae BBCode',
@@ -1305,6 +1341,9 @@
             onIslandInfo: '{n} v\u00e1ros ezen a szigeten',
             favoritesTitle: 'Kedvencek',
             recentTitle: 'Legut\u00f3bbi',
+            recentClearAll: 'Törlés',
+            recentRemove: 'Eltávolítás az előzményekből',
+            recentCleared: 'Előzmények törölve',
             footerTab: 'Tab sz\u0171r\u00e9s',
             footerFav: 'Ctrl+F kedvenc',
             footerBBCode: 'Ctrl+B BBCode m\u00e1sol\u00e1sa',
@@ -1401,6 +1440,9 @@
             onIslandInfo: '{n} ora\u0219e pe aceast\u0103 insul\u0103',
             favoritesTitle: 'Favorite',
             recentTitle: 'Recente',
+            recentClearAll: 'Golește',
+            recentRemove: 'Elimină din istoric',
+            recentCleared: 'Istoricul recent a fost golit',
             footerTab: 'Tab filtreaz\u0103',
             footerFav: 'Ctrl+F favorit',
             footerBBCode: 'Ctrl+B copiaz\u0103 BBCode',
@@ -1497,6 +1539,9 @@
             onIslandInfo: '{n} m\u011bst na tomto ostrov\u011b',
             favoritesTitle: 'Obl\u00edben\u00e9',
             recentTitle: 'Ned\u00e1vn\u00e9',
+            recentClearAll: 'Vymazat',
+            recentRemove: 'Odebrat z historie',
+            recentCleared: 'Historie vymazána',
             footerTab: 'Tab filtr',
             footerFav: 'Ctrl+F obl\u00edben\u00e9',
             footerBBCode: 'Ctrl+B kop\u00edrovat BBCode',
@@ -1593,6 +1638,9 @@
             onIslandInfo: '{n} miest na tomto ostrove',
             favoritesTitle: 'Ob\u013e\u00faben\u00e9',
             recentTitle: 'Ned\u00e1vne',
+            recentClearAll: 'Vymazať',
+            recentRemove: 'Odstrániť z histórie',
+            recentCleared: 'História vymazaná',
             footerTab: 'Tab filter',
             footerFav: 'Ctrl+F ob\u013e\u00faben\u00e9',
             footerBBCode: 'Ctrl+B kop\u00edrova\u0165 BBCode',
@@ -1965,6 +2013,28 @@
             list.length = CONFIG.HISTORY_MAX;
         }
         storageSet(worldKey('history'), list);
+    }
+
+    /*
+     * Coordinate entries without a town on them carry no stable `id`
+     * (see searchCoordinates/hydrateHistoryItem), so type+id alone
+     * cannot identify them; x/y is used instead for that one type.
+     */
+    function historyEntryKey(entry) {
+        if (entry.type === 'coordinate') {
+            return `coordinate:${entry.x}:${entry.y}`;
+        }
+        return `${entry.type}:${entry.id}`;
+    }
+
+    function removeHistoryItem(item) {
+        const key = historyEntryKey(item);
+        const list = loadHistory().filter((entry) => historyEntryKey(entry) !== key);
+        storageSet(worldKey('history'), list);
+    }
+
+    function clearHistory() {
+        storageSet(worldKey('history'), []);
     }
 
     function loadFavorites() {
@@ -3691,7 +3761,7 @@
         input.addEventListener('keydown', handleInputKeydown);
 
         const resultsEl = overlay.querySelector('#qf-results');
-        resultsEl.addEventListener('mousedown', handleResultClick);
+        resultsEl.addEventListener('mousedown', handleResultsMousedown);
         resultsEl.addEventListener('scroll', () => {
             const nearBottom = resultsEl.scrollTop + resultsEl.clientHeight >= resultsEl.scrollHeight - 120;
             if (nearBottom) {
@@ -3934,9 +4004,11 @@
             const item = rows[index];
             if (item.section && item.section !== currentSection) {
                 currentSection = item.section;
-                html += `<div class="qf-section">${
-                    escapeHTML(translate(currentSection === 'favorite' ? 'favoritesTitle' : 'recentTitle'))
-                }</div>`;
+                const title = escapeHTML(translate(currentSection === 'favorite' ? 'favoritesTitle' : 'recentTitle'));
+                const clearBtn = currentSection === 'recent'
+                    ? `<button type="button" class="qf-section-clear" title="${escapeHTML(translate('recentClearAll'))}">${escapeHTML(translate('recentClearAll'))}</button>`
+                    : '';
+                html += `<div class="qf-section">${title}${clearBtn}</div>`;
             }
             html += renderResult(item, index);
         }
@@ -4207,6 +4279,7 @@
         starOutline: svgIcon('<path d="M12 3.3l2.6 5.4 5.9.7-4.3 4.1 1.1 5.9L12 16.6l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.7L12 3.3z"></path>'),
         starFilled: svgIcon('<path d="M12 3.3l2.6 5.4 5.9.7-4.3 4.1 1.1 5.9L12 16.6l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.7L12 3.3z" fill="currentColor" stroke="none"></path>'),
         gear: svgIcon('<circle cx="12" cy="12" r="3.2"></circle><path d="M12 3.2v2.1M12 18.7v2.1M20.8 12h-2.1M5.3 12H3.2M17.9 6.1l-1.5 1.5M7.6 16.4l-1.5 1.5M17.9 17.9l-1.5-1.5M7.6 7.6L6.1 6.1"></path>'),
+        trash: svgIcon('<polyline points="4 7 20 7"></polyline><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>'),
     };
 
     /*
@@ -4342,6 +4415,11 @@
         // Filled star (favorite) vs. outline star (not) — clicking is
         // handled in handleResultClick.
         const star = `<span class="qf-star" title="${escapeHTML(translate('favoritesTitle'))}">${isFavorite(item) ? ICONS.starFilled : ICONS.starOutline}</span>`;
+        // Only recent (non-favorite) history rows can be individually
+        // removed; favorites are managed via the star toggle instead.
+        const removeBtn = item.section === 'recent'
+            ? `<span class="qf-remove" title="${escapeHTML(translate('recentRemove'))}">${ICONS.trash}</span>`
+            : '';
 
         return `
             <div class="qf-result${selected}${favorite}${header}" data-index="${index}"${title}>
@@ -4350,6 +4428,7 @@
                     <div class="qf-result-line1">
                         <span class="qf-result-name">${escapeHTML(item.name)}</span>
                         ${star}
+                        ${removeBtn}
                         ${badge ? `<span class="qf-badge ${badgeClass}">${escapeHTML(badge)}</span>` : ''}
                     </div>
                     ${meta ? `<div class="qf-result-meta">${meta}</div>` : ''}
@@ -4470,8 +4549,34 @@
             return;
         }
 
+        if (event.target.closest('.qf-remove')) {
+            event.stopPropagation();
+            if (item && item.section === 'recent') {
+                removeHistoryItem(item);
+                performSearch('', ++searchToken);
+            }
+            return;
+        }
+
         state.selected = index;
         openResult(item);
+    }
+
+    /*
+     * The "Clear" button on the Recent section header lives outside
+     * .qf-result rows, so it needs its own delegated handler instead
+     * of piggybacking on handleResultClick.
+     */
+    function handleResultsMousedown(event) {
+        const clearBtn = event.target.closest('.qf-section-clear');
+        if (clearBtn) {
+            event.stopPropagation();
+            clearHistory();
+            showToast(translate('recentCleared'));
+            performSearch('', ++searchToken);
+            return;
+        }
+        handleResultClick(event);
     }
 
     /*
@@ -5078,6 +5183,31 @@
             color: #e6bd6c;
         }
 
+        .qf-remove {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            padding: 3px;
+            margin: -2px -2px -2px 0;
+            border-radius: 4px;
+            color: rgba(255, 255, 255, 0);
+            opacity: 0;
+            transition: color .06s ease, background-color .06s ease, opacity .06s ease;
+        }
+
+        .qf-result:hover .qf-remove {
+            color: rgba(255, 255, 255, .45);
+            opacity: 1;
+        }
+
+        .qf-remove:hover {
+            color: #e08a8a !important;
+            background: rgba(255, 255, 255, .08);
+        }
+
         .qf-results-more {
             padding: 10px 20px 12px;
             text-align: center;
@@ -5112,6 +5242,10 @@
         }
 
         .qf-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
             padding: 14px 20px 6px;
             color: rgba(255, 255, 255, .4);
             font-size: 10px;
@@ -5124,6 +5258,26 @@
 
         .qf-section:first-child {
             padding-top: 8px;
+        }
+
+        .qf-section-clear {
+            flex: 0 0 auto;
+            padding: 2px 8px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            color: rgba(255, 255, 255, .4);
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            cursor: pointer;
+            transition: color .06s ease, background-color .06s ease;
+        }
+
+        .qf-section-clear:hover {
+            color: #e08a8a;
+            background: rgba(255, 255, 255, .07);
         }
 
         .qf-empty,
