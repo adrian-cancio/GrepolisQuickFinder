@@ -1,75 +1,50 @@
 # Grepolis Quick Finder
 
-A userscript that adds a quick command palette (`Ctrl+Shift+F`) to
+A userscript that adds a quick command palette (`Ctrl+Shift+F`) and a main menu button to
 [Grepolis](https://www.grepolis.com/) for searching players, alliances, towns,
 and coordinates, with real in-game navigation (no new tabs).
 
 ## Features
 
-- **Ctrl+Shift+F** opens a searchable palette over the game.
-- Fuzzy search across players, alliances, and towns, built from the game's own
-  public data dumps (`/data/players.txt`, `/data/alliances.txt`,
-  `/data/towns.txt`), cached locally in **IndexedDB** with automatic 6-hour TTL
-  and fast startup.
-- **Segments & Tab cycling**: Filter results by type (*All*, *Players*, *Alliances*,
-  *Towns*, *Islands*, *Coordinates*) with live match counters, or cycle through them with `Tab` / `Shift+Tab`.
-- **Scope prefixes**: Target specific categories directly using `@p` (players),
-  `@a` (alliances), `@t` (towns), `@i` (islands), or `@c` (coordinates). An
-  exact `@p`/`@a` match drills into that player's towns or that alliance's
-  member/ocean spread instead of a flat list.
-- **Island awareness**: Searching a coordinate that has more than one town
-  (an island can host up to 20) resolves to an island row listing every town
-  on it, instead of guessing which one you meant.
-- **History & Favorites**: Press `Ctrl+F` on any result — including islands —
-  to pin it as a favorite. Opening the palette with an empty search displays
-  your pinned favorites and recent searches.
+- **Quick Access**: Press `Ctrl+Shift+F` or click the **QuickFinder** button integrated into the Grepolis main navigation menu.
+- **Fast Search**: Fuzzy search across players, alliances, and towns built from game data dumps (`/data/players.txt`, `/data/alliances.txt`, `/data/towns.txt`, `/data/islands.txt`), cached locally in **IndexedDB** with automatic 6-hour TTL and instant startup.
+- **Segments & Tab cycling**: Filter results by type (*All*, *Players*, *Alliances*, *Towns*, *Islands*, *Coordinates*) with live match counters, or cycle through them with `Tab` / `Shift+Tab`.
+- **Scope prefixes**: Target specific categories directly using `@p` (players), `@a` (alliances), `@t` (towns), `@i` (islands), or `@c` (coordinates). An exact `@p`/`@a` match drills into that player's towns or that alliance's member/ocean spread instead of a flat list.
+- **Island awareness**: Searching a coordinate that has more than one town (an island can host up to 20) resolves to an island row listing every town on it.
+- **BBCode Export**: Press `Ctrl+B` on any result row to instantly copy its BBCode (`[player]`, `[alliance]`, `[town]`, `[island]`) to your clipboard.
+- **History & Favorites**: Press `Ctrl+F` on any result to pin it as a favorite. Opening the palette with an empty search displays your pinned favorites and recent searches.
 - **Command mode**: Type `>` to access utility commands:
   - `>goto <x>:<y>` — Jump directly to coordinates on the world map.
-  - `>ghost [minPts] [near]` — List ghost towns sorted by points, or by
-    distance from your active city with `near`.
-  - `>dist [from] [to]` — Calculate island distance between two coordinates or
-    from your active city, with the origin/destination oceans and a rough
-    same-island/adjacent/regional/long-range band.
+  - `>ghost [minPts] [near]` — List ghost towns sorted by points, or by distance from your active city with `near`.
+  - `>dist [from] [to]` — Calculate island distance between two coordinates or from your active city, with origin/destination oceans and range classification.
   - `>island <x>:<y>` — List every town on an island.
-  - `>near [x:y] [radius]` — List islands (and their towns) within a radius
-    of a coordinate or your active city.
-  - `>ocean <M##> [alliance]` — Snapshot of an ocean, optionally filtered to
-    one alliance's towns in it.
+  - `>near [x:y] [radius]` — List islands (and their towns) within a radius of a coordinate or your active city.
+  - `>ocean <M##> [alliance]` — Snapshot of an ocean, optionally filtered to one alliance's towns in it.
   - `>help` — Display command and shortcut documentation.
 - **Help overlay**: Type `?` anytime in the search input to toggle the shortcut and command cheat sheet.
-- **External stats links**: Quick link to GrepoLife player/alliance analytics when available.
 - **Manual refresh**: Press `Ctrl+R` to force-refresh world data from game servers.
-- **Automatic localization**: The UI text (placeholder, footer hints, badges,
-  empty/loading/error states) is selected based on the Grepolis market
-  detected from the current subdomain (e.g. `en37`, `es12`, `de44`, `zz2`).
-  See [Supported markets](#supported-markets-and-languages) below.
+- **Automatic localization**: Fully localized across 16 supported languages based on the Grepolis market detected from the world subdomain (e.g. `en37`, `es12`, `de44`, `zz2`).
 
 ## Installation
 
-1. Install a userscript manager (e.g.
-   [Tampermonkey](https://www.tampermonkey.net/) or
-   [Violentmonkey](https://violentmonkey.github.io/)).
-2. Open `GrepolisQuickFinder.user.js` in your browser, or import it manually
-   into your userscript manager.
-3. Visit any Grepolis world (`https://<market><number>.grepolis.com/game/*`)
-   and press `Ctrl+Shift+F`.
+1. Install a userscript manager:
+   - [Tampermonkey](https://www.tampermonkey.net/) (recommended)
+   - [Violentmonkey](https://violentmonkey.github.io/)
+2. Install the userscript directly from raw URL:
+   👉 **[Click here to Install Grepolis Quick Finder](https://raw.githubusercontent.com/adrian-cancio/GrepolisQuickFinder/master/GrepolisQuickFinder.user.js)**
+3. Visit any Grepolis world (`https://*.grepolis.com/game/*`) and press `Ctrl+Shift+F` or click **QuickFinder** in the main side menu.
 
 ## Supported markets and languages
 
-Grepolis worlds are hosted on subdomains shaped like
-`<market><number>.grepolis.com` (for example `en37`, `es12`, `zz2`). The
-2-letter market prefix is mapped to a UI language as follows. This mapping was
-verified directly against the game's own onboarding endpoint
-(`https://om.grepolis.com/grepo/<market>`), which returns the exact
-`lang`/`locale` pair the official client uses per market.
+Grepolis worlds are hosted on subdomains shaped like `<market><number>.grepolis.com` (for example `en37`, `es12`, `zz2`). The 2-letter market prefix is mapped to a UI language as follows (verified against official client endpoint):
 
 | Market prefix | Language      | Notes                                   |
 | -------------- | ------------- | ---------------------------------------- |
-| `en`           | English       |                                           |
-| `us`           | English       | US market, shares English UI             |
-| `zz`           | English       | International / test-and-beta world      |
+| `en`           | English       | Default fallback                         |
+| `us`           | English       | US market                                |
+| `zz`           | English       | International / Sandbox test world       |
 | `es`           | Spanish       |                                           |
-| `ar`           | Spanish       | Argentina market, shares Spanish UI      |
+| `ar`           | Spanish       | Argentina market                         |
 | `de`           | German        |                                           |
 | `fr`           | French        |                                           |
 | `it`           | Italian       |                                           |
@@ -85,12 +60,11 @@ verified directly against the game's own onboarding endpoint
 | `cz`           | Czech         |                                           |
 | `sk`           | Slovak        |                                           |
 
-Any market not listed above falls back to English.
-
 ## Usage & Shortcuts
 
-- `Ctrl+Shift+F` — open/close the palette.
-- `Tab` / `Shift+Tab` — cycle result category filters (All / Players / Alliances / Towns / Coordinates).
+- `Ctrl+Shift+F` or **Menu item** — open/close the palette.
+- `Tab` / `Shift+Tab` — cycle result category filters (All / Players / Alliances / Towns / Islands / Coordinates).
+- `Ctrl+B` — copy BBCode for selected result.
 - `Ctrl+F` — toggle favorite on selected result.
 - `Ctrl+R` — force refresh world data.
 - `Home` / `End` — jump to first or last result.
@@ -103,14 +77,11 @@ Any market not listed above falls back to English.
 
 ## Development
 
-This is a single-file userscript with no build step and no external
-dependencies (project hygiene files aside). Edit `GrepolisQuickFinder.user.js`
-directly.
+This is a single-file userscript with no build step and no external dependencies. Edit `GrepolisQuickFinder.user.js` directly.
 
 ### Debugging
 
-The script exposes a `window.QF` object in the page for inspection and manual
-testing from the DevTools console:
+The script exposes a `window.QF` object in the page for inspection and manual testing from the DevTools console:
 
 ```js
 QF.debug();                  // dumps world/market/index/game-API status
@@ -121,18 +92,6 @@ QF.refresh();                // forces a network data refresh
 QF.clearCache();             // clears local IndexedDB cache
 ```
 
-### Manual test checklist
+## License
 
-1. Load the script on a live world (e.g. a `zz` test world) via your
-   userscript manager.
-2. Confirm the console prints the detected world/market and that
-   `Ctrl+Shift+F` opens the palette with the placeholder and footer text in
-   the expected language for that market.
-3. Search a known player, alliance, and town name; confirm results and that
-   `Enter`/click opens the correct in-game window.
-4. Test segment tabs, `@` scope prefixes, `Ctrl+F` favorites, `?` help, and `>` commands (`>ghost`, `>goto`, `>dist`).
-5. Confirm IndexedDB caching works on page reload (console reports `loaded (cache)`).
-
-## Project status
-
-Active development. Single-file architecture with zero build tools or external dependencies.
+MIT License.
