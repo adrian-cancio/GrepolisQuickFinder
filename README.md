@@ -12,15 +12,29 @@ and coordinates, with real in-game navigation (no new tabs).
   `/data/towns.txt`), cached locally in **IndexedDB** with automatic 6-hour TTL
   and fast startup.
 - **Segments & Tab cycling**: Filter results by type (*All*, *Players*, *Alliances*,
-  *Towns*, *Coordinates*) with live match counters, or cycle through them with `Tab` / `Shift+Tab`.
+  *Towns*, *Islands*, *Coordinates*) with live match counters, or cycle through them with `Tab` / `Shift+Tab`.
 - **Scope prefixes**: Target specific categories directly using `@p` (players),
-  `@a` (alliances), `@t` (towns), or `@c` (coordinates).
-- **History & Favorites**: Press `Ctrl+F` on any result to pin it as a favorite.
-  Opening the palette with an empty search displays your pinned favorites and recent searches.
+  `@a` (alliances), `@t` (towns), `@i` (islands), or `@c` (coordinates). An
+  exact `@p`/`@a` match drills into that player's towns or that alliance's
+  member/ocean spread instead of a flat list.
+- **Island awareness**: Searching a coordinate that has more than one town
+  (an island can host up to 20) resolves to an island row listing every town
+  on it, instead of guessing which one you meant.
+- **History & Favorites**: Press `Ctrl+F` on any result — including islands —
+  to pin it as a favorite. Opening the palette with an empty search displays
+  your pinned favorites and recent searches.
 - **Command mode**: Type `>` to access utility commands:
   - `>goto <x>:<y>` — Jump directly to coordinates on the world map.
-  - `>ghost [minPts]` — List ghost towns sorted by points.
-  - `>dist [from] [to]` — Calculate island distance between two coordinates or from your active city.
+  - `>ghost [minPts] [near]` — List ghost towns sorted by points, or by
+    distance from your active city with `near`.
+  - `>dist [from] [to]` — Calculate island distance between two coordinates or
+    from your active city, with the origin/destination oceans and a rough
+    same-island/adjacent/regional/long-range band.
+  - `>island <x>:<y>` — List every town on an island.
+  - `>near [x:y] [radius]` — List islands (and their towns) within a radius
+    of a coordinate or your active city.
+  - `>ocean <M##> [alliance]` — Snapshot of an ocean, optionally filtered to
+    one alliance's towns in it.
   - `>help` — Display command and shortcut documentation.
 - **Help overlay**: Type `?` anytime in the search input to toggle the shortcut and command cheat sheet.
 - **External stats links**: Quick link to GrepoLife player/alliance analytics when available.
@@ -81,8 +95,8 @@ Any market not listed above falls back to English.
 - `Ctrl+R` — force refresh world data.
 - `Home` / `End` — jump to first or last result.
 - `?` — toggle in-app help overlay.
-- `@p`, `@a`, `@t`, `@c` — scope query to players, alliances, towns, or coordinates.
-- `>goto`, `>ghost`, `>dist`, `>help` — execute commands.
+- `@p`, `@a`, `@t`, `@i`, `@c` — scope query to players, alliances, towns, islands, or coordinates.
+- `>goto`, `>ghost`, `>dist`, `>island`, `>near`, `>ocean`, `>help` — execute commands.
 - `↑` / `↓` — navigate results.
 - `Enter` — open selected result.
 - `Esc` — close palette.

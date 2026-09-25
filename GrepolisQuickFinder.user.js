@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder
 // @namespace    https://grepolis.com/
-// @version      2.2.0
+// @version      2.3.0
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market.
 // @author       Cancio
 // @match        https://*.grepolis.com/game/*
@@ -13,7 +13,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.2.0';
+    const VERSION = '2.3.0';
 
     /*
      * ============================================================
@@ -29,10 +29,11 @@
         FAV_KEY: 'f',             // Ctrl+<FAV_KEY> inside the palette: toggle favorite
         REFRESH_KEY: 'r',         // Ctrl+<REFRESH_KEY> inside the palette: reload data
         HELP_CHAR: '?',           // typing this alone shows the shortcuts/commands panel
-        COMMAND_PREFIX: '>',      // commands: >goto, >ghost, >dist, >help
-        SEGMENTS: ['all', 'player', 'alliance', 'town', 'coordinate'],
+        COMMAND_PREFIX: '>',      // commands: >goto, >ghost, >dist, >island, >near, >ocean, >help
+        SEGMENTS: ['all', 'player', 'alliance', 'town', 'island', 'coordinate'],
         DEFAULT_SEGMENT: 'all',
-        SCOPE_ALIASES: { t: 'town', p: 'player', a: 'alliance', c: 'coordinate' },
+        SCOPE_ALIASES: { t: 'town', p: 'player', a: 'alliance', c: 'coordinate', i: 'island' },
+        NEAR_MAX_RADIUS: 15,
         HISTORY_MAX: 12,
         FAVORITES_MAX: 30,
         CACHE_TTL: 6 * 60 * 60 * 1000, // reuse world data for at most this long
@@ -126,17 +127,43 @@
             shortcutsHelp: 'Show this help',
             commandHelpTitle: 'Commands',
             commandGotoHelp: '>goto 123:456 \u2014 jump to an island',
-            commandGhostHelp: '>ghost [minPts] \u2014 list ghost towns',
+            commandGhostHelp: '>ghost [minPts] [near] \u2014 ghost towns by points or distance',
             commandDistHelp: '>dist X:Y [X:Y] \u2014 island distance',
+            commandIslandHelp: '>island X:Y \u2014 every town on an island',
+            commandNearHelp: '>near [X:Y] [radius] \u2014 towns around a point',
+            commandOceanHelp: '>ocean M34 [alliance] \u2014 ocean snapshot',
             commandHelpHint: '>help \u2014 show this list',
             commandUnknown: 'Unknown command: {cmd}',
             ghostEmpty: 'No ghost towns found.',
             distResult: 'Island distance: {n}',
             distFromActive: 'from your active city',
             distNeedOrigin: 'Give two coordinates, or one if your active city can be detected.',
+            distBandSame: 'same island',
+            distBandAdjacent: 'adjacent islands',
+            distBandRegional: 'regional',
+            distBandFar: 'long range',
             scopeHelpTitle: 'Scopes',
-            scopeHelpDesc: '@p players \u00b7 @a alliances \u00b7 @t towns \u00b7 @c coordinates',
+            scopeHelpDesc: '@p players \u00b7 @a alliances \u00b7 @t towns \u00b7 @i islands \u00b7 @c coordinates',
             externalStats: 'Open in GrepoLife',
+            badgeIsland: 'Island',
+            badgeCommand: 'Command',
+            segmentIslands: 'Islands',
+            ghostLabel: 'Ghost',
+            islandTowns: '{n} towns',
+            islandAlliances: '{n} alliances',
+            islandGhosts: '{n} ghosts',
+            openIslandMap: 'Open island on the map',
+            nearSummary: '{islands} islands \u00b7 {towns} towns within {n}',
+            nearNeedOrigin: 'Give a radius, or coordinates plus a radius. The active city is used when it can be detected.',
+            oceanEmpty: 'Nothing indexed in that ocean.',
+            oceanNeed: 'Use >ocean M34 or >ocean M34 AllianceName.',
+            oceanSummary: '{players} players \u00b7 {alliances} alliances \u00b7 {towns} towns \u00b7 {ghosts} ghosts',
+            playerTownsTitle: 'Towns',
+            allianceSpreadTitle: 'Where they sit',
+            allianceMembersTitle: 'Members',
+            drillTowns: 'show towns',
+            sortPoints: 'by points',
+            sortDistance: 'by distance',
         },
         es: {
             searchPlaceholder: 'Buscar jugadores, alianzas o ciudades...',
@@ -178,17 +205,43 @@
             shortcutsHelp: 'mostrar esta ayuda',
             commandHelpTitle: 'Comandos',
             commandGotoHelp: '>goto 123:456 \u2014 saltar a una isla',
-            commandGhostHelp: '>ghost [minPts] \u2014 listar ciudades fantasma',
+            commandGhostHelp: '>ghost [minPts] [near] \u2014 fantasmas por puntos o distancia',
             commandDistHelp: '>dist X:Y [X:Y] \u2014 distancia de islas',
+            commandIslandHelp: '>island X:Y \u2014 todas las ciudades de una isla',
+            commandNearHelp: '>near [X:Y] [radio] \u2014 ciudades alrededor de un punto',
+            commandOceanHelp: '>ocean M34 [alianza] \u2014 resumen del oc\u00e9ano',
             commandHelpHint: '>help \u2014 mostrar esta lista',
             commandUnknown: 'Comando desconocido: {cmd}',
             ghostEmpty: 'No se encontraron ciudades fantasma.',
             distResult: 'Distancia de islas: {n}',
             distFromActive: 'desde tu ciudad activa',
             distNeedOrigin: 'Da dos coordenadas, o una si se puede detectar tu ciudad activa.',
+            distBandSame: 'misma isla',
+            distBandAdjacent: 'islas adyacentes',
+            distBandRegional: 'regional',
+            distBandFar: 'larga distancia',
             scopeHelpTitle: 'Ambitos',
-            scopeHelpDesc: '@p jugadores \u00b7 @a alianzas \u00b7 @t ciudades \u00b7 @c coordenadas',
+            scopeHelpDesc: '@p jugadores \u00b7 @a alianzas \u00b7 @t ciudades \u00b7 @i islas \u00b7 @c coordenadas',
             externalStats: 'Abrir en GrepoLife',
+            badgeIsland: 'Isla',
+            badgeCommand: 'Comando',
+            segmentIslands: 'Islas',
+            ghostLabel: 'Fantasma',
+            islandTowns: '{n} ciudades',
+            islandAlliances: '{n} alianzas',
+            islandGhosts: '{n} fantasmas',
+            openIslandMap: 'Abrir isla en el mapa',
+            nearSummary: '{islands} islas \u00b7 {towns} ciudades a {n} o menos',
+            nearNeedOrigin: 'Da un radio, o coordenadas y un radio. Si se detecta, se usa la ciudad activa.',
+            oceanEmpty: 'No hay nada indexado en ese oc\u00e9ano.',
+            oceanNeed: 'Usa >ocean M34 o >ocean M34 NombreAlianza.',
+            oceanSummary: '{players} jugadores \u00b7 {alliances} alianzas \u00b7 {towns} ciudades \u00b7 {ghosts} fantasmas',
+            playerTownsTitle: 'Ciudades',
+            allianceSpreadTitle: 'D\u00f3nde est\u00e1n',
+            allianceMembersTitle: 'Miembros',
+            drillTowns: 'ver ciudades',
+            sortPoints: 'por puntos',
+            sortDistance: 'por distancia',
         },
         de: {
             searchPlaceholder: 'Spieler, Allianzen oder St\u00e4dte suchen...',
@@ -992,6 +1045,10 @@
         fullResults: [],
         segment: CONFIG.DEFAULT_SEGMENT,
         segmentCounts: null,
+        // True for command output and player/alliance drill-down views:
+        // those rows mix types on purpose (info/town/player...) and must
+        // not be pruned by the segment chip filter.
+        detail: false,
         showHelp: false,
         savedAt: 0,
         dataSource: null,
@@ -1082,6 +1139,7 @@
         player: 'segmentPlayers',
         alliance: 'segmentAlliances',
         town: 'segmentTowns',
+        island: 'segmentIslands',
         coordinate: 'segmentCoords',
     };
 
@@ -1115,7 +1173,7 @@
     }
 
     function addHistory(item) {
-        const list = loadHistory().filter((entry) => !(entry.type === item.type && entry.id === item.id));
+        const list = loadHistory().filter((entry) => !(entry.type === item.type && String(entry.id) === String(item.id)));
         list.unshift({ type: item.type, id: item.id, name: item.name, x: item.x, y: item.y });
         if (list.length > CONFIG.HISTORY_MAX) {
             list.length = CONFIG.HISTORY_MAX;
@@ -1143,7 +1201,7 @@
      */
     function toggleFavorite(item) {
         const favorites = loadFavorites();
-        const index = favorites.findIndex((entry) => entry.type === item.type && entry.id === item.id);
+        const index = favorites.findIndex((entry) => entry.type === item.type && String(entry.id) === String(item.id));
         if (index >= 0) {
             favorites.splice(index, 1);
         } else {
@@ -1207,6 +1265,11 @@
             case 'coordinate':
                 if (Number.isFinite(entry.x) && Number.isFinite(entry.y)) {
                     return { type: 'coordinate', name: `${entry.x}:${entry.y}`, x: entry.x, y: entry.y };
+                }
+                return null;
+            case 'island':
+                if (Number.isFinite(entry.x) && Number.isFinite(entry.y)) {
+                    return islandRow(entry.x, entry.y);
                 }
                 return null;
             default:
@@ -1684,20 +1747,68 @@
             const score = scoreMatch(town.nameNorm, queryNorm);
             if (score > 0) {
                 const player = DATA.playerById.get(town.playerId);
-                out.push({
-                    type: 'town',
-                    id: town.id,
-                    name: town.name,
-                    score,
-                    x: town.islandX,
-                    y: town.islandY,
-                    playerId: town.playerId,
-                    playerName: player ? player.name : '',
-                    data: town,
-                });
+                out.push(townResult(town, { score }));
             }
         }
         return out;
+    }
+
+    function townsOnIsland(x, y) {
+        return DATA.townsByCoord.get(`${x}:${y}`) || [];
+    }
+
+    function allianceOfPlayer(player) {
+        if (!player || !player.allianceId) return null;
+        return DATA.allianceById.get(player.allianceId) || null;
+    }
+
+    function townResult(town, extra) {
+        const player = DATA.playerById.get(town.playerId);
+        const alliance = allianceOfPlayer(player);
+        return Object.assign({
+            type: 'town',
+            id: town.id,
+            name: town.name,
+            score: town.points,
+            x: town.islandX,
+            y: town.islandY,
+            playerId: town.playerId,
+            playerName: player ? player.name : '',
+            allianceName: alliance ? alliance.name : '',
+            data: town,
+        }, extra || {});
+    }
+
+    /*
+     * An island is not a row in the dump. It is every town that shares
+     * the same island coordinate, which is the unit a player actually
+     * looks at when scouting a spot.
+     */
+    function islandRow(x, y) {
+        const towns = townsOnIsland(x, y).slice().sort((a, b) => b.points - a.points);
+        const alliances = new Set();
+        let ghosts = 0;
+        for (const town of towns) {
+            if (!town.playerId) {
+                ghosts++;
+                continue;
+            }
+            const player = DATA.playerById.get(town.playerId);
+            const alliance = allianceOfPlayer(player);
+            alliances.add(alliance ? alliance.id : `p:${town.playerId}`);
+        }
+        return {
+            type: 'island',
+            id: `${x}:${y}`,
+            name: `${x}:${y}`,
+            score: 16000,
+            x,
+            y,
+            townCount: towns.length,
+            allianceCount: alliances.size,
+            ghostCount: ghosts,
+            towns,
+        };
     }
 
     function searchCoordinates(rawQuery) {
@@ -1706,26 +1817,12 @@
             return null;
         }
 
-        const matching = DATA.townsByCoord.get(`${coords.x}:${coords.y}`);
-        const unique = matching && matching.length === 1;
-
-        // Only a lone town on its island can be resolved unambiguously.
-        // Islands with several towns would pick one at random, so those
-        // fall through to a plain coordinate result that jumps the map.
-        if (unique) {
-            const town = matching[0];
-            const player = DATA.playerById.get(town.playerId);
-            return {
-                type: 'town',
-                id: town.id,
-                name: town.name,
-                score: 20000,
-                x: town.islandX,
-                y: town.islandY,
-                playerId: town.playerId,
-                playerName: player ? player.name : '',
-                data: town,
-            };
+        const matching = townsOnIsland(coords.x, coords.y);
+        if (matching.length === 1) {
+            return townResult(matching[0], { score: 20000 });
+        }
+        if (matching.length > 1) {
+            return islandRow(coords.x, coords.y);
         }
 
         return { type: 'coordinate', name: `${coords.x}:${coords.y}`, x: coords.x, y: coords.y, score: 15000 };
@@ -1750,7 +1847,7 @@
     }
 
     function applySegment() {
-        if (state.segment === CONFIG.DEFAULT_SEGMENT) {
+        if (state.detail || state.segment === CONFIG.DEFAULT_SEGMENT) {
             state.results = state.fullResults;
         } else {
             state.results = state.fullResults.filter((item) => item.type === state.segment);
@@ -1812,6 +1909,13 @@
         }
     }
 
+    function distanceBand(distance) {
+        if (distance <= 0) return translate('distBandSame');
+        if (distance <= 2) return translate('distBandAdjacent');
+        if (distance <= 5) return translate('distBandRegional');
+        return translate('distBandFar');
+    }
+
     function distRows(rawArgs) {
         const parsePair = (token) => {
             const match = String(token).match(/(\d{1,3})\s*[:;]\s*(\d{1,3})/);
@@ -1843,7 +1947,13 @@
         }
 
         const distance = islandDistance(from, to);
-        return [{ type: 'info', name: translate('distResult', { n: distance }) + originLabel }];
+        const seas = getSea(from.x, from.y) === getSea(to.x, to.y)
+            ? getSea(from.x, from.y)
+            : `${getSea(from.x, from.y)} \u2192 ${getSea(to.x, to.y)}`;
+        return [{
+            type: 'info',
+            name: `${from.x}:${from.y} \u2192 ${to.x}:${to.y} \u00b7 ${seas} \u00b7 ${translate('distResult', { n: distance })} \u00b7 ${distanceBand(distance)}${originLabel}`,
+        }];
     }
 
     /*
@@ -1851,27 +1961,232 @@
      * player and reclaimable. They are sorted by points (biggest
      * first, mirroring the in-game ghost listings).
      */
-    function ghostRows(minPoints) {
+    function ghostRows(minPoints, near) {
         const minimum = Number.isFinite(minPoints) ? minPoints : CONFIG.GHOST_MIN_POINTS;
-        const towns = DATA.towns
-            .filter((town) => town.playerId === 0 && town.points >= minimum)
-            .sort((a, b) => b.points - a.points)
-            .slice(0, CONFIG.MAX_RESULTS);
+        const origin = near ? activeTownCoords() : null;
+        if (near && !origin) {
+            return [{ type: 'info', name: translate('distNeedOrigin') }];
+        }
 
-        if (!towns.length) {
+        const towns = DATA.towns.filter((town) => town.playerId === 0 && town.points >= minimum);
+        towns.sort((a, b) => {
+            if (origin) {
+                const left = islandDistance(origin, { x: a.islandX, y: a.islandY });
+                const right = islandDistance(origin, { x: b.islandX, y: b.islandY });
+                if (left !== right) return left - right;
+            }
+            return b.points - a.points;
+        });
+
+        const picked = towns.slice(0, CONFIG.MAX_RESULTS);
+        if (!picked.length) {
             return [{ type: 'info', name: translate('ghostEmpty') }];
         }
 
-        return towns.map((town) => ({
-            type: 'town',
-            id: town.id,
-            name: town.name,
-            x: town.islandX,
-            y: town.islandY,
-            playerId: town.playerId,
-            playerName: '',
-            data: town,
-        }));
+        return picked.map((town) => townResult(town, origin ? {
+            distance: islandDistance(origin, { x: town.islandX, y: town.islandY }),
+        } : null));
+    }
+
+    function islandRows(rawArgs) {
+        const coords = parseCoordinates(rawArgs);
+        if (!coords) {
+            return [{ type: 'info', name: translate('commandIslandHelp') }];
+        }
+        const island = islandRow(coords.x, coords.y);
+        if (!island.towns.length) {
+            return [
+                island,
+                { type: 'coordinate', id: `${coords.x}:${coords.y}`, name: translate('openIslandMap'), x: coords.x, y: coords.y, score: 1 },
+            ];
+        }
+        return [
+            island,
+            ...island.towns.map((town) => townResult(town)),
+            { type: 'coordinate', id: `${coords.x}:${coords.y}`, name: translate('openIslandMap'), x: coords.x, y: coords.y, score: 1 },
+        ];
+    }
+
+    function parseRadius(token) {
+        const value = Number(token);
+        if (!Number.isFinite(value) || value < 0) return null;
+        return Math.min(CONFIG.NEAR_MAX_RADIUS, Math.floor(value));
+    }
+
+    function nearRows(rawArgs) {
+        const tokens = String(rawArgs || '').trim().split(/\s+/).filter(Boolean);
+        let origin = null;
+        let radius = null;
+
+        if (!tokens.length) {
+            return [{ type: 'info', name: translate('nearNeedOrigin') }];
+        }
+
+        const coordToken = tokens.find((token) => parseCoordinates(token));
+        if (coordToken) {
+            origin = parseCoordinates(coordToken);
+            const other = tokens.find((token) => token !== coordToken);
+            radius = other ? parseRadius(other) : 3;
+        } else {
+            origin = activeTownCoords();
+            radius = parseRadius(tokens[0]);
+        }
+
+        if (!origin || radius === null) {
+            return [{ type: 'info', name: translate('nearNeedOrigin') }];
+        }
+
+        const islands = [];
+        for (const [key, towns] of DATA.townsByCoord) {
+            const [x, y] = key.split(':').map(Number);
+            const distance = islandDistance(origin, { x, y });
+            if (distance <= radius) {
+                islands.push({ x, y, distance, towns });
+            }
+        }
+        islands.sort((a, b) => a.distance - b.distance || b.towns.length - a.towns.length);
+
+        if (!islands.length) {
+            return [{ type: 'info', name: translate('nearSummary', { islands: 0, towns: 0, n: radius }) }];
+        }
+
+        const townCount = islands.reduce((sum, island) => sum + island.towns.length, 0);
+        const rows = [{
+            type: 'info',
+            name: translate('nearSummary', { islands: islands.length, towns: townCount, n: radius }),
+        }];
+        for (const island of islands) {
+            if (rows.length >= CONFIG.MAX_RESULTS) break;
+            const row = islandRow(island.x, island.y);
+            row.distance = island.distance;
+            rows.push(row);
+        }
+        return rows;
+    }
+
+    function oceanOf(x, y) {
+        return getSea(x, y);
+    }
+
+    function townsInOcean(ocean, allianceId) {
+        const wanted = ocean.toUpperCase();
+        const towns = [];
+        for (const town of DATA.towns) {
+            if (oceanOf(town.islandX, town.islandY) !== wanted) continue;
+            if (allianceId) {
+                const player = DATA.playerById.get(town.playerId);
+                if (!player || player.allianceId !== allianceId) continue;
+            }
+            towns.push(town);
+        }
+        return towns;
+    }
+
+    function findAlliance(name) {
+        const query = normalize(name);
+        if (!query) return null;
+        let best = null;
+        let bestScore = 0;
+        for (const alliance of DATA.alliances) {
+            const score = scoreMatch(alliance.nameNorm, query);
+            if (score > bestScore) {
+                best = alliance;
+                bestScore = score;
+            }
+        }
+        return bestScore >= 6000 ? best : null;
+    }
+
+    function oceanRows(rawArgs) {
+        const match = String(rawArgs || '').trim().match(/^(M\d{2})(?:\s+(.+))?$/i);
+        if (!match) {
+            return [{ type: 'info', name: translate('oceanNeed') }];
+        }
+        const ocean = match[1].toUpperCase();
+        const alliance = match[2] ? findAlliance(match[2]) : null;
+        if (match[2] && !alliance) {
+            return [{ type: 'info', name: translate('noResults') }];
+        }
+
+        const towns = townsInOcean(ocean, alliance ? alliance.id : null);
+        if (!towns.length) {
+            return [{ type: 'info', name: translate('oceanEmpty') }];
+        }
+
+        const players = new Set();
+        const alliances = new Set();
+        let ghosts = 0;
+        for (const town of towns) {
+            if (!town.playerId) {
+                ghosts++;
+                continue;
+            }
+            players.add(town.playerId);
+            const player = DATA.playerById.get(town.playerId);
+            if (player && player.allianceId) alliances.add(player.allianceId);
+        }
+
+        const summary = translate('oceanSummary', {
+            players: players.size,
+            alliances: alliances.size,
+            towns: towns.length,
+            ghosts,
+        });
+        const title = alliance ? `${ocean} \u00b7 ${alliance.name}` : ocean;
+        const rows = [{ type: 'info', name: `${title} \u00b7 ${summary}` }];
+        towns.sort((a, b) => b.points - a.points);
+        for (const town of towns.slice(0, CONFIG.MAX_RESULTS - 1)) {
+            rows.push(townResult(town));
+        }
+        return rows;
+    }
+
+    function playerDetailRows(player) {
+        const header = { type: 'player', id: player.id, name: player.name, data: player, score: 30000 };
+        const towns = (DATA.townsByPlayer.get(player.id) || []).slice().sort((a, b) => b.points - a.points);
+        const origin = activeTownCoords();
+        const rows = [header];
+        if (towns.length) {
+            rows.push({ type: 'info', name: `${translate('playerTownsTitle')} \u00b7 ${towns.length}` });
+        }
+        for (const town of towns.slice(0, CONFIG.MAX_RESULTS - rows.length)) {
+            rows.push(townResult(town, origin ? {
+                distance: islandDistance(origin, { x: town.islandX, y: town.islandY }),
+            } : null));
+        }
+        return rows;
+    }
+
+    function allianceDetailRows(alliance) {
+        const header = { type: 'alliance', id: alliance.id, name: alliance.name, data: alliance, score: 30000 };
+        const members = DATA.players.filter((player) => player.allianceId === alliance.id);
+        const byOcean = new Map();
+        let townCount = 0;
+        for (const member of members) {
+            for (const town of DATA.townsByPlayer.get(member.id) || []) {
+                townCount++;
+                const ocean = oceanOf(town.islandX, town.islandY);
+                byOcean.set(ocean, (byOcean.get(ocean) || 0) + 1);
+            }
+        }
+        const spread = [...byOcean.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+        const rows = [
+            header,
+            {
+                type: 'info',
+                name: spread.length
+                    ? `${translate('allianceSpreadTitle')} \u00b7 ${spread.map(([ocean, count]) => `${ocean} ${count}`).join(' \u00b7 ')}`
+                    : translate('allianceSpreadTitle'),
+            },
+        ];
+        const listed = members.slice().sort((a, b) => b.points - a.points);
+        if (listed.length) {
+            rows.push({ type: 'info', name: `${translate('allianceMembersTitle')} \u00b7 ${members.length} \u00b7 ${townCount} ${translate('townsSuffix')}` });
+        }
+        for (const member of listed.slice(0, CONFIG.MAX_RESULTS - rows.length)) {
+            rows.push({ type: 'player', id: member.id, name: member.name, data: member, score: member.points });
+        }
+        return rows;
     }
 
     /*
@@ -1885,12 +2200,16 @@
         const [nameRaw, ...tokens] = rest.split(/\s+/);
         const name = (nameRaw || '').toLowerCase();
         const args = tokens.join(' ');
+        const knownCommands = ['goto', 'ghost', 'dist', 'island', 'near', 'ocean', 'help'];
 
-        if (!name || (tokens.length === 0 && !['goto', 'ghost', 'dist', 'help'].includes(name))) {
+        if (!name || (tokens.length === 0 && !knownCommands.includes(name))) {
             const suggestions = [
                 { type: 'command-suggestion', name: '>goto <x>:<y>', command: '>goto', helpText: translate('commandGotoHelp') },
-                { type: 'command-suggestion', name: '>ghost [minPts]', command: '>ghost', helpText: translate('commandGhostHelp') },
+                { type: 'command-suggestion', name: '>ghost [minPts] [near]', command: '>ghost', helpText: translate('commandGhostHelp') },
                 { type: 'command-suggestion', name: '>dist X:Y [X:Y]', command: '>dist', helpText: translate('commandDistHelp') },
+                { type: 'command-suggestion', name: '>island X:Y', command: '>island', helpText: translate('commandIslandHelp') },
+                { type: 'command-suggestion', name: '>near [X:Y] [radius]', command: '>near', helpText: translate('commandNearHelp') },
+                { type: 'command-suggestion', name: '>ocean M34 [alliance]', command: '>ocean', helpText: translate('commandOceanHelp') },
                 { type: 'command-suggestion', name: '>help', command: '>help', helpText: translate('commandHelpHint') },
             ];
             const matching = suggestions.filter((item) => item.command.slice(1).startsWith(name));
@@ -1913,11 +2232,23 @@
                 return null;
             }
 
-            case 'ghost':
-                return ghostRows(args ? Number(args) : NaN);
+            case 'ghost': {
+                const near = tokens.some((token) => token.toLowerCase() === 'near');
+                const numeric = tokens.find((token) => token.toLowerCase() !== 'near' && Number.isFinite(Number(token)));
+                return ghostRows(numeric !== undefined ? Number(numeric) : NaN, near);
+            }
 
             case 'dist':
                 return distRows(args);
+
+            case 'island':
+                return islandRows(args);
+
+            case 'near':
+                return nearRows(args);
+
+            case 'ocean':
+                return oceanRows(args);
 
             default:
                 return [{ type: 'info', name: translate('commandUnknown', { cmd: nameRaw || '' }) }];
@@ -1985,6 +2316,7 @@
                 }
                 state.fullResults = commandResult;
                 state.segmentCounts = computeCounts(commandResult);
+                state.detail = true;
                 applySegment();
             }
             render();
@@ -1995,6 +2327,7 @@
             // History/favorites view: skip heuristics and segmentation.
             state.query = '';
             state.segment = CONFIG.DEFAULT_SEGMENT;
+            state.detail = false;
             state.fullResults = buildHistoryResults();
             state.segmentCounts = null;
             state.results = state.fullResults;
@@ -2015,7 +2348,7 @@
         // stripped before the actual query.
         let segment = state.segment;
         let searchQuery = query;
-        const scopeMatch = query.match(/^@([tpaoc])\s+(.+)/);
+        const scopeMatch = query.match(/^@([tpaoic])\s+(.+)/);
         if (scopeMatch) {
             segment = CONFIG.SCOPE_ALIASES[scopeMatch[1]];
             state.segment = segment;
@@ -2026,14 +2359,40 @@
         const coordinate = searchCoordinates(searchQuery);
 
         let results;
+        let detail = false;
 
-        if (coordinate && coordinate.type === 'town') {
+        if (segment === 'island') {
+            if (coordinate && coordinate.type === 'island') {
+                results = [coordinate, ...coordinate.towns.map((town) => townResult(town))];
+                detail = true;
+            } else {
+                results = [];
+            }
+        } else if (coordinate && coordinate.type === 'island') {
+            results = [coordinate, ...coordinate.towns.map((town) => townResult(town))];
+            detail = true;
+        } else if (coordinate && coordinate.type === 'town') {
             results = [coordinate];
         } else {
             if (segment === 'player') {
-                results = [...searchPlayers(queryNorm)];
+                const matches = searchPlayers(queryNorm);
+                // An exact match reached through the explicit @p scope
+                // drills straight into that player's own towns instead
+                // of showing every fuzzy near-miss.
+                if (matches.length && matches[0].score === 10000) {
+                    results = playerDetailRows(matches[0].data);
+                    detail = true;
+                } else {
+                    results = [...matches];
+                }
             } else if (segment === 'alliance') {
-                results = [...searchAlliances(queryNorm)];
+                const matches = searchAlliances(queryNorm);
+                if (matches.length && matches[0].score === 10000) {
+                    results = allianceDetailRows(matches[0].data);
+                    detail = true;
+                } else {
+                    results = [...matches];
+                }
             } else if (segment === 'town') {
                 results = searchQuery.length >= CONFIG.MIN_TOWN_QUERY_LENGTH ? [...searchTowns(queryNorm)] : [];
             } else if (segment === 'coordinate') {
@@ -2051,20 +2410,23 @@
             }
         }
 
-        results.sort((a, b) => b.score - a.score);
+        if (!detail) {
+            results.sort((a, b) => b.score - a.score);
 
-        const seen = new Set();
-        results = results.filter((item) => {
-            const key = `${item.type}:${item.id}`;
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        });
+            const seen = new Set();
+            results = results.filter((item) => {
+                const key = `${item.type}:${item.id}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
 
         if (token !== searchToken) {
             return; // in case something more recent already fired in the meantime.
         }
 
+        state.detail = detail;
         state.segmentCounts = computeCounts(results);
         state.fullResults = results.slice(0, CONFIG.MAX_RESULTS);
         applySegment();
@@ -2330,6 +2692,7 @@
                 }
                 return ok;
             case 'coordinate':
+            case 'island':
                 ok = openCoordinate(item);
                 break;
             default:
@@ -2589,8 +2952,11 @@
 
         const commands = [
             ['>goto 123:456', translate('commandGotoHelp')],
-            ['>ghost [minPts]', translate('commandGhostHelp')],
+            ['>ghost [minPts] [near]', translate('commandGhostHelp')],
             ['>dist X:Y [X:Y]', translate('commandDistHelp')],
+            ['>island X:Y', translate('commandIslandHelp')],
+            ['>near [X:Y] [radius]', translate('commandNearHelp')],
+            ['>ocean M34 [alliance]', translate('commandOceanHelp')],
             ['>help', translate('commandHelpHint')],
         ];
 
@@ -2674,14 +3040,17 @@
             }
 
             case 'town': {
-                icon = '&#127961;'; // 🏙️
-                badge = translate('badgeTown');
-                badgeClass = 'qf-badge-town';
-                const player = item.playerName ? ` &middot; ${escapeHTML(item.playerName)}` : '';
+                const isGhost = item.data ? item.data.playerId === 0 : !item.playerName;
+                icon = isGhost ? '&#128123;' : '&#127961;'; // 👻 / 🏙️
+                badge = isGhost ? translate('ghostLabel') : translate('badgeTown');
+                badgeClass = isGhost ? 'qf-badge-coordinate' : 'qf-badge-town';
+                const owner = item.playerName ? ` &middot; ${escapeHTML(item.playerName)}` : '';
+                const alliance = item.allianceName ? ` &middot; ${escapeHTML(item.allianceName)}` : '';
                 const points = item.data ? item.data.points : (item.points || 0);
                 const pts = points ? ` &middot; ${points.toLocaleString()} ${translate('ptsSuffix')}` : '';
                 const sea = getSea(item.x, item.y);
-                meta = `${sea}${pts}${player}`;
+                const distance = Number.isFinite(item.distance) ? ` &middot; ${item.distance}` : '';
+                meta = `${item.x}:${item.y} &middot; ${sea}${pts}${owner}${alliance}${distance}`;
 
                 const islandTowns = DATA.townsByCoord ? DATA.townsByCoord.get(`${item.x}:${item.y}`) : null;
                 if (islandTowns && islandTowns.length > 1) {
@@ -2690,9 +3059,23 @@
                 break;
             }
 
+            case 'island': {
+                icon = '&#127757;'; // 🌐
+                badge = translate('badgeIsland');
+                badgeClass = 'qf-badge-coordinate';
+                const distance = Number.isFinite(item.distance) ? `${item.distance} &middot; ` : '';
+                const parts = [
+                    translate('islandTowns', { n: item.townCount }),
+                    translate('islandAlliances', { n: item.allianceCount }),
+                ];
+                if (item.ghostCount) parts.push(translate('islandGhosts', { n: item.ghostCount }));
+                meta = `${distance}${getSea(item.x, item.y)} &middot; ${parts.join(' &middot; ')}`;
+                break;
+            }
+
             case 'command-suggestion': {
                 icon = '&#128187;'; // 💻
-                badge = 'Command';
+                badge = translate('badgeCommand');
                 badgeClass = 'qf-badge-coordinate';
                 meta = escapeHTML(item.helpText);
                 info = true;

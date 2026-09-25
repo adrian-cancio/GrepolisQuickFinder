@@ -51,7 +51,9 @@ real game data over HTTP). To verify changes:
    placeholder/footer text matches the expected language for that market.
 5. Run a few searches (`QF.search('...')` or typing in the UI) covering a
    player, an alliance, a town, and a coordinate pair; confirm opening each
-   result triggers the expected in-game window.
+   result triggers the expected in-game window. Also try `>island`, `>near`,
+   `>ocean`, and `>ghost near`, plus an exact `@p`/`@a` match, and confirm
+   they list the expected island/town/member breakdown.
 
 ## Conventions
 
