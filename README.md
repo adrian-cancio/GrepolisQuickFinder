@@ -9,14 +9,23 @@ and coordinates, with real in-game navigation (no new tabs).
 - **Ctrl+Shift+F** opens a searchable palette over the game.
 - Fuzzy search across players, alliances, and towns, built from the game's own
   public data dumps (`/data/players.txt`, `/data/alliances.txt`,
-  `/data/towns.txt`), loaded once per session and cached in memory.
-- Coordinate search (`55:123`) that jumps straight to a known town or the map
-  position.
-- Opens player/alliance profiles and town info windows using the same
-  internal mechanisms the game client itself uses
-  (`Layout.playerProfile.open`, `Layout.allianceProfile.open`, and the game's
-  own town-link hash format).
-- **Automatic localization**: the UI text (placeholder, footer hints, badges,
+  `/data/towns.txt`), cached locally in **IndexedDB** with automatic 6-hour TTL
+  and fast startup.
+- **Segments & Tab cycling**: Filter results by type (*All*, *Players*, *Alliances*,
+  *Towns*, *Coordinates*) with live match counters, or cycle through them with `Tab` / `Shift+Tab`.
+- **Scope prefixes**: Target specific categories directly using `@p` (players),
+  `@a` (alliances), `@t` (towns), or `@c` (coordinates).
+- **History & Favorites**: Press `Ctrl+F` on any result to pin it as a favorite.
+  Opening the palette with an empty search displays your pinned favorites and recent searches.
+- **Command mode**: Type `>` to access utility commands:
+  - `>goto <x>:<y>` — Jump directly to coordinates on the world map.
+  - `>ghost [minPts]` — List ghost towns sorted by points.
+  - `>dist [from] [to]` — Calculate island distance between two coordinates or from your active city.
+  - `>help` — Display command and shortcut documentation.
+- **Help overlay**: Type `?` anytime in the search input to toggle the shortcut and command cheat sheet.
+- **External stats links**: Quick link to GrepoLife player/alliance analytics when available.
+- **Manual refresh**: Press `Ctrl+R` to force-refresh world data from game servers.
+- **Automatic localization**: The UI text (placeholder, footer hints, badges,
   empty/loading/error states) is selected based on the Grepolis market
   detected from the current subdomain (e.g. `en37`, `es12`, `de44`, `zz2`).
   See [Supported markets](#supported-markets-and-languages) below.
@@ -64,13 +73,19 @@ verified directly against the game's own onboarding endpoint
 
 Any market not listed above falls back to English.
 
-## Usage
+## Usage & Shortcuts
 
 - `Ctrl+Shift+F` — open/close the palette.
-- Type a player name, alliance name, town name, or coordinates (`x:y`).
+- `Tab` / `Shift+Tab` — cycle result category filters (All / Players / Alliances / Towns / Coordinates).
+- `Ctrl+F` — toggle favorite on selected result.
+- `Ctrl+R` — force refresh world data.
+- `Home` / `End` — jump to first or last result.
+- `?` — toggle in-app help overlay.
+- `@p`, `@a`, `@t`, `@c` — scope query to players, alliances, towns, or coordinates.
+- `>goto`, `>ghost`, `>dist`, `>help` — execute commands.
 - `↑` / `↓` — navigate results.
-- `Enter` — open the selected result.
-- `Esc` — close the palette.
+- `Enter` — open selected result.
+- `Esc` — close palette.
 
 ## Development
 
@@ -87,7 +102,9 @@ testing from the DevTools console:
 QF.debug();                  // dumps world/market/index/game-API status
 QF.search('some name');      // runs a search without opening the UI
 QF.setQuery('55:123');       // opens the palette and searches programmatically
-QF.openIndex(0);             // selects and opens result at index 0
+QF.setSegment('town');       // filters active query to towns
+QF.refresh();                // forces a network data refresh
+QF.clearCache();             // clears local IndexedDB cache
 ```
 
 ### Manual test checklist
@@ -99,15 +116,9 @@ QF.openIndex(0);             // selects and opens result at index 0
    the expected language for that market.
 3. Search a known player, alliance, and town name; confirm results and that
    `Enter`/click opens the correct in-game window.
-4. Search a coordinate pair (`x:y`); confirm it opens the town info window when
-   the island holds a single town, and jumps the map otherwise (shared islands
-   and empty coordinates).
-
-There is no automated test suite; this is a browser-only userscript and
-changes are verified live against a running Grepolis world (see the checklist
-above).
+4. Test segment tabs, `@` scope prefixes, `Ctrl+F` favorites, `?` help, and `>` commands (`>ghost`, `>goto`, `>dist`).
+5. Confirm IndexedDB caching works on page reload (console reports `loaded (cache)`).
 
 ## Project status
 
-Early-stage, actively iterated prototype-turned-real-project. No build tooling
-is required to use or modify it.
+Active development. Single-file architecture with zero build tools or external dependencies.
