@@ -65,3 +65,67 @@ real game data over HTTP). To verify changes:
   are same-origin.
 - No comments unless they explain non-obvious behavior (matching the existing
   style of documenting *why*, not *what*).
+
+## UI style & theme
+
+All CSS lives in a single `document.createElement('style')` block near the
+end of the file (search `CSS` in the section banner). New UI must extend that
+one block rather than injecting separate `<style>` tags or inline
+`element.style.*` for anything visual (inline `style.*` is only acceptable
+for pure positioning/visibility hacks like the existing hidden-textarea and
+overlay `display` toggles).
+
+Follow the existing dark-theme language:
+
+- **Naming**: every new ID/class is kebab-case prefixed with `qf-`
+  (`#qf-thing`, `.qf-thing`), to avoid colliding with Grepolis' own page
+  styles. State/variant modifiers are separate classes toggled via
+  `classList`, e.g. `qf-selected`, `qf-favorite`, `qf-chip-active`,
+  `qf-status-error`, `qf-toast-visible` — never encode state in inline
+  styles.
+- **Color palette**: base surfaces use
+  `linear-gradient(180deg, #2c2c2c, #1a1a1a)` with a
+  `1px solid rgba(255, 255, 255, .16)` border and a soft black
+  `box-shadow`. Text/border/background hierarchy is expressed as
+  `rgba(255, 255, 255, <alpha>)` at varying alpha (roughly `.08`–`.16` for
+  hairline borders/dividers, `.3`–`.5` for secondary text, `.68`–`1` for
+  primary text) — don't introduce new hardcoded grays; reuse this
+  white-with-alpha scale.
+- **Accent color**: gold `#d7a33f` (hover/lighter variant `#e6bd6c`) marks
+  selection, active state, favorites and the spinner accent. Use it for any
+  new "active/selected/primary accent" affordance instead of inventing
+  another accent hue.
+- **Semantic badge colors** (used for entity-type badges): player blue
+  (`#9cc4ff` on `rgba(90, 160, 255, .16)`), alliance gold (`#e6bd6c` on
+  `rgba(215, 163, 63, .18)`), town green (`#8fdba9` on
+  `rgba(100, 200, 140, .16)`), coordinate purple (`#dda6ea` on
+  `rgba(200, 120, 220, .16)`). Reuse these for the same entity types; only
+  add a new hue for a genuinely new entity/category.
+- **Error/danger color**: `#e6a2a2` (title/strong) / `#e08a8a` (status text)
+  on the same dark surfaces — reuse instead of red/other error colors.
+- **Typography**: UI text uses
+  `-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif`;
+  monospace elements (`kbd`, inline codes) use
+  `ui-monospace, SFMono-Regular, Consolas, monospace`. No web fonts/`@font-face`.
+- **Radius scale**: 4px for small chips (badges, scrollbar thumb), 5px for
+  `kbd`/key hints, 7px for filter chips, 10px for the toast, 12px for the
+  main window. Pick the closest existing value instead of a new one.
+- **Icons**: inline SVG only, added to the `ICONS` map and rendered with the
+  `qf-icon-svg` class (`stroke="currentColor"`, `stroke-width="1.8"`). Never
+  use emoji glyphs — they render inconsistently across OSes and are missing
+  on systems without an emoji font.
+- **Motion**: short, subtle transitions (`.06s`–`.15s`, `ease`/`ease-out`) for
+  hover/selection state, and short keyframe animations (`.12s`–`.7s`) for
+  entrances/spinners. New keyframes are prefixed `qf-` (see
+  `qf-window-in`, `qf-spin`). Avoid long/bouncy animations that would feel
+  out of place in a command-palette-style UI.
+- **Layering**: any new overlay/toast that must sit above the Grepolis page
+  uses `z-index: 2147483647` (max signed 32-bit int), matching `#qf-overlay`
+  and `#qf-toast`.
+- **DOM construction**: build markup via template strings and always run
+  user/game-supplied text through `escapeHTML()` before interpolating it —
+  never build HTML from untrusted strings without escaping.
+
+When adding a new UI element, first find the closest existing pattern above
+(a chip, a badge, a result row, a section header, the toast) and match its
+color/spacing/radius/animation values before introducing new ones.
