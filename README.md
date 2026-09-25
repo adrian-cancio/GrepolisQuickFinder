@@ -20,10 +20,12 @@ and coordinates, with real in-game navigation (no new tabs).
   - `>island <x>:<y>` — List every town on an island.
   - `>near [x:y] [radius]` — List islands (and their towns) within a radius of a coordinate or your active city.
   - `>ocean <M##> [alliance]` — Snapshot of an ocean, optionally filtered to one alliance's towns in it.
+  - `>settings` — Open the settings panel.
   - `>help` — Display command and shortcut documentation.
-- **Help overlay**: Type `?` anytime in the search input to toggle the shortcut and command cheat sheet.
+- **Help overlay**: Type `?` anytime in the search input to toggle the shortcut and command cheat sheet (also lists the palette's own open/close shortcut).
+- **Settings panel**: Click the gear icon in the search bar, or type `>settings`, to customize the language override, keyboard shortcut, results-per-page/command result caps, world data cache duration, and the default radius/points used by `>near` and `>ghost`. Settings are stored globally (shared across every world) and apply instantly, no reload required.
 - **Manual refresh**: Press `Ctrl+R` to force-refresh world data from game servers.
-- **Automatic localization**: Fully localized across 16 supported languages based on the Grepolis market detected from the world subdomain (e.g. `en37`, `es12`, `de44`, `zz2`).
+- **Automatic localization**: Fully localized across 16 supported languages based on the Grepolis market detected from the world subdomain (e.g. `en37`, `es12`, `de44`, `zz2`), with an optional manual override in Settings.
 
 ## Installation
 
@@ -62,15 +64,15 @@ Grepolis worlds are hosted on subdomains shaped like `<market><number>.grepolis.
 
 ## Usage & Shortcuts
 
-- `Ctrl+Shift+F` or **Menu item** — open/close the palette.
+- `Ctrl+Shift+F` (customizable in Settings), the **QuickFinder** menu item, or the gear icon — open the palette / open settings.
 - `Tab` / `Shift+Tab` — cycle result category filters (All / Players / Alliances / Towns / Islands / Coordinates).
 - `Ctrl+B` — copy BBCode for selected result.
 - `Ctrl+F` — toggle favorite on selected result.
 - `Ctrl+R` — force refresh world data.
 - `Home` / `End` — jump to first or last result.
-- `?` — toggle in-app help overlay.
+- `?` — toggle in-app help overlay (also shown via `>help`).
 - `@p`, `@a`, `@t`, `@i`, `@c` — scope query to players, alliances, towns, islands, or coordinates.
-- `>goto`, `>ghost`, `>dist`, `>island`, `>near`, `>ocean`, `>help` — execute commands.
+- `>goto`, `>ghost`, `>dist`, `>island`, `>near`, `>ocean`, `>settings`, `>help` — execute commands.
 - `↑` / `↓` — navigate results.
 - `Enter` — open selected result.
 - `Esc` — close palette.

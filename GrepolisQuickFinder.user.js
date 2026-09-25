@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.5.0
+// @version      2.6.0
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market.
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.5.0';
+    const VERSION = '2.6.0';
 
     /*
      * ============================================================
@@ -46,6 +46,38 @@
         CACHE_TTL: 6 * 60 * 60 * 1000, // reuse world data for at most this long
         GHOST_MIN_POINTS: 0,
     };
+
+    /*
+     * ============================================================
+     * SETTINGS (user-adjustable overrides for some of the CONFIG
+     * values above, persisted globally in localStorage — shared by
+     * every world, unlike history/favorites which are per-world.
+     * Opened via the footer gear icon or the >settings command; see
+     * the "SETTINGS PANEL" section further below for the UI/logic.
+     * ============================================================
+     */
+
+    const SETTINGS_KEY = 'qf:settings';
+
+    const SETTINGS_DEFAULTS = {
+        language: 'auto', // 'auto' = derive from the world market, otherwise a LOCALES key
+        hotkey: CONFIG.HOTKEY,
+        resultsPageSize: CONFIG.RESULTS_PAGE_SIZE,
+        maxResults: CONFIG.MAX_RESULTS,
+        cacheTtlHours: CONFIG.CACHE_TTL / (60 * 60 * 1000),
+        nearMaxRadius: CONFIG.NEAR_MAX_RADIUS,
+        ghostMinPoints: CONFIG.GHOST_MIN_POINTS,
+    };
+
+    const SETTINGS_BOUNDS = {
+        resultsPageSize: { min: 10, max: 200 },
+        maxResults: { min: 5, max: 100 },
+        cacheTtlHours: { min: 1, max: 168 },
+        nearMaxRadius: { min: 1, max: 50 },
+        ghostMinPoints: { min: 0, max: 100000 },
+    };
+
+    let settings = { ...SETTINGS_DEFAULTS };
 
     /*
      * ============================================================
@@ -174,6 +206,21 @@
             drillTowns: 'show towns',
             sortPoints: 'by points',
             sortDistance: 'by distance',
+            shortcutsOpen: 'Open/close QuickFinder',
+            commandSettingsHelp: '>settings — open the settings panel',
+            settingsTitle: 'Settings',
+            settingsLanguage: 'Language',
+            settingsLanguageAuto: 'Automatic (detected from world)',
+            settingsHotkey: 'Keyboard shortcut',
+            settingsPageSize: 'Results per page',
+            settingsMaxResults: 'Max. command results',
+            settingsCacheTtl: 'Data cache (hours)',
+            settingsNearRadius: 'Max. radius for >near',
+            settingsGhostMin: 'Default min. points for >ghost',
+            settingsSave: 'Save',
+            settingsReset: 'Reset to defaults',
+            settingsSaved: 'Settings saved',
+            settingsResetDone: 'Settings reset to defaults',
         },
         es: {
             searchPlaceholder: 'Buscar jugadores, alianzas o ciudades...',
@@ -255,6 +302,21 @@
             drillTowns: 'ver ciudades',
             sortPoints: 'por puntos',
             sortDistance: 'por distancia',
+            shortcutsOpen: 'Abrir/cerrar QuickFinder',
+            commandSettingsHelp: '>settings — abrir el panel de ajustes',
+            settingsTitle: 'Ajustes',
+            settingsLanguage: 'Idioma',
+            settingsLanguageAuto: 'Automático (detectado del mundo)',
+            settingsHotkey: 'Atajo de teclado',
+            settingsPageSize: 'Resultados por página',
+            settingsMaxResults: 'Máx. resultados de comandos',
+            settingsCacheTtl: 'Caché de datos (horas)',
+            settingsNearRadius: 'Radio máx. para >near',
+            settingsGhostMin: 'Puntos mín. por defecto para >ghost',
+            settingsSave: 'Guardar',
+            settingsReset: 'Restablecer valores',
+            settingsSaved: 'Ajustes guardados',
+            settingsResetDone: 'Ajustes restablecidos',
         },
         de: {
             searchPlaceholder: 'Spieler, Allianzen oder St\u00e4dte suchen...',
@@ -336,6 +398,21 @@
             drillTowns: 'Städte anzeigen',
             sortPoints: 'nach Punkten',
             sortDistance: 'nach Entfernung',
+            shortcutsOpen: 'QuickFinder öffnen/schließen',
+            commandSettingsHelp: '>settings — Einstellungen öffnen',
+            settingsTitle: 'Einstellungen',
+            settingsLanguage: 'Sprache',
+            settingsLanguageAuto: 'Automatisch (anhand der Welt erkannt)',
+            settingsHotkey: 'Tastenkürzel',
+            settingsPageSize: 'Ergebnisse pro Seite',
+            settingsMaxResults: 'Max. Befehlsergebnisse',
+            settingsCacheTtl: 'Daten-Cache (Stunden)',
+            settingsNearRadius: 'Max. Radius für >near',
+            settingsGhostMin: 'Standard-Mindestpunkte für >ghost',
+            settingsSave: 'Speichern',
+            settingsReset: 'Auf Standard zurücksetzen',
+            settingsSaved: 'Einstellungen gespeichert',
+            settingsResetDone: 'Einstellungen zurückgesetzt',
         },
         fr: {
             searchPlaceholder: 'Rechercher des joueurs, alliances ou villes...',
@@ -417,6 +494,21 @@
             drillTowns: 'afficher les villes',
             sortPoints: 'par points',
             sortDistance: 'par distance',
+            shortcutsOpen: 'Ouvrir/fermer QuickFinder',
+            commandSettingsHelp: '>settings — ouvrir le panneau des paramètres',
+            settingsTitle: 'Paramètres',
+            settingsLanguage: 'Langue',
+            settingsLanguageAuto: 'Automatique (détectée depuis le monde)',
+            settingsHotkey: 'Raccourci clavier',
+            settingsPageSize: 'Résultats par page',
+            settingsMaxResults: 'Max. résultats de commande',
+            settingsCacheTtl: 'Cache de données (heures)',
+            settingsNearRadius: 'Rayon max. pour >near',
+            settingsGhostMin: 'Points min. par défaut pour >ghost',
+            settingsSave: 'Enregistrer',
+            settingsReset: 'Réinitialiser',
+            settingsSaved: 'Paramètres enregistrés',
+            settingsResetDone: 'Paramètres réinitialisés',
         },
         it: {
             searchPlaceholder: 'Cerca giocatori, alleanze o citt\u00e0...',
@@ -498,6 +590,21 @@
             drillTowns: 'mostra città',
             sortPoints: 'per punti',
             sortDistance: 'per distanza',
+            shortcutsOpen: 'Apri/chiudi QuickFinder',
+            commandSettingsHelp: '>settings — apri il pannello impostazioni',
+            settingsTitle: 'Impostazioni',
+            settingsLanguage: 'Lingua',
+            settingsLanguageAuto: 'Automatica (rilevata dal mondo)',
+            settingsHotkey: 'Scorciatoia da tastiera',
+            settingsPageSize: 'Risultati per pagina',
+            settingsMaxResults: 'Max. risultati comando',
+            settingsCacheTtl: 'Cache dati (ore)',
+            settingsNearRadius: 'Raggio max. per >near',
+            settingsGhostMin: 'Punti min. predefiniti per >ghost',
+            settingsSave: 'Salva',
+            settingsReset: 'Ripristina predefiniti',
+            settingsSaved: 'Impostazioni salvate',
+            settingsResetDone: 'Impostazioni ripristinate',
         },
         nl: {
             searchPlaceholder: 'Zoek spelers, allianties of steden...',
@@ -579,6 +686,21 @@
             drillTowns: 'steden tonen',
             sortPoints: 'op punten',
             sortDistance: 'op afstand',
+            shortcutsOpen: 'QuickFinder openen/sluiten',
+            commandSettingsHelp: '>settings — instellingenpaneel openen',
+            settingsTitle: 'Instellingen',
+            settingsLanguage: 'Taal',
+            settingsLanguageAuto: 'Automatisch (gedetecteerd via wereld)',
+            settingsHotkey: 'Sneltoets',
+            settingsPageSize: 'Resultaten per pagina',
+            settingsMaxResults: 'Max. opdrachtresultaten',
+            settingsCacheTtl: 'Gegevenscache (uren)',
+            settingsNearRadius: 'Max. straal voor >near',
+            settingsGhostMin: 'Standaard min. punten voor >ghost',
+            settingsSave: 'Opslaan',
+            settingsReset: 'Standaardwaarden herstellen',
+            settingsSaved: 'Instellingen opgeslagen',
+            settingsResetDone: 'Instellingen hersteld',
         },
         pl: {
             searchPlaceholder: 'Szukaj graczy, sojuszy lub miast...',
@@ -660,6 +782,21 @@
             drillTowns: 'pokaż miasta',
             sortPoints: 'wg punktów',
             sortDistance: 'wg odległości',
+            shortcutsOpen: 'Otwórz/zamknij QuickFinder',
+            commandSettingsHelp: '>settings — otwórz panel ustawień',
+            settingsTitle: 'Ustawienia',
+            settingsLanguage: 'Język',
+            settingsLanguageAuto: 'Automatyczny (wykryty ze świata)',
+            settingsHotkey: 'Skrót klawiszowy',
+            settingsPageSize: 'Wyników na stronę',
+            settingsMaxResults: 'Maks. wyników polecenia',
+            settingsCacheTtl: 'Pamięć podręczna danych (godziny)',
+            settingsNearRadius: 'Maks. promień dla >near',
+            settingsGhostMin: 'Domyślne min. punkty dla >ghost',
+            settingsSave: 'Zapisz',
+            settingsReset: 'Przywróć domyślne',
+            settingsSaved: 'Ustawienia zapisane',
+            settingsResetDone: 'Ustawienia przywrócone',
         },
         pt: {
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
@@ -741,6 +878,21 @@
             drillTowns: 'ver cidades',
             sortPoints: 'por pontos',
             sortDistance: 'por distância',
+            shortcutsOpen: 'Abrir/fechar QuickFinder',
+            commandSettingsHelp: '>settings — abrir o painel de definições',
+            settingsTitle: 'Definições',
+            settingsLanguage: 'Idioma',
+            settingsLanguageAuto: 'Automático (detetado a partir do mundo)',
+            settingsHotkey: 'Atalho de teclado',
+            settingsPageSize: 'Resultados por página',
+            settingsMaxResults: 'Máx. de resultados de comandos',
+            settingsCacheTtl: 'Cache de dados (horas)',
+            settingsNearRadius: 'Raio máx. para >near',
+            settingsGhostMin: 'Pontos mín. predefinidos para >ghost',
+            settingsSave: 'Guardar',
+            settingsReset: 'Repor predefinições',
+            settingsSaved: 'Definições guardadas',
+            settingsResetDone: 'Definições repostas',
         },
         br: {
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
@@ -822,6 +974,21 @@
             drillTowns: 'ver cidades',
             sortPoints: 'por pontos',
             sortDistance: 'por distância',
+            shortcutsOpen: 'Abrir/fechar o QuickFinder',
+            commandSettingsHelp: '>settings — abrir o painel de configurações',
+            settingsTitle: 'Configurações',
+            settingsLanguage: 'Idioma',
+            settingsLanguageAuto: 'Automático (detectado a partir do mundo)',
+            settingsHotkey: 'Atalho de teclado',
+            settingsPageSize: 'Resultados por página',
+            settingsMaxResults: 'Máx. de resultados de comandos',
+            settingsCacheTtl: 'Cache de dados (horas)',
+            settingsNearRadius: 'Raio máx. para >near',
+            settingsGhostMin: 'Pontos mín. padrão para >ghost',
+            settingsSave: 'Salvar',
+            settingsReset: 'Restaurar padrões',
+            settingsSaved: 'Configurações salvas',
+            settingsResetDone: 'Configurações restauradas',
         },
         tr: {
             searchPlaceholder: 'Oyuncu, ittifak veya \u015fehir ara...',
@@ -903,6 +1070,21 @@
             drillTowns: 'şehirleri göster',
             sortPoints: 'puana göre',
             sortDistance: 'mesafeye göre',
+            shortcutsOpen: 'QuickFinder\'ı aç/kapat',
+            commandSettingsHelp: '>settings — ayarlar panelini aç',
+            settingsTitle: 'Ayarlar',
+            settingsLanguage: 'Dil',
+            settingsLanguageAuto: 'Otomatik (dünyadan algılanır)',
+            settingsHotkey: 'Klavye kısayolu',
+            settingsPageSize: 'Sayfa başına sonuç',
+            settingsMaxResults: 'Maks. komut sonucu',
+            settingsCacheTtl: 'Veri önbelleği (saat)',
+            settingsNearRadius: '>near için maks. yarıçap',
+            settingsGhostMin: '>ghost için varsayılan min. puan',
+            settingsSave: 'Kaydet',
+            settingsReset: 'Varsayılanlara sıfırla',
+            settingsSaved: 'Ayarlar kaydedildi',
+            settingsResetDone: 'Ayarlar sıfırlandı',
         },
         ru: {
             searchPlaceholder: '\u041f\u043e\u0438\u0441\u043a \u0438\u0433\u0440\u043e\u043a\u043e\u0432, \u0430\u043b\u044c\u044f\u043d\u0441\u043e\u0432 \u0438\u043b\u0438 \u0433\u043e\u0440\u043e\u0434\u043e\u0432...',
@@ -984,6 +1166,21 @@
             drillTowns: 'показать города',
             sortPoints: 'по очкам',
             sortDistance: 'по расстоянию',
+            shortcutsOpen: 'Открыть/закрыть QuickFinder',
+            commandSettingsHelp: '>settings — открыть панель настроек',
+            settingsTitle: 'Настройки',
+            settingsLanguage: 'Язык',
+            settingsLanguageAuto: 'Автоматически (определяется по миру)',
+            settingsHotkey: 'Горячая клавиша',
+            settingsPageSize: 'Результатов на странице',
+            settingsMaxResults: 'Макс. результатов команды',
+            settingsCacheTtl: 'Кэш данных (часы)',
+            settingsNearRadius: 'Макс. радиус для >near',
+            settingsGhostMin: 'Мин. очки по умолчанию для >ghost',
+            settingsSave: 'Сохранить',
+            settingsReset: 'Сбросить настройки',
+            settingsSaved: 'Настройки сохранены',
+            settingsResetDone: 'Настройки сброшены',
         },
         el: {
             searchPlaceholder: '\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03c0\u03b1\u03b9\u03ba\u03c4\u03ce\u03bd, \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03b9\u03ce\u03bd \u03ae \u03c0\u03cc\u03bb\u03b5\u03c9\u03bd...',
@@ -1065,6 +1262,21 @@
             drillTowns: 'εμφάνιση πόλεων',
             sortPoints: 'κατά πόντους',
             sortDistance: 'κατά απόσταση',
+            shortcutsOpen: 'Άνοιγμα/κλείσιμο QuickFinder',
+            commandSettingsHelp: '>settings — άνοιγμα πίνακα ρυθμίσεων',
+            settingsTitle: 'Ρυθμίσεις',
+            settingsLanguage: 'Γλώσσα',
+            settingsLanguageAuto: 'Αυτόματη (εντοπισμός από τον κόσμο)',
+            settingsHotkey: 'Συντόμευση πληκτρολογίου',
+            settingsPageSize: 'Αποτελέσματα ανά σελίδα',
+            settingsMaxResults: 'Μέγ. αποτελέσματα εντολής',
+            settingsCacheTtl: 'Προσωρινή μνήμη δεδομένων (ώρες)',
+            settingsNearRadius: 'Μέγ. ακτίνα για >near',
+            settingsGhostMin: 'Προεπιλεγμένοι ελάχ. πόντοι για >ghost',
+            settingsSave: 'Αποθήκευση',
+            settingsReset: 'Επαναφορά προεπιλογών',
+            settingsSaved: 'Οι ρυθμίσεις αποθηκεύτηκαν',
+            settingsResetDone: 'Οι ρυθμίσεις επαναφέρθηκαν',
         },
         hu: {
             searchPlaceholder: 'J\u00e1t\u00e9kosok, sz\u00f6vets\u00e9gek vagy v\u00e1rosok keres\u00e9se...',
@@ -1146,6 +1358,21 @@
             drillTowns: 'városok megjelenítése',
             sortPoints: 'pont szerint',
             sortDistance: 'távolság szerint',
+            shortcutsOpen: 'QuickFinder megnyitása/bezárása',
+            commandSettingsHelp: '>settings — beállítások panel megnyitása',
+            settingsTitle: 'Beállítások',
+            settingsLanguage: 'Nyelv',
+            settingsLanguageAuto: 'Automatikus (a világ alapján)',
+            settingsHotkey: 'Billentyűparancs',
+            settingsPageSize: 'Találatok oldalanként',
+            settingsMaxResults: 'Max. parancs-találat',
+            settingsCacheTtl: 'Adat gyorsítótár (óra)',
+            settingsNearRadius: 'Max. sugár a >near-hez',
+            settingsGhostMin: 'Alapértelmezett min. pont a >ghost-hoz',
+            settingsSave: 'Mentés',
+            settingsReset: 'Alapértelmezés visszaállítása',
+            settingsSaved: 'Beállítások mentve',
+            settingsResetDone: 'Beállítások visszaállítva',
         },
         ro: {
             searchPlaceholder: 'Caut\u0103 juc\u0103tori, alian\u021be sau ora\u0219e...',
@@ -1227,6 +1454,21 @@
             drillTowns: 'arată orașele',
             sortPoints: 'după puncte',
             sortDistance: 'după distanță',
+            shortcutsOpen: 'Deschide/închide QuickFinder',
+            commandSettingsHelp: '>settings — deschide panoul de setări',
+            settingsTitle: 'Setări',
+            settingsLanguage: 'Limbă',
+            settingsLanguageAuto: 'Automat (detectată din lume)',
+            settingsHotkey: 'Comandă rapidă',
+            settingsPageSize: 'Rezultate pe pagină',
+            settingsMaxResults: 'Max. rezultate comandă',
+            settingsCacheTtl: 'Cache date (ore)',
+            settingsNearRadius: 'Rază max. pentru >near',
+            settingsGhostMin: 'Puncte min. implicite pentru >ghost',
+            settingsSave: 'Salvează',
+            settingsReset: 'Resetează la valori implicite',
+            settingsSaved: 'Setări salvate',
+            settingsResetDone: 'Setări resetate',
         },
         cs: {
             searchPlaceholder: 'Hledat hr\u00e1\u010de, aliance nebo m\u011bsta...',
@@ -1308,6 +1550,21 @@
             drillTowns: 'zobrazit města',
             sortPoints: 'podle bodů',
             sortDistance: 'podle vzdálenosti',
+            shortcutsOpen: 'Otevřít/zavřít QuickFinder',
+            commandSettingsHelp: '>settings — otevřít panel nastavení',
+            settingsTitle: 'Nastavení',
+            settingsLanguage: 'Jazyk',
+            settingsLanguageAuto: 'Automaticky (podle světa)',
+            settingsHotkey: 'Klávesová zkratka',
+            settingsPageSize: 'Výsledků na stránku',
+            settingsMaxResults: 'Max. výsledků příkazu',
+            settingsCacheTtl: 'Mezipaměť dat (hodiny)',
+            settingsNearRadius: 'Max. poloměr pro >near',
+            settingsGhostMin: 'Výchozí min. body pro >ghost',
+            settingsSave: 'Uložit',
+            settingsReset: 'Obnovit výchozí',
+            settingsSaved: 'Nastavení uloženo',
+            settingsResetDone: 'Nastavení obnoveno',
         },
         sk: {
             searchPlaceholder: 'H\u013ead\u0165 hr\u00e1\u010dov, alianciu alebo mest\u00e1...',
@@ -1389,7 +1646,44 @@
             drillTowns: 'zobraziť mestá',
             sortPoints: 'podľa bodov',
             sortDistance: 'podľa vzdialenosti',
+            shortcutsOpen: 'Otvoriť/zavrieť QuickFinder',
+            commandSettingsHelp: '>settings — otvoriť panel nastavení',
+            settingsTitle: 'Nastavenia',
+            settingsLanguage: 'Jazyk',
+            settingsLanguageAuto: 'Automaticky (podľa sveta)',
+            settingsHotkey: 'Klávesová skratka',
+            settingsPageSize: 'Výsledkov na stránku',
+            settingsMaxResults: 'Max. výsledkov príkazu',
+            settingsCacheTtl: 'Vyrovnávacia pamäť dát (hodiny)',
+            settingsNearRadius: 'Max. polomer pre >near',
+            settingsGhostMin: 'Predvolené min. body pre >ghost',
+            settingsSave: 'Uložiť',
+            settingsReset: 'Obnoviť predvolené',
+            settingsSaved: 'Nastavenia uložené',
+            settingsResetDone: 'Nastavenia obnovené',
         },
+    };
+
+    // Native display names for each LOCALES key, used in the settings
+    // panel's language dropdown (kept separate from LOCALES so it
+    // doesn't need a translation lookup for its own labels).
+    const LANGUAGE_NAMES = {
+        en: 'English',
+        es: 'Español',
+        de: 'Deutsch',
+        fr: 'Français',
+        it: 'Italiano',
+        nl: 'Nederlands',
+        pl: 'Polski',
+        pt: 'Português',
+        br: 'Português (Brasil)',
+        tr: 'Türkçe',
+        ru: '\u0420\u0443\u0441\u0441\u043a\u0438\u0439',
+        el: '\u0395\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac',
+        hu: 'Magyar',
+        ro: 'Rom\u00e2n\u0103',
+        cs: '\u010ce\u0161tina',
+        sk: 'Sloven\u010dina',
     };
 
     function translate(key, params) {
@@ -1437,7 +1731,15 @@
         return match ? match[0] : null;
     }
 
+    /*
+     * Resolves the active locale dictionary. A manual override in
+     * settings.language (anything other than 'auto') always wins;
+     * otherwise falls back to the market-based auto-detection.
+     */
     function resolveLocale(world) {
+        if (settings.language && settings.language !== 'auto' && LOCALES[settings.language]) {
+            return LOCALES[settings.language];
+        }
         const market = getMarket(world);
         const languageKey = market && MARKET_TO_LANGUAGE[market];
         return LOCALES[languageKey] || LOCALES.en;
@@ -1445,6 +1747,67 @@
 
     const WORLD = getWorld();
     const MARKET = getMarket(WORLD);
+
+    /*
+     * ============================================================
+     * SETTINGS PERSISTENCE
+     * ============================================================
+     *
+     * Unlike history/favorites, settings are stored under a single
+     * global localStorage key (not namespaced per world): they are
+     * user preferences about how the tool itself behaves, and are
+     * expected to be the same across every Grepolis world the same
+     * browser profile plays on.
+     */
+
+    function loadSettings() {
+        let raw = null;
+        try {
+            raw = localStorage.getItem(SETTINGS_KEY);
+        } catch (_) {
+            raw = null;
+        }
+        if (!raw) {
+            return { ...SETTINGS_DEFAULTS };
+        }
+        try {
+            const parsed = JSON.parse(raw);
+            return { ...SETTINGS_DEFAULTS, ...(parsed && typeof parsed === 'object' ? parsed : {}) };
+        } catch (_) {
+            return { ...SETTINGS_DEFAULTS };
+        }
+    }
+
+    function persistSettings() {
+        try {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        } catch (_) {
+            // Quota exceeded or storage disabled: settings are best-effort.
+        }
+    }
+
+    function clampSetting(key, value) {
+        const bounds = SETTINGS_BOUNDS[key];
+        if (!bounds) return value;
+        return Math.min(bounds.max, Math.max(bounds.min, value));
+    }
+
+    /*
+     * Re-applies the runtime-relevant settings onto CONFIG so every
+     * function reading CONFIG.* immediately reflects the current
+     * settings without needing a page reload.
+     */
+    function applySettingsToConfig() {
+        CONFIG.HOTKEY = settings.hotkey || SETTINGS_DEFAULTS.hotkey;
+        CONFIG.RESULTS_PAGE_SIZE = clampSetting('resultsPageSize', settings.resultsPageSize);
+        CONFIG.MAX_RESULTS = clampSetting('maxResults', settings.maxResults);
+        CONFIG.CACHE_TTL = clampSetting('cacheTtlHours', settings.cacheTtlHours) * 60 * 60 * 1000;
+        CONFIG.NEAR_MAX_RADIUS = clampSetting('nearMaxRadius', settings.nearMaxRadius);
+        CONFIG.GHOST_MIN_POINTS = clampSetting('ghostMinPoints', settings.ghostMinPoints);
+    }
+
+    settings = loadSettings();
+    applySettingsToConfig();
 
     /*
      * ============================================================
@@ -1469,6 +1832,7 @@
         // not be pruned by the segment chip filter.
         detail: false,
         showHelp: false,
+        showSettings: false,
         savedAt: 0,
         dataSource: null,
         // How many of state.results are currently rendered; grows as the
@@ -2663,7 +3027,7 @@
         const [nameRaw, ...tokens] = rest.split(/\s+/);
         const name = (nameRaw || '').toLowerCase();
         const args = tokens.join(' ');
-        const knownCommands = ['goto', 'ghost', 'dist', 'island', 'near', 'ocean', 'help'];
+        const knownCommands = ['goto', 'ghost', 'dist', 'island', 'near', 'ocean', 'settings', 'help'];
 
         if (!name || (tokens.length === 0 && !knownCommands.includes(name))) {
             const suggestions = [
@@ -2673,6 +3037,7 @@
                 { type: 'command-suggestion', name: '>island X:Y', command: '>island', helpText: translate('commandIslandHelp') },
                 { type: 'command-suggestion', name: '>near [X:Y] [radius]', command: '>near', helpText: translate('commandNearHelp') },
                 { type: 'command-suggestion', name: '>ocean M34 [alliance]', command: '>ocean', helpText: translate('commandOceanHelp') },
+                { type: 'command-suggestion', name: '>settings', command: '>settings', helpText: translate('commandSettingsHelp') },
                 { type: 'command-suggestion', name: '>help', command: '>help', helpText: translate('commandHelpHint') },
             ];
             const matching = suggestions.filter((item) => item.command.slice(1).startsWith(name));
@@ -2684,6 +3049,10 @@
         switch (name) {
             case 'help':
                 state.showHelp = true;
+                return null;
+
+            case 'settings':
+                state.showSettings = true;
                 return null;
 
             case 'goto': {
@@ -2840,6 +3209,7 @@
         const query = rawQuery.trim();
         state.query = query;
         state.showHelp = false;
+        state.showSettings = false;
 
         // '?' and '>help' shortcuts render the help panel even while
         // the index is still loading, so those are handled first.
@@ -2850,6 +3220,13 @@
         }
 
         if (isCommand(query)) {
+            // >settings works even while the index is still loading
+            // (it doesn't need it), unlike >ghost/>dist/etc below.
+            if (query.slice(CONFIG.COMMAND_PREFIX.length).trim().toLowerCase() === 'settings') {
+                state.showSettings = true;
+                render();
+                return;
+            }
             const commandResult = runCommand(query);
             if (commandResult) {
                 if (!state.loaded) {
@@ -3284,13 +3661,14 @@
                         spellcheck="false"
                         placeholder="${escapeHTML(translate('searchPlaceholder'))}"
                     >
+                    <button type="button" id="qf-settings-btn" title="${escapeHTML(translate('settingsTitle'))}">${ICONS.gear}</button>
                     <kbd id="qf-esc-key">ESC</kbd>
                 </div>
                 <div id="qf-segments" hidden></div>
                 <div id="qf-results"></div>
                 <div id="qf-footer">
                     <div id="qf-footer-shortcuts">
-                        <span>${escapeHTML(translate('footerTab'))}</span>
+                        <span id="qf-footer-tab">${escapeHTML(translate('footerTab'))}</span>
                         <span id="qf-footer-fav">${escapeHTML(translate('footerFav'))}</span>
                         <span id="qf-footer-bbcode">${escapeHTML(translate('footerBBCode'))}</span>
                         <span id="qf-footer-refresh">${escapeHTML(translate('footerRefresh'))}</span>
@@ -3326,6 +3704,11 @@
             event.preventDefault();
             setSegment(chip.dataset.segment);
         });
+
+        overlay.querySelector('#qf-settings-btn').addEventListener('click', (event) => {
+            event.preventDefault();
+            openSettings();
+        });
     }
 
     /*
@@ -3355,8 +3738,8 @@
 
         // Segment chips only make sense while actively searching:
         // without a query the results are the history/favorites view,
-        // and command output (ghost/dist) is not segmentable.
-        const showSegments = Boolean(state.query) && !state.showHelp && !isCommand(state.query) && state.segmentCounts && !state.loading;
+        // and command output (ghost/dist/settings) is not segmentable.
+        const showSegments = Boolean(state.query) && !state.showHelp && !state.showSettings && !isCommand(state.query) && state.segmentCounts && !state.loading;
         segmentsEl.hidden = !showSegments;
         if (showSegments) {
             segmentsEl.innerHTML = CONFIG.SEGMENTS
@@ -3375,6 +3758,12 @@
         }
 
         renderFooter();
+
+        if (state.showSettings) {
+            results.innerHTML = renderSettings();
+            bindSettingsEvents(results);
+            return;
+        }
 
         if (state.showHelp) {
             results.innerHTML = renderHelp();
@@ -3572,6 +3961,7 @@
 
     function renderHelp() {
         const shortcuts = [
+            [hotkeyLabel(), translate('shortcutsOpen')],
             ['\u2191 \u2193', translate('footerNavigate')],
             ['Enter', translate('footerOpen')],
             ['Tab', translate('footerTab')],
@@ -3590,6 +3980,7 @@
             ['>island X:Y', translate('commandIslandHelp')],
             ['>near [X:Y] [radius]', translate('commandNearHelp')],
             ['>ocean M34 [alliance]', translate('commandOceanHelp')],
+            ['>settings', translate('commandSettingsHelp')],
             ['>help', translate('commandHelpHint')],
         ];
 
@@ -3610,6 +4001,178 @@
                 <div class="qf-help-text">${translate('scopeHelpDesc')}</div>
             </div>
         `;
+    }
+
+    /*
+     * ============================================================
+     * SETTINGS PANEL
+     * ============================================================
+     *
+     * Rendered for the footer gear icon and ">settings". Like the
+     * help panel, its DOM is detached from the live .qf-results
+     * container and doesn't participate in palette navigation keys.
+     * Every field applies immediately (live-updates CONFIG/state and
+     * persists to localStorage) rather than requiring an explicit
+     * save step; the "Save" button is a confirmation/close action.
+     */
+
+    function renderSettings() {
+        const languageOptions = [
+            `<option value="auto"${settings.language === 'auto' ? ' selected' : ''}>${escapeHTML(translate('settingsLanguageAuto'))}</option>`,
+            ...Object.keys(LANGUAGE_NAMES).map((code) => (
+                `<option value="${code}"${settings.language === code ? ' selected' : ''}>${escapeHTML(LANGUAGE_NAMES[code])}</option>`
+            )),
+        ].join('');
+
+        const numberField = (id, key, label, step) => `
+            <div class="qf-settings-row">
+                <label class="qf-settings-label" for="${id}">${escapeHTML(translate(label))}</label>
+                <input
+                    id="${id}"
+                    class="qf-settings-input qf-settings-input-number"
+                    type="number"
+                    data-setting="${key}"
+                    min="${SETTINGS_BOUNDS[key].min}"
+                    max="${SETTINGS_BOUNDS[key].max}"
+                    step="${step || 1}"
+                    value="${settings[key]}"
+                >
+            </div>
+        `;
+
+        return `
+            <div class="qf-settings">
+                <div class="qf-settings-row">
+                    <label class="qf-settings-label" for="qf-set-language">${escapeHTML(translate('settingsLanguage'))}</label>
+                    <select id="qf-set-language" class="qf-settings-input" data-setting="language">${languageOptions}</select>
+                </div>
+                <div class="qf-settings-row">
+                    <label class="qf-settings-label" for="qf-set-hotkey">${escapeHTML(translate('settingsHotkey'))}</label>
+                    <div class="qf-settings-hotkey">
+                        <span class="qf-settings-hotkey-prefix">Ctrl+Shift+</span>
+                        <input
+                            id="qf-set-hotkey"
+                            class="qf-settings-input qf-settings-input-hotkey"
+                            type="text"
+                            data-setting="hotkey"
+                            maxlength="1"
+                            autocomplete="off"
+                            spellcheck="false"
+                            value="${escapeHTML((settings.hotkey || 'f').toUpperCase())}"
+                        >
+                    </div>
+                </div>
+                ${numberField('qf-set-page-size', 'resultsPageSize', 'settingsPageSize')}
+                ${numberField('qf-set-max-results', 'maxResults', 'settingsMaxResults')}
+                ${numberField('qf-set-cache-ttl', 'cacheTtlHours', 'settingsCacheTtl')}
+                ${numberField('qf-set-near-radius', 'nearMaxRadius', 'settingsNearRadius')}
+                ${numberField('qf-set-ghost-min', 'ghostMinPoints', 'settingsGhostMin')}
+                <div class="qf-settings-actions">
+                    <button type="button" id="qf-settings-reset" class="qf-settings-btn qf-settings-btn-secondary">${escapeHTML(translate('settingsReset'))}</button>
+                    <button type="button" id="qf-settings-save" class="qf-settings-btn qf-settings-btn-primary">${escapeHTML(translate('settingsSave'))}</button>
+                </div>
+            </div>
+        `;
+    }
+
+    /*
+     * Applies one changed settings field: parses/clamps the raw value,
+     * updates the in-memory `settings` object, persists it, and
+     * re-applies the runtime-relevant subset onto CONFIG so the
+     * change takes effect immediately (no reload needed).
+     */
+    function applySettingField(key, rawValue) {
+        if (key === 'language') {
+            settings.language = rawValue && LANGUAGE_NAMES[rawValue] ? rawValue : 'auto';
+        } else if (key === 'hotkey') {
+            const letter = String(rawValue || '').trim().toLowerCase().slice(-1);
+            settings.hotkey = /^[a-z0-9]$/.test(letter) ? letter : SETTINGS_DEFAULTS.hotkey;
+        } else if (key in SETTINGS_BOUNDS) {
+            const parsed = Number(rawValue);
+            settings[key] = Number.isFinite(parsed) ? clampSetting(key, parsed) : SETTINGS_DEFAULTS[key];
+        }
+
+        persistSettings();
+        applySettingsToConfig();
+        state.locale = resolveLocale(WORLD);
+
+        if (key === 'language') {
+            // The settings panel's own labels are translated too, so a
+            // language change needs a full re-render (not just the
+            // static footer/placeholder refreshStaticTexts() handles).
+            render();
+        } else {
+            refreshStaticTexts();
+        }
+    }
+
+    /*
+     * Wires up change handlers for the settings panel. Called after
+     * every render() while state.showSettings is true, since the
+     * panel's DOM is rebuilt from scratch each time (same pattern as
+     * the segment chips / result rows elsewhere in this file).
+     */
+    function bindSettingsEvents(container) {
+        container.querySelectorAll('[data-setting]').forEach((el) => {
+            const key = el.dataset.setting;
+            const eventName = el.tagName === 'SELECT' ? 'change' : 'input';
+            el.addEventListener(eventName, () => applySettingField(key, el.value));
+            // Re-render the whole panel on blur so values normalized by
+            // applySettingField (e.g. an out-of-range number clamped
+            // back, or an invalid hotkey falling back to the default)
+            // are reflected in the field instead of showing the raw
+            // input the user typed.
+            el.addEventListener('blur', () => render());
+        });
+
+        const resetBtn = container.querySelector('#qf-settings-reset');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                settings = { ...SETTINGS_DEFAULTS };
+                persistSettings();
+                applySettingsToConfig();
+                state.locale = resolveLocale(WORLD);
+                refreshStaticTexts();
+                showToast(translate('settingsResetDone'));
+                render();
+            });
+        }
+
+        const saveBtn = container.querySelector('#qf-settings-save');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                persistSettings();
+                showToast(translate('settingsSaved'));
+                const input = document.getElementById('qf-input');
+                input.value = '';
+                performSearch('', ++searchToken);
+            });
+        }
+    }
+
+    /*
+     * Updates the pieces of the palette UI that are only written once
+     * in createUI()'s innerHTML (placeholder, footer shortcut labels,
+     * settings button title) so a language change made from the
+     * settings panel is reflected immediately without closing/
+     * reopening the palette.
+     */
+    function refreshStaticTexts() {
+        const input = document.getElementById('qf-input');
+        if (input) input.placeholder = translate('searchPlaceholder');
+
+        const settingsBtn = document.getElementById('qf-settings-btn');
+        if (settingsBtn) settingsBtn.title = translate('settingsTitle');
+
+        const setText = (id, key) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = translate(key);
+        };
+        setText('qf-footer-tab', 'footerTab');
+        setText('qf-footer-fav', 'footerFav');
+        setText('qf-footer-bbcode', 'footerBBCode');
+        setText('qf-footer-refresh', 'footerRefresh');
+        setText('qf-footer-help', 'footerHelp');
     }
 
     /*
@@ -3643,6 +4206,7 @@
         check: svgIcon('<polyline points="4 12 9.5 17.5 20 6"></polyline>'),
         starOutline: svgIcon('<path d="M12 3.3l2.6 5.4 5.9.7-4.3 4.1 1.1 5.9L12 16.6l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.7L12 3.3z"></path>'),
         starFilled: svgIcon('<path d="M12 3.3l2.6 5.4 5.9.7-4.3 4.1 1.1 5.9L12 16.6l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.7L12 3.3z" fill="currentColor" stroke="none"></path>'),
+        gear: svgIcon('<circle cx="12" cy="12" r="3.2"></circle><path d="M12 3.2v2.1M12 18.7v2.1M20.8 12h-2.1M5.3 12H3.2M17.9 6.1l-1.5 1.5M7.6 16.4l-1.5 1.5M17.9 17.9l-1.5-1.5M7.6 7.6L6.1 6.1"></path>'),
     };
 
     /*
@@ -3939,6 +4503,7 @@
             state.segment = CONFIG.DEFAULT_SEGMENT;
             state.segmentCounts = null;
             state.showHelp = false;
+            state.showSettings = false;
 
             input.value = '';
             render();
@@ -3953,6 +4518,22 @@
         if (overlay) {
             overlay.style.display = 'none';
         }
+    }
+
+    /*
+     * Opens the palette (if needed) directly into the settings panel,
+     * used by both the footer gear icon and the >settings command.
+     */
+    function openSettings() {
+        createUI();
+        state.open = true;
+        state.showHelp = false;
+        state.showSettings = true;
+
+        const input = document.getElementById('qf-input');
+        input.value = state.query || '';
+
+        render();
     }
 
     /*
@@ -4043,6 +4624,15 @@
         toastTimer = setTimeout(() => {
             toast.classList.remove('qf-toast-visible');
         }, 1800);
+    }
+
+    /*
+     * Human-readable label for the current open/close hotkey, e.g.
+     * "Ctrl+Shift+F". Used in the footer, help panel and settings
+     * panel so all three stay in sync when the user customizes it.
+     */
+    function hotkeyLabel() {
+        return `Ctrl+Shift+${(CONFIG.HOTKEY || 'f').toUpperCase()}`;
     }
 
     /*
@@ -4240,6 +4830,28 @@
         #qf-input::placeholder {
             color: rgba(255, 255, 255, .32);
             font-weight: 400;
+        }
+
+        #qf-settings-btn {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            margin-right: 10px;
+            padding: 5px;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: rgba(255, 255, 255, .42);
+            cursor: pointer;
+            transition: background-color .08s ease, color .08s ease;
+        }
+
+        #qf-settings-btn:hover {
+            color: rgba(255, 255, 255, .85);
+            background: rgba(255, 255, 255, .07);
         }
 
         #qf-esc-key {
@@ -4597,7 +5209,7 @@
 
         #qf-footer-meta {
             display: flex;
-            align-items: baseline;
+            align-items: center;
             justify-content: flex-end;
             gap: 8px;
         }
@@ -4666,6 +5278,111 @@
             color: rgba(255, 255, 255, .5);
         }
 
+        .qf-settings {
+            padding: 22px 24px;
+        }
+
+        .qf-settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 11px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .06);
+        }
+
+        .qf-settings-row:last-of-type {
+            border-bottom: 0;
+        }
+
+        .qf-settings-label {
+            color: rgba(255, 255, 255, .68);
+            font-size: 12.5px;
+            font-weight: 500;
+        }
+
+        .qf-settings-input {
+            flex: 0 0 auto;
+            min-width: 160px;
+            padding: 7px 10px;
+            border: 1px solid rgba(255, 255, 255, .16);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .04);
+            color: #f2f2f2;
+            font-size: 12.5px;
+            font-family: inherit;
+            outline: 0;
+            transition: border-color .08s ease, background-color .08s ease;
+        }
+
+        .qf-settings-input:focus {
+            border-color: rgba(215, 163, 63, .6);
+            background: rgba(255, 255, 255, .06);
+        }
+
+        .qf-settings-input-number {
+            min-width: 90px;
+            text-align: right;
+        }
+
+        .qf-settings-hotkey {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .qf-settings-hotkey-prefix {
+            color: rgba(255, 255, 255, .4);
+            font-size: 11.5px;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        }
+
+        .qf-settings-input-hotkey {
+            width: 40px;
+            min-width: 0;
+            text-align: center;
+            text-transform: uppercase;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        }
+
+        .qf-settings-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .qf-settings-btn {
+            padding: 8px 16px;
+            border: 1px solid rgba(255, 255, 255, .16);
+            border-radius: 7px;
+            background: rgba(255, 255, 255, .03);
+            color: rgba(255, 255, 255, .7);
+            font-size: 12px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background-color .08s ease, border-color .08s ease, color .08s ease;
+        }
+
+        .qf-settings-btn:hover {
+            color: rgba(255, 255, 255, .9);
+            border-color: rgba(255, 255, 255, .3);
+            background: rgba(255, 255, 255, .07);
+        }
+
+        .qf-settings-btn-primary {
+            color: #1c1608;
+            background: #d7a33f;
+            border-color: #d7a33f;
+        }
+
+        .qf-settings-btn-primary:hover {
+            background: #e6bd6c;
+            border-color: #e6bd6c;
+            color: #1c1608;
+        }
+
         /* Main menu button icon styling */
         .nui_main_menu .quickfinder .icon {
             position: absolute !important;
@@ -4700,6 +5417,9 @@
         state,
         data: DATA,
         gp: GP,
+        get settings() {
+            return settings;
+        },
 
         search(query) {
             const queryNorm = normalize(query);
@@ -4728,6 +5448,10 @@
 
         closePalette() {
             close();
+        },
+
+        openSettings() {
+            openSettings();
         },
 
         setQuery(query) {
@@ -4780,6 +5504,7 @@
             console.log('World:', WORLD);
             console.log('Market:', MARKET);
             console.log('GP context:', GP === window ? 'window (unsafeWindow not available)' : 'unsafeWindow');
+            console.log('Settings:', settings);
 
             console.log('Index:', {
                 loaded: state.loaded,
@@ -4835,7 +5560,7 @@
 
         console.info(`%c[Grepolis Quick Finder ${VERSION}] loaded`, 'color:#d6a342;font-weight:bold');
         console.info(`[QF] Detected world: ${WORLD} (market: ${MARKET})`);
-        console.info('[QF] Ctrl+Shift+F to open.');
+        console.info(`[QF] ${hotkeyLabel()} to open.`);
         console.info('[QF] QF.debug() to inspect the integration.');
     }
 
