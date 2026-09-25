@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder
 // @namespace    https://grepolis.com/
-// @version      2.4.0
+// @version      2.5.0
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market.
 // @author       Cancio
 // @match        https://*.grepolis.com/game/*
@@ -13,7 +13,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.4.0';
+    const VERSION = '2.5.0';
 
     /*
      * ============================================================
@@ -23,11 +23,13 @@
 
     const CONFIG = {
         HOTKEY: 'f',              // Ctrl+Shift+<HOTKEY>
-        MAX_RESULTS: 30,
+        MAX_RESULTS: 30,          // cap for command output (>ghost, >near, >ocean...)
+        RESULTS_PAGE_SIZE: 40,    // free-text search: rows rendered per page, more load on scroll
         MIN_TOWN_QUERY_LENGTH: 2, // avoids listing half an island with 1 letter
         SEARCH_DELAY: 150,        // debounce in ms
         FAV_KEY: 'f',             // Ctrl+<FAV_KEY> inside the palette: toggle favorite
         REFRESH_KEY: 'r',         // Ctrl+<REFRESH_KEY> inside the palette: reload data
+        BBCODE_KEY: 'b',          // Ctrl+<BBCODE_KEY> inside the palette: copy BBCode and close
         HELP_CHAR: '?',           // typing this alone shows the shortcuts/commands panel
         COMMAND_PREFIX: '>',      // commands: >goto, >ghost, >dist, >island, >near, >ocean, >help
         SEGMENTS: ['all', 'player', 'alliance', 'town', 'island', 'coordinate'],
@@ -97,6 +99,7 @@
             emptyHintCoords: 'You can also enter coordinates: <strong>{example}</strong>',
             loadingWorldData: 'Loading world data...',
             noResults: 'No results found.',
+            resultsMore: 'Showing {shown} of {total} \u2014 scroll for more',
             errorLoadingData: 'Error loading data: {error}',
             badgePlayer: 'Player',
             badgeAlliance: 'Alliance',
@@ -115,6 +118,8 @@
             recentTitle: 'Recent',
             footerTab: 'Tab filter',
             footerFav: 'Ctrl+F favorite',
+            footerBBCode: 'Ctrl+B copy BBCode',
+            bbcodeCopied: 'Copied',
             footerRefresh: 'Ctrl+R refresh',
             footerHelp: '? help',
             dataFresh: 'Data fresh',
@@ -144,7 +149,6 @@
             distBandFar: 'long range',
             scopeHelpTitle: 'Scopes',
             scopeHelpDesc: '@p players \u00b7 @a alliances \u00b7 @t towns \u00b7 @i islands \u00b7 @c coordinates',
-            externalStats: 'Open in GrepoLife',
             badgeIsland: 'Island',
             badgeCommand: 'Command',
             segmentIslands: 'Islands',
@@ -175,6 +179,7 @@
             emptyHintCoords: 'Tambi\u00e9n puedes introducir coordenadas: <strong>{example}</strong>',
             loadingWorldData: 'Cargando datos del mundo...',
             noResults: 'No se encontraron resultados.',
+            resultsMore: 'Mostrando {shown} de {total} \u2014 desplaza para ver m\u00e1s',
             errorLoadingData: 'Error cargando datos: {error}',
             badgePlayer: 'Jugador',
             badgeAlliance: 'Alianza',
@@ -193,6 +198,8 @@
             recentTitle: 'Recientes',
             footerTab: 'Tab filtrar',
             footerFav: 'Ctrl+F favoritos',
+            footerBBCode: 'Ctrl+B copiar BBCode',
+            bbcodeCopied: 'Copiado',
             footerRefresh: 'Ctrl+R recargar',
             footerHelp: '? ayuda',
             dataFresh: 'Datos nuevos',
@@ -222,7 +229,6 @@
             distBandFar: 'larga distancia',
             scopeHelpTitle: 'Ambitos',
             scopeHelpDesc: '@p jugadores \u00b7 @a alianzas \u00b7 @t ciudades \u00b7 @i islas \u00b7 @c coordenadas',
-            externalStats: 'Abrir en GrepoLife',
             badgeIsland: 'Isla',
             badgeCommand: 'Comando',
             segmentIslands: 'Islas',
@@ -253,6 +259,7 @@
             emptyHintCoords: 'Du kannst auch Koordinaten eingeben: <strong>{example}</strong>',
             loadingWorldData: 'Weltdaten werden geladen...',
             noResults: 'Keine Ergebnisse gefunden.',
+            resultsMore: '{shown} von {total} angezeigt \u2014 scrollen f\u00fcr mehr',
             errorLoadingData: 'Fehler beim Laden der Daten: {error}',
             badgePlayer: 'Spieler',
             badgeAlliance: 'Allianz',
@@ -271,6 +278,8 @@
             recentTitle: 'Zuletzt',
             footerTab: 'Tab filter',
             footerFav: 'Strg+F Favorit',
+            footerBBCode: 'Strg+B BBCode kopieren',
+            bbcodeCopied: 'Kopiert',
             footerRefresh: 'Strg+R aktualisieren',
             footerHelp: '? Hilfe',
             dataFresh: 'Daten aktuell',
@@ -293,7 +302,6 @@
             distNeedOrigin: 'Gib zwei Koordinaten an, oder eine, wenn deine aktive Stadt erkannt werden kann.',
             scopeHelpTitle: 'Bereiche',
             scopeHelpDesc: '@p Spieler \u00b7 @a Allianzen \u00b7 @t St\u00e4dte \u00b7 @c Koordinaten',
-            externalStats: 'In GrepoLife \u00f6ffnen',
             commandIslandHelp: '>island X:Y \u2014 alle St\u00e4dte einer Insel',
             commandNearHelp: '>near [X:Y] [Radius] \u2014 Inseln um einen Punkt',
             commandOceanHelp: '>ocean M34 [Allianz] \u2014 Ozean-\u00dcbersicht',
@@ -331,6 +339,7 @@
             emptyHintCoords: 'Vous pouvez aussi saisir des coordonn\u00e9es : <strong>{example}</strong>',
             loadingWorldData: 'Chargement des donn\u00e9es du monde...',
             noResults: 'Aucun r\u00e9sultat trouv\u00e9.',
+            resultsMore: '{shown} sur {total} affich\u00e9s \u2014 faites d\u00e9filer pour plus',
             errorLoadingData: 'Erreur lors du chargement des donn\u00e9es : {error}',
             badgePlayer: 'Joueur',
             badgeAlliance: 'Alliance',
@@ -349,6 +358,8 @@
             recentTitle: 'R\u00e9cents',
             footerTab: 'Tab filtrer',
             footerFav: 'Ctrl+F favori',
+            footerBBCode: 'Ctrl+B copier le BBCode',
+            bbcodeCopied: 'Copi\u00e9',
             footerRefresh: 'Ctrl+R actualiser',
             footerHelp: '? aide',
             dataFresh: 'Donn\u00e9es \u00e0 jour',
@@ -371,7 +382,6 @@
             distNeedOrigin: 'Donnez deux coordonn\u00e9es, ou une si votre ville active peut \u00eatre d\u00e9tect\u00e9e.',
             scopeHelpTitle: 'Port\u00e9es',
             scopeHelpDesc: '@p joueurs \u00b7 @a alliances \u00b7 @t villes \u00b7 @c coordonn\u00e9es',
-            externalStats: 'Ouvrir dans GrepoLife',
             commandIslandHelp: '>island X:Y \u2014 toutes les villes d\u2019une \u00eele',
             commandNearHelp: '>near [X:Y] [rayon] \u2014 \u00eeles autour d\u2019un point',
             commandOceanHelp: '>ocean M34 [alliance] \u2014 aper\u00e7u d\u2019oc\u00e9an',
@@ -409,6 +419,7 @@
             emptyHintCoords: 'Puoi anche inserire le coordinate: <strong>{example}</strong>',
             loadingWorldData: 'Caricamento dati del mondo...',
             noResults: 'Nessun risultato trovato.',
+            resultsMore: '{shown} di {total} mostrati \u2014 scorri per altri',
             errorLoadingData: 'Errore nel caricamento dei dati: {error}',
             badgePlayer: 'Giocatore',
             badgeAlliance: 'Alleanza',
@@ -427,6 +438,8 @@
             recentTitle: 'Recenti',
             footerTab: 'Tab filtra',
             footerFav: 'Ctrl+F preferito',
+            footerBBCode: 'Ctrl+B copia BBCode',
+            bbcodeCopied: 'Copiato',
             footerRefresh: 'Ctrl+R aggiorna',
             footerHelp: '? aiuto',
             dataFresh: 'Dati aggiornati',
@@ -449,7 +462,6 @@
             distNeedOrigin: 'Indica due coordinate, o una se la tua citt\u00e0 attiva pu\u00f2 essere rilevata.',
             scopeHelpTitle: 'Ambiti',
             scopeHelpDesc: '@p giocatori \u00b7 @a alleanze \u00b7 @t citt\u00e0 \u00b7 @c coordinate',
-            externalStats: 'Apri in GrepoLife',
             commandIslandHelp: '>island X:Y \u2014 tutte le citt\u00e0 di un\u2019isola',
             commandNearHelp: '>near [X:Y] [raggio] \u2014 isole attorno a un punto',
             commandOceanHelp: '>ocean M34 [alleanza] \u2014 riepilogo dell\u2019oceano',
@@ -487,6 +499,7 @@
             emptyHintCoords: 'Je kunt ook co\u00f6rdinaten invoeren: <strong>{example}</strong>',
             loadingWorldData: 'Wereldgegevens laden...',
             noResults: 'Geen resultaten gevonden.',
+            resultsMore: '{shown} van {total} weergegeven \u2014 scroll voor meer',
             errorLoadingData: 'Fout bij het laden van gegevens: {error}',
             badgePlayer: 'Speler',
             badgeAlliance: 'Alliantie',
@@ -505,6 +518,8 @@
             recentTitle: 'Recent',
             footerTab: 'Tab filteren',
             footerFav: 'Ctrl+F favoriet',
+            footerBBCode: 'Ctrl+B BBCode kopi\u00ebren',
+            bbcodeCopied: 'Gekopieerd',
             footerRefresh: 'Ctrl+R verversen',
             footerHelp: '? help',
             dataFresh: 'Gegevens actueel',
@@ -527,7 +542,6 @@
             distNeedOrigin: 'Geef twee co\u00f6rdinaten, of \u00e9\u00e9n als je actieve stad kan worden gedetecteerd.',
             scopeHelpTitle: 'Bereiken',
             scopeHelpDesc: '@p spelers \u00b7 @a allianties \u00b7 @t steden \u00b7 @c co\u00f6rdinaten',
-            externalStats: 'Openen in GrepoLife',
             commandIslandHelp: '>island X:Y \u2014 alle steden op een eiland',
             commandNearHelp: '>near [X:Y] [straal] \u2014 eilanden rond een punt',
             commandOceanHelp: '>ocean M34 [alliantie] \u2014 overzicht van een oceaan',
@@ -565,6 +579,7 @@
             emptyHintCoords: 'Mo\u017cesz te\u017c wpisa\u0107 wsp\u00f3\u0142rz\u0119dne: <strong>{example}</strong>',
             loadingWorldData: '\u0141adowanie danych \u015bwiata...',
             noResults: 'Nie znaleziono wynik\u00f3w.',
+            resultsMore: 'Pokazano {shown} z {total} \u2014 przewi\u0144, aby zobaczy\u0107 wi\u0119cej',
             errorLoadingData: 'B\u0142\u0105d podczas \u0142adowania danych: {error}',
             badgePlayer: 'Gracz',
             badgeAlliance: 'Sojusz',
@@ -583,6 +598,8 @@
             recentTitle: 'Ostatnie',
             footerTab: 'Tab filtr',
             footerFav: 'Ctrl+F ulubione',
+            footerBBCode: 'Ctrl+B kopiuj BBCode',
+            bbcodeCopied: 'Skopiowano',
             footerRefresh: 'Ctrl+R od\u015bwie\u017c',
             footerHelp: '? pomoc',
             dataFresh: 'Dane aktualne',
@@ -605,7 +622,6 @@
             distNeedOrigin: 'Podaj dwie wsp\u00f3\u0142rz\u0119dne lub jedn\u0105, je\u015bli mo\u017cna wykry\u0107 twoje aktywne miasto.',
             scopeHelpTitle: 'Zakresy',
             scopeHelpDesc: '@p gracze \u00b7 @a sojusze \u00b7 @t miasta \u00b7 @c wsp\u00f3\u0142rz\u0119dne',
-            externalStats: 'Otw\u00f3rz w GrepoLife',
             commandIslandHelp: '>island X:Y \u2014 wszystkie miasta na wyspie',
             commandNearHelp: '>near [X:Y] [promie\u0144] \u2014 wyspy wok\u00f3\u0142 punktu',
             commandOceanHelp: '>ocean M34 [sojusz] \u2014 podgl\u0105d oceanu',
@@ -643,6 +659,7 @@
             emptyHintCoords: 'Tamb\u00e9m podes introduzir coordenadas: <strong>{example}</strong>',
             loadingWorldData: 'A carregar dados do mundo...',
             noResults: 'Nenhum resultado encontrado.',
+            resultsMore: 'A mostrar {shown} de {total} \u2014 desloque para ver mais',
             errorLoadingData: 'Erro ao carregar dados: {error}',
             badgePlayer: 'Jogador',
             badgeAlliance: 'Alian\u00e7a',
@@ -661,6 +678,8 @@
             recentTitle: 'Recentes',
             footerTab: 'Tab filtrar',
             footerFav: 'Ctrl+F favorito',
+            footerBBCode: 'Ctrl+B copiar BBCode',
+            bbcodeCopied: 'Copiado',
             footerRefresh: 'Ctrl+R atualizar',
             footerHelp: '? ajuda',
             dataFresh: 'Dados atuais',
@@ -683,7 +702,6 @@
             distNeedOrigin: 'Indique duas coordenadas, ou uma, se a sua cidade ativa puder ser detetada.',
             scopeHelpTitle: '\u00c2mbitos',
             scopeHelpDesc: '@p jogadores \u00b7 @a alian\u00e7as \u00b7 @t cidades \u00b7 @c coordenadas',
-            externalStats: 'Abrir no GrepoLife',
             commandIslandHelp: '>island X:Y \u2014 todas as cidades de uma ilha',
             commandNearHelp: '>near [X:Y] [raio] \u2014 ilhas em torno de um ponto',
             commandOceanHelp: '>ocean M34 [alian\u00e7a] \u2014 resumo do oceano',
@@ -721,6 +739,7 @@
             emptyHintCoords: 'Voc\u00ea tamb\u00e9m pode digitar coordenadas: <strong>{example}</strong>',
             loadingWorldData: 'Carregando dados do mundo...',
             noResults: 'Nenhum resultado encontrado.',
+            resultsMore: 'Exibindo {shown} de {total} \u2014 role para ver mais',
             errorLoadingData: 'Erro ao carregar dados: {error}',
             badgePlayer: 'Jogador',
             badgeAlliance: 'Alian\u00e7a',
@@ -739,6 +758,8 @@
             recentTitle: 'Recentes',
             footerTab: 'Tab filtrar',
             footerFav: 'Ctrl+F favorito',
+            footerBBCode: 'Ctrl+B copiar BBCode',
+            bbcodeCopied: 'Copiado',
             footerRefresh: 'Ctrl+R atualizar',
             footerHelp: '? ajuda',
             dataFresh: 'Dados atuais',
@@ -761,7 +782,6 @@
             distNeedOrigin: 'Informe duas coordenadas, ou uma, se sua cidade ativa puder ser detectada.',
             scopeHelpTitle: '\u00c2mbitos',
             scopeHelpDesc: '@p jogadores \u00b7 @a alian\u00e7as \u00b7 @t cidades \u00b7 @c coordenadas',
-            externalStats: 'Abrir no GrepoLife',
             commandIslandHelp: '>island X:Y \u2014 todas as cidades de uma ilha',
             commandNearHelp: '>near [X:Y] [raio] \u2014 ilhas ao redor de um ponto',
             commandOceanHelp: '>ocean M34 [alian\u00e7a] \u2014 resumo do oceano',
@@ -799,6 +819,7 @@
             emptyHintCoords: 'Koordinat da girebilirsin: <strong>{example}</strong>',
             loadingWorldData: 'D\u00fcnya verileri y\u00fckleniyor...',
             noResults: 'Sonu\u00e7 bulunamad\u0131.',
+            resultsMore: '{total} sonu\u00e7tan {shown} g\u00f6steriliyor \u2014 daha fazlas\u0131 i\u00e7in kayd\u0131r\u0131n',
             errorLoadingData: 'Veri y\u00fcklenirken hata olu\u015ftu: {error}',
             badgePlayer: 'Oyuncu',
             badgeAlliance: '\u0130ttifak',
@@ -817,6 +838,8 @@
             recentTitle: 'Son',
             footerTab: 'Tab filtrele',
             footerFav: 'Ctrl+F favori',
+            footerBBCode: 'Ctrl+B BBCode kopyala',
+            bbcodeCopied: 'Kopyaland\u0131',
             footerRefresh: 'Ctrl+R yenile',
             footerHelp: '? yard\u0131m',
             dataFresh: 'Veriler g\u00fcncel',
@@ -839,7 +862,6 @@
             distNeedOrigin: '\u0130ki koordinat ver veya aktif \u015fehrin alg\u0131lanabiliyorsa bir tane ver.',
             scopeHelpTitle: 'Kapsamlar',
             scopeHelpDesc: '@p oyuncular \u00b7 @a ittifaklar \u00b7 @t \u015fehirler \u00b7 @c koordinatlar',
-            externalStats: 'GrepoLife\u2019da a\u00e7',
             commandIslandHelp: '>island X:Y \u2014 bir adadaki t\u00fcm \u015fehirler',
             commandNearHelp: '>near [X:Y] [yar\u0131\u00e7ap] \u2014 bir noktan\u0131n etraf\u0131ndaki adalar',
             commandOceanHelp: '>ocean M34 [ittifak] \u2014 okyanus \u00f6zeti',
@@ -877,6 +899,7 @@
             emptyHintCoords: '\u041c\u043e\u0436\u043d\u043e \u0442\u0430\u043a\u0436\u0435 \u0432\u0432\u0435\u0441\u0442\u0438 \u043a\u043e\u043e\u0440\u0434\u0438\u043d\u0430\u0442\u044b: <strong>{example}</strong>',
             loadingWorldData: '\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u0434\u0430\u043d\u043d\u044b\u0445 \u043c\u0438\u0440\u0430...',
             noResults: '\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b.',
+            resultsMore: '\u041f\u043e\u043a\u0430\u0437\u0430\u043d\u043e {shown} \u0438\u0437 {total} \u2014 \u043f\u0440\u043e\u043a\u0440\u0443\u0442\u0438\u0442\u0435 \u0434\u043b\u044f \u0431\u043e\u043b\u044c\u0448\u0435\u0433\u043e',
             errorLoadingData: '\u041e\u0448\u0438\u0431\u043a\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0438 \u0434\u0430\u043d\u043d\u044b\u0445: {error}',
             badgePlayer: '\u0418\u0433\u0440\u043e\u043a',
             badgeAlliance: '\u0410\u043b\u044c\u044f\u043d\u0441',
@@ -895,6 +918,8 @@
             recentTitle: '\u041d\u0435\u0434\u0430\u0432\u043d\u0438\u0435',
             footerTab: 'Tab \u0444\u0438\u043b\u044c\u0442\u0440',
             footerFav: 'Ctrl+F \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0435',
+            footerBBCode: 'Ctrl+B \u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c BBCode',
+            bbcodeCopied: '\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e',
             footerRefresh: 'Ctrl+R \u043e\u0431\u043d\u043e\u0432\u0438\u0442\u044c',
             footerHelp: '? \u0441\u043f\u0440\u0430\u0432\u043a\u0430',
             dataFresh: '\u0414\u0430\u043d\u043d\u044b\u0435 \u0430\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u044b',
@@ -917,7 +942,6 @@
             distNeedOrigin: '\u0423\u043a\u0430\u0436\u0438\u0442\u0435 \u0434\u0432\u0435 \u043a\u043e\u043e\u0440\u0434\u0438\u043d\u0430\u0442\u044b \u0438\u043b\u0438 \u043e\u0434\u043d\u0443, \u0435\u0441\u043b\u0438 \u0432\u0430\u0448 \u0430\u043a\u0442\u0438\u0432\u043d\u044b\u0439 \u0433\u043e\u0440\u043e\u0434 \u043c\u043e\u0436\u0435\u0442 \u0431\u044b\u0442\u044c \u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0451\u043d.',
             scopeHelpTitle: '\u041e\u0431\u043b\u0430\u0441\u0442\u0438',
             scopeHelpDesc: '@p \u0438\u0433\u0440\u043e\u043a\u0438 \u00b7 @a \u0430\u043b\u044c\u044f\u043d\u0441\u044b \u00b7 @t \u0433\u043e\u0440\u043e\u0434\u0430 \u00b7 @c \u043a\u043e\u043e\u0440\u0434\u0438\u043d\u0430\u0442\u044b',
-            externalStats: '\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0432 GrepoLife',
             commandIslandHelp: '>island X:Y \u2014 \u0432\u0441\u0435 \u0433\u043e\u0440\u043e\u0434\u0430 \u043e\u0441\u0442\u0440\u043e\u0432\u0430',
             commandNearHelp: '>near [X:Y] [\u0440\u0430\u0434\u0438\u0443\u0441] \u2014 \u043e\u0441\u0442\u0440\u043e\u0432\u0430 \u0432\u043e\u043a\u0440\u0443\u0433 \u0442\u043e\u0447\u043a\u0438',
             commandOceanHelp: '>ocean M34 [\u0430\u043b\u044c\u044f\u043d\u0441] \u2014 \u0441\u0432\u043e\u0434\u043a\u0430 \u043f\u043e \u043e\u043a\u0435\u0430\u043d\u0443',
@@ -955,6 +979,7 @@
             emptyHintCoords: '\u039c\u03c0\u03bf\u03c1\u03b5\u03af\u03c2 \u03b5\u03c0\u03af\u03c3\u03b7\u03c2 \u03bd\u03b1 \u03b5\u03b9\u03c3\u03b1\u03b3\u03ac\u03b3\u03b5\u03b9\u03c2 \u03c3\u03c5\u03bd\u03c4\u03b5\u03c4\u03b1\u03b3\u03bc\u03ad\u03bd\u03b5\u03c2: <strong>{example}</strong>',
             loadingWorldData: '\u03a6\u03cc\u03c1\u03c4\u03c9\u03c3\u03b7 \u03b4\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03c9\u03bd \u03ba\u03cc\u03c3\u03bc\u03bf\u03c5...',
             noResults: '\u0394\u03b5\u03bd \u03b2\u03c1\u03ad\u03b8\u03b7\u03ba\u03b1\u03bd \u03b1\u03c0\u03bf\u03c4\u03b5\u03bb\u03ad\u03c3\u03bc\u03b1\u03c4\u03b1.',
+            resultsMore: '\u0395\u03bc\u03c6\u03ac\u03bd\u03b9\u03c3\u03b7 {shown} \u03b1\u03c0\u03cc {total} \u2014 \u03ba\u03c5\u03bb\u03af\u03c3\u03c4\u03b5 \u03b3\u03b9\u03b1 \u03c0\u03b5\u03c1\u03b9\u03c3\u03c3\u03cc\u03c4\u03b5\u03c1\u03b1',
             errorLoadingData: '\u03a3\u03c6\u03ac\u03bb\u03bc\u03b1 \u03c6\u03cc\u03c1\u03c4\u03c9\u03c3\u03b7\u03c2 \u03b4\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03c9\u03bd: {error}',
             badgePlayer: '\u03a0\u03b1\u03af\u03ba\u03c4\u03b7\u03c2',
             badgeAlliance: '\u03a3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b1',
@@ -973,6 +998,8 @@
             recentTitle: '\u03a0\u03c1\u03cc\u03c3\u03c6\u03b1\u03c4\u03b1',
             footerTab: 'Tab \u03c6\u03af\u03bb\u03c4\u03c1\u03bf',
             footerFav: 'Ctrl+F \u03b1\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03bf',
+            footerBBCode: 'Ctrl+B \u03b1\u03bd\u03c4\u03b9\u03b3\u03c1\u03b1\u03c6\u03ae BBCode',
+            bbcodeCopied: '\u0391\u03bd\u03c4\u03b9\u03b3\u03c1\u03ac\u03c6\u03b7\u03ba\u03b5',
             footerRefresh: 'Ctrl+R \u03b1\u03bd\u03ac\u03ba\u03c4\u03b7\u03c3\u03b7',
             footerHelp: '? \u03b2\u03bf\u03ae\u03b8\u03b5\u03b9\u03b1',
             dataFresh: '\u0394\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03b1 \u03b5\u03bd\u03b7\u03bc\u03b5\u03c1\u03c9\u03bc\u03ad\u03bd\u03b1',
@@ -995,7 +1022,6 @@
             distNeedOrigin: '\u0394\u03ce\u03c3\u03b5 \u03b4\u03cd\u03bf \u03c3\u03c5\u03bd\u03c4\u03b5\u03c4\u03b1\u03b3\u03bc\u03ad\u03bd\u03b5\u03c2, \u03ae \u03bc\u03af\u03b1 \u03b1\u03bd \u03bc\u03c0\u03bf\u03c1\u03b5\u03af \u03bd\u03b1 \u03b1\u03bd\u03b9\u03c7\u03bd\u03b5\u03c5\u03b8\u03b5\u03af \u03b7 \u03b5\u03bd\u03b5\u03c1\u03b3\u03ae \u03c0\u03cc\u03bb\u03b7 \u03c3\u03bf\u03c5.',
             scopeHelpTitle: '\u03a0\u03b5\u03b4\u03af\u03b1',
             scopeHelpDesc: '@p \u03c0\u03b1\u03af\u03ba\u03c4\u03b5\u03c2 \u00b7 @a \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b5\u03c2 \u00b7 @t \u03c0\u03cc\u03bb\u03b5\u03b9\u03c2 \u00b7 @c \u03c3\u03c5\u03bd\u03c4\u03b5\u03c4\u03b1\u03b3\u03bc\u03ad\u03bd\u03b5\u03c2',
-            externalStats: '\u0386\u03bd\u03bf\u03b9\u03b3\u03bc\u03b1 \u03c3\u03c4\u03bf GrepoLife',
             commandIslandHelp: '>island X:Y \u2014 \u03cc\u03bb\u03b5\u03c2 \u03bf\u03b9 \u03c0\u03cc\u03bb\u03b5\u03b9\u03c2 \u03b5\u03bd\u03cc\u03c2 \u03bd\u03b7\u03c3\u03b9\u03bf\u03cd',
             commandNearHelp: '>near [X:Y] [\u03b1\u03ba\u03c4\u03af\u03bd\u03b1] \u2014 \u03bd\u03b7\u03c3\u03b9\u03ac \u03b3\u03cd\u03c1\u03c9 \u03b1\u03c0\u03cc \u03ad\u03bd\u03b1 \u03c3\u03b7\u03bc\u03b5\u03af\u03bf',
             commandOceanHelp: '>ocean M34 [\u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b1] \u2014 \u03b5\u03c0\u03b9\u03c3\u03ba\u03cc\u03c0\u03b7\u03c3\u03b7 \u03c9\u03ba\u03b5\u03b1\u03bd\u03bf\u03cd',
@@ -1033,6 +1059,7 @@
             emptyHintCoords: 'Koordin\u00e1t\u00e1kat is megadhatsz: <strong>{example}</strong>',
             loadingWorldData: 'Vil\u00e1gadatok bet\u00f6lt\u00e9se...',
             noResults: 'Nincs tal\u00e1lat.',
+            resultsMore: '{shown}/{total} tal\u00e1lat megjelen\u0151\u2014 g\u00f6rgessen tov\u00e1bbiak\u00e9rt',
             errorLoadingData: 'Hiba az adatok bet\u00f6lt\u00e9sekor: {error}',
             badgePlayer: 'J\u00e1t\u00e9kos',
             badgeAlliance: 'Sz\u00f6vets\u00e9g',
@@ -1051,6 +1078,8 @@
             recentTitle: 'Legut\u00f3bbi',
             footerTab: 'Tab sz\u0171r\u00e9s',
             footerFav: 'Ctrl+F kedvenc',
+            footerBBCode: 'Ctrl+B BBCode m\u00e1sol\u00e1sa',
+            bbcodeCopied: 'M\u00e1solva',
             footerRefresh: 'Ctrl+R friss\u00edt\u00e9s',
             footerHelp: '? s\u00fag\u00f3',
             dataFresh: 'Adatok frissek',
@@ -1073,7 +1102,6 @@
             distNeedOrigin: 'Adj meg k\u00e9t koordin\u00e1t\u00e1t, vagy egyet, ha az akt\u00edv v\u00e1rosod felismerhet\u0151.',
             scopeHelpTitle: 'Tartom\u00e1nyok',
             scopeHelpDesc: '@p j\u00e1t\u00e9kosok \u00b7 @a sz\u00f6vets\u00e9gek \u00b7 @t v\u00e1rosok \u00b7 @c koordin\u00e1t\u00e1k',
-            externalStats: 'Megnyit\u00e1s a GrepoLife-ban',
             commandIslandHelp: '>island X:Y \u2014 egy sziget \u00f6sszes v\u00e1rosa',
             commandNearHelp: '>near [X:Y] [sug\u00e1r] \u2014 szigetek egy pont k\u00f6r\u00fcl',
             commandOceanHelp: '>ocean M34 [sz\u00f6vets\u00e9g] \u2014 \u00f3ce\u00e1n \u00e1ttekint\u00e9s',
@@ -1111,6 +1139,7 @@
             emptyHintCoords: 'Po\u021bi introduce \u0219i coordonate: <strong>{example}</strong>',
             loadingWorldData: 'Se \u00eencarc\u0103 datele lumii...',
             noResults: 'Niciun rezultat g\u0103sit.',
+            resultsMore: 'Se afi\u0219eaz\u0103 {shown} din {total} \u2014 derula\u021bi pentru mai multe',
             errorLoadingData: 'Eroare la \u00eenc\u0103rcarea datelor: {error}',
             badgePlayer: 'Juc\u0103tor',
             badgeAlliance: 'Alian\u021b\u0103',
@@ -1129,6 +1158,8 @@
             recentTitle: 'Recente',
             footerTab: 'Tab filtreaz\u0103',
             footerFav: 'Ctrl+F favorit',
+            footerBBCode: 'Ctrl+B copiaz\u0103 BBCode',
+            bbcodeCopied: 'Copiat',
             footerRefresh: 'Ctrl+R re\u00eencarc\u0103',
             footerHelp: '? ajutor',
             dataFresh: 'Date actuale',
@@ -1151,7 +1182,6 @@
             distNeedOrigin: 'D\u0103 dou\u0103 coordonate, sau una dac\u0103 ora\u0219ul t\u0103u activ poate fi detectat.',
             scopeHelpTitle: 'Domenii',
             scopeHelpDesc: '@p juc\u0103tori \u00b7 @a alian\u021be \u00b7 @t ora\u0219e \u00b7 @c coordonate',
-            externalStats: 'Deschide \u00een GrepoLife',
             commandIslandHelp: '>island X:Y \u2014 toate ora\u0219ele de pe o insul\u0103',
             commandNearHelp: '>near [X:Y] [raz\u0103] \u2014 insule \u00een jurul unui punct',
             commandOceanHelp: '>ocean M34 [alian\u021b\u0103] \u2014 rezumat al oceanului',
@@ -1189,6 +1219,7 @@
             emptyHintCoords: 'M\u016f\u017ee\u0161 tak\u00e9 zadat sou\u0159adnice: <strong>{example}</strong>',
             loadingWorldData: 'Na\u010d\u00edt\u00e1n\u00ed dat sv\u011bta...',
             noResults: 'Nebyly nalezeny \u017e\u00e1dn\u00e9 v\u00fdsledky.',
+            resultsMore: 'Zobrazeno {shown} z {total} \u2014 posunut\u00edm zobraz\u00edte dal\u0161\u00ed',
             errorLoadingData: 'Chyba p\u0159i na\u010d\u00edt\u00e1n\u00ed dat: {error}',
             badgePlayer: 'Hr\u00e1\u010d',
             badgeAlliance: 'Aliance',
@@ -1207,6 +1238,8 @@
             recentTitle: 'Ned\u00e1vn\u00e9',
             footerTab: 'Tab filtr',
             footerFav: 'Ctrl+F obl\u00edben\u00e9',
+            footerBBCode: 'Ctrl+B kop\u00edrovat BBCode',
+            bbcodeCopied: 'Zkop\u00edrov\u00e1no',
             footerRefresh: 'Ctrl+R obnovit',
             footerHelp: '? n\u00e1pov\u011bda',
             dataFresh: 'Data \u010derstv\u00e1',
@@ -1229,7 +1262,6 @@
             distNeedOrigin: 'Zadejte dv\u011b sou\u0159adnice, nebo jednu, pokud lze zjistit va\u0161e aktivn\u00ed m\u011bsto.',
             scopeHelpTitle: 'Rozsahy',
             scopeHelpDesc: '@p hr\u00e1\u010di \u00b7 @a aliance \u00b7 @t m\u011bsta \u00b7 @c sou\u0159adnice',
-            externalStats: 'Otev\u0159\u00edt v GrepoLife',
             commandIslandHelp: '>island X:Y \u2014 v\u0161echna m\u011bsta na ostrov\u011b',
             commandNearHelp: '>near [X:Y] [polom\u011br] \u2014 ostrovy kolem bodu',
             commandOceanHelp: '>ocean M34 [aliance] \u2014 p\u0159ehled oce\u00e1nu',
@@ -1267,6 +1299,7 @@
             emptyHintCoords: 'M\u00f4\u017ee\u0161 zada\u0165 aj s\u00faradnice: <strong>{example}</strong>',
             loadingWorldData: 'Na\u010d\u00edtavanie d\u00e1t sveta...',
             noResults: 'Neboli n\u00e1jden\u00e9 \u017eiadne v\u00fdsledky.',
+            resultsMore: 'Zobrazen\u00fdch {shown} z {total} \u2014 posunut\u00edm zobraz\u00edte \u010fal\u0161ie',
             errorLoadingData: 'Chyba pri na\u010d\u00edtan\u00ed d\u00e1t: {error}',
             badgePlayer: 'Hr\u00e1\u010d',
             badgeAlliance: 'Aliancia',
@@ -1285,6 +1318,8 @@
             recentTitle: 'Ned\u00e1vne',
             footerTab: 'Tab filter',
             footerFav: 'Ctrl+F ob\u013e\u00faben\u00e9',
+            footerBBCode: 'Ctrl+B kop\u00edrova\u0165 BBCode',
+            bbcodeCopied: 'Skop\u00edrovan\u00e9',
             footerRefresh: 'Ctrl+R obnovi\u0165',
             footerHelp: '? pomoc',
             dataFresh: 'D\u00e1ta \u010derstv\u00e9',
@@ -1307,7 +1342,6 @@
             distNeedOrigin: 'Zadajte dve s\u00faradnice, alebo jednu, ak mo\u017eno zisti\u0165 va\u0161e akt\u00edvne mesto.',
             scopeHelpTitle: 'Rozsahy',
             scopeHelpDesc: '@p hr\u00e1\u010di \u00b7 @a aliancie \u00b7 @t mest\u00e1 \u00b7 @c s\u00faradnice',
-            externalStats: 'Otvori\u0165 v GrepoLife',
             commandIslandHelp: '>island X:Y \u2014 v\u0161etky mest\u00e1 na ostrove',
             commandNearHelp: '>near [X:Y] [polomer] \u2014 ostrovy okolo bodu',
             commandOceanHelp: '>ocean M34 [aliancia] \u2014 preh\u013ead oce\u00e1nu',
@@ -1416,16 +1450,19 @@
         showHelp: false,
         savedAt: 0,
         dataSource: null,
+        // How many of state.results are currently rendered; grows as the
+        // user scrolls down instead of rendering thousands of rows at once.
+        visibleCount: CONFIG.RESULTS_PAGE_SIZE,
     };
 
     /*
      * ============================================================
      * DATA (in-memory index built from Grepolis' public data
-     * dumps: /data/players.txt, /data/alliances.txt and
-     * /data/towns.txt). These are same-origin, plain-text files
-     * that the game client itself exposes for rankings/exports.
-     * This is not a made-up endpoint: they are loaded once on
-     * startup and cached in memory, so subsequent searches are
+     * dumps: /data/players.txt, /data/alliances.txt, /data/towns.txt
+     * and /data/islands.txt). These are same-origin, plain-text
+     * files that the game client itself exposes for rankings/
+     * exports. This is not a made-up endpoint: they are loaded once
+     * on startup and cached in memory, so subsequent searches are
      * purely local and synchronous.
      * ============================================================
      */
@@ -1439,6 +1476,7 @@
         townById: new Map(),
         townsByCoord: new Map(),
         townsByPlayer: new Map(),
+        islandIdByCoord: new Map(),
     };
 
     /*
@@ -1609,7 +1647,6 @@
             case 'town': {
                 const town = DATA.townById.get(Number(entry.id));
                 if (town) {
-                    const player = DATA.playerById.get(town.playerId);
                     return {
                         type: 'town',
                         id: town.id,
@@ -1617,7 +1654,6 @@
                         x: town.islandX,
                         y: town.islandY,
                         playerId: town.playerId,
-                        playerName: player ? player.name : '',
                         data: town,
                     };
                 }
@@ -1671,34 +1707,6 @@
         }
 
         return rows;
-    }
-
-    /*
-     * ============================================================
-     * EXTERNAL STATS (GrepoLife)
-     * ============================================================
-     *
-     * GrepoLife organizes worlds by language directory + numeric
-     * world: https://grepolife.com/{market}/{world}/{player|alliance}/{id}
-     * (e.g. fr/178/player/4290280). The world number is the trailing
-     * digits of the world subdomain (en37 -> 37). Test/kitchen worlds
-     * ('zz') have no GrepoLife catalog, so the link is disabled there.
-     */
-
-    function externalStatsUrl(type, id) {
-        if (!WORLD || MARKET === 'zz') {
-            return null;
-        }
-        const pathByType = { player: 'player', alliance: 'alliance' };
-        if (!pathByType[type]) {
-            return null;
-        }
-        const worldNumber = WORLD.match(/\d+$/);
-        if (!worldNumber) {
-            return null;
-        }
-        const url = `https://grepolife.com/${MARKET}/${worldNumber[0]}/${pathByType[type]}/${id}`;
-        return id === undefined || id === null || id === '' ? null : url;
     }
 
     /*
@@ -1771,11 +1779,12 @@
      * DATA LOADING
      * ============================================================
      *
-     * /data/players.txt, /data/alliances.txt and /data/towns.txt are
-     * same-origin (same world subdomain as /game/index), so a plain
-     * `fetch` is enough: no need for GM_xmlhttpRequest or @connect,
-     * and we avoid the complexity of manually decompressing gzip.
-     * All three are loaded in parallel once on startup.
+     * /data/players.txt, /data/alliances.txt, /data/towns.txt and
+     * /data/islands.txt are same-origin (same world subdomain as
+     * /game/index), so a plain `fetch` is enough: no need for
+     * GM_xmlhttpRequest or @connect, and we avoid the complexity of
+     * manually decompressing gzip. All four are loaded in parallel
+     * once on startup.
      */
 
     function fetchText(path) {
@@ -1822,6 +1831,20 @@
                 DATA.townsByPlayer.set(town.playerId, []);
             }
             DATA.townsByPlayer.get(town.playerId).push(town);
+        }
+    }
+
+    /*
+     * Only used to resolve the internal island id that Grepolis'
+     * own [island]id[/island] BBCode expects (confirmed against the
+     * game's own "Island info" window: it is a numeric id, not the
+     * "x:y" pair used everywhere else in this script). Indexed by
+     * "x:y" since that is how every island is already looked up.
+     */
+    function indexIslands(islands) {
+        DATA.islandIdByCoord = new Map();
+        for (const island of islands) {
+            DATA.islandIdByCoord.set(`${island.x}:${island.y}`, island.id);
         }
     }
 
@@ -1912,6 +1935,32 @@
     }
 
     /*
+     * islands.txt rows: id,x,y,type,phase,resource1,resource2. Only
+     * id/x/y are needed here (see indexIslands above for why).
+     */
+    function parseIslands(text) {
+        const islands = [];
+
+        for (const line of text.split(/\r?\n/)) {
+            if (!line) continue;
+
+            const parts = line.split(',');
+            if (parts.length < 3) continue;
+
+            const id = Number(parts[0]);
+            if (!id) continue;
+
+            islands.push({
+                id,
+                x: Number(parts[1]),
+                y: Number(parts[2]),
+            });
+        }
+
+        return islands;
+    }
+
+    /*
      * ============================================================
      * LOCAL CACHE (IndexedDB)
      * ============================================================
@@ -1957,7 +2006,7 @@
             .catch(() => null);
     }
 
-    function cacheSet(players, alliances, towns) {
+    function cacheSet(players, alliances, towns, islands) {
         return idbOpen()
             .then((db) => new Promise((resolve, reject) => {
                 const tx = db.transaction(DB_STORE, 'readwrite');
@@ -1967,6 +2016,7 @@
                     players,
                     alliances,
                     towns,
+                    islands,
                 });
                 tx.oncomplete = () => resolve();
                 tx.onerror = () => reject(tx.error);
@@ -1985,10 +2035,11 @@
             .catch(() => null);
     }
 
-    function applyLoadedData(source, players, alliances, towns, savedAt) {
+    function applyLoadedData(source, players, alliances, towns, islands, savedAt) {
         indexPlayers(players);
         indexAlliances(alliances);
         indexTowns(towns);
+        indexIslands(islands);
         state.savedAt = savedAt || Date.now();
         state.dataSource = source;
         state.loaded = true;
@@ -1996,7 +2047,7 @@
 
         console.info(
             `[QF] Data loaded (${source}): ${players.length} players, ` +
-            `${alliances.length} alliances, ${towns.length} towns.`
+            `${alliances.length} alliances, ${towns.length} towns, ${islands.length} islands.`
         );
     }
 
@@ -2030,26 +2081,32 @@
         try {
             if (!force) {
                 const cached = await cacheGet();
-                if (cached && cached.savedAt && Date.now() - cached.savedAt < CONFIG.CACHE_TTL) {
-                    applyLoadedData('cache', cached.players || [], cached.alliances || [], cached.towns || [], cached.savedAt);
+                // cached.islands is only present once a user has loaded the
+                // world after islands.txt support was added: older cache
+                // entries are treated as stale so the BBCode island lookup
+                // has data to work with instead of silently staying empty.
+                if (cached && cached.savedAt && cached.islands && Date.now() - cached.savedAt < CONFIG.CACHE_TTL) {
+                    applyLoadedData('cache', cached.players || [], cached.alliances || [], cached.towns || [], cached.islands || [], cached.savedAt);
                     state.loading = false;
                     finishLoad();
                     return;
                 }
             }
 
-            const [playersText, alliancesText, townsText] = await Promise.all([
+            const [playersText, alliancesText, townsText, islandsText] = await Promise.all([
                 fetchText('/data/players.txt'),
                 fetchText('/data/alliances.txt'),
                 fetchText('/data/towns.txt'),
+                fetchText('/data/islands.txt'),
             ]);
 
             const players = parsePlayers(playersText);
             const alliances = parseAlliances(alliancesText);
             const towns = parseTowns(townsText);
+            const islands = parseIslands(islandsText);
 
-            applyLoadedData('network', players, alliances, towns, Date.now());
-            cacheSet(players, alliances, towns); // fire-and-forget; failures are ignored
+            applyLoadedData('network', players, alliances, towns, islands, Date.now());
+            cacheSet(players, alliances, towns, islands); // fire-and-forget; failures are ignored
             state.loading = false;
             finishLoad();
         } catch (error) {
@@ -2110,7 +2167,6 @@
         for (const town of DATA.towns) {
             const score = scoreMatch(town.nameNorm, queryNorm);
             if (score > 0) {
-                const player = DATA.playerById.get(town.playerId);
                 out.push(townResult(town, { score }));
             }
         }
@@ -2126,9 +2182,16 @@
         return DATA.allianceById.get(player.allianceId) || null;
     }
 
+    /*
+     * Player/alliance names are resolved lazily (only when a town row
+     * is actually rendered) instead of on every matching town at
+     * search time: a free-text search over tens of thousands of
+     * towns can match thousands of rows, and only ~40 are ever drawn
+     * at once, so eagerly doing two Map lookups per match wastes
+     * work that scales with the full result set instead of with what
+     * the user actually sees.
+     */
     function townResult(town, extra) {
-        const player = DATA.playerById.get(town.playerId);
-        const alliance = allianceOfPlayer(player);
         return Object.assign({
             type: 'town',
             id: town.id,
@@ -2137,10 +2200,24 @@
             x: town.islandX,
             y: town.islandY,
             playerId: town.playerId,
-            playerName: player ? player.name : '',
-            allianceName: alliance ? alliance.name : '',
             data: town,
         }, extra || {});
+    }
+
+    /*
+     * Resolves the {playerName, allianceName} pair for a town row at
+     * render time, from item.data when available (the common case)
+     * or by looking up item.playerId (history/favorites snapshots
+     * that predate a page reload of the index).
+     */
+    function townOwnerNames(item) {
+        const playerId = item.data ? item.data.playerId : item.playerId;
+        const player = playerId ? DATA.playerById.get(playerId) : null;
+        const alliance = allianceOfPlayer(player);
+        return {
+            playerName: player ? player.name : '',
+            allianceName: alliance ? alliance.name : '',
+        };
     }
 
     /*
@@ -2168,6 +2245,7 @@
             score: 16000,
             x,
             y,
+            islandId: DATA.islandIdByCoord.get(`${x}:${y}`),
             townCount: towns.length,
             allianceCount: alliances.size,
             ghostCount: ghosts,
@@ -2217,6 +2295,7 @@
             state.results = state.fullResults.filter((item) => item.type === state.segment);
         }
         state.selected = 0;
+        state.visibleCount = CONFIG.RESULTS_PAGE_SIZE;
     }
 
     function setSegment(name) {
@@ -2638,6 +2717,89 @@
         }
     }
 
+    /*
+     * ============================================================
+     * BBCODE
+     * ============================================================
+     *
+     * Builds the exact BBCode Grepolis itself generates from its own
+     * "Info" popups, confirmed live against the game client:
+     *   - [player]Name[/player]   (by name, like the in-game chooser)
+     *   - [ally]Name[/ally]       (by name, like the in-game chooser)
+     *   - [town]townId[/town]     (by internal town id)
+     *   - [island]islandId[/island] (by internal island id, NOT "x:y" —
+     *     confirmed via the "Island info" window's own bbcode field)
+     * Returns null for types that have no BBCode equivalent
+     * (coordinate/command-suggestion/info, and islands whose id
+     * couldn't be resolved because islands.txt hasn't loaded yet).
+     */
+    function bbcodeFor(item) {
+        if (!item) return null;
+        switch (item.type) {
+            case 'player':
+                return `[player]${item.name}[/player]`;
+            case 'alliance':
+                return `[ally]${item.name}[/ally]`;
+            case 'town':
+                return Number.isFinite(item.id) ? `[town]${item.id}[/town]` : null;
+            case 'island': {
+                const islandId = Number.isFinite(item.islandId)
+                    ? item.islandId
+                    : DATA.islandIdByCoord.get(`${item.x}:${item.y}`);
+                return Number.isFinite(islandId) ? `[island]${islandId}[/island]` : null;
+            }
+            default:
+                return null;
+        }
+    }
+
+    function copyToClipboard(text) {
+        if (GP.navigator && GP.navigator.clipboard && GP.navigator.clipboard.writeText) {
+            return GP.navigator.clipboard.writeText(text).catch(() => fallbackCopyToClipboard(text));
+        }
+        return fallbackCopyToClipboard(text);
+    }
+
+    // GM/userscript pages can end up without Clipboard API permission
+    // (e.g. no user gesture reaching the real page, or an older
+    // browser); execCommand('copy') via a throwaway textarea is the
+    // fallback every other in-page copy button on the web still uses.
+    function fallbackCopyToClipboard(text) {
+        try {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            document.execCommand('copy');
+            textarea.remove();
+            return Promise.resolve();
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
+
+    /*
+     * Copies the BBCode for the selected result and closes the
+     * palette, mirroring Enter's "act on the selection, then close"
+     * behavior. Silently no-ops for rows without a BBCode equivalent
+     * instead of copying nothing useful or throwing.
+     */
+    function copySelectedBBCode() {
+        const item = state.results[state.selected];
+        const code = bbcodeFor(item);
+        if (!code) {
+            return;
+        }
+        copyToClipboard(code).then(() => {
+            addHistory(item);
+            close();
+            showToast(translate('bbcodeCopied'), code);
+        });
+    }
+
     let searchTimer = null;
     let searchToken = 0;
 
@@ -2696,6 +2858,7 @@
             state.segmentCounts = null;
             state.results = state.fullResults;
             state.selected = 0;
+            state.visibleCount = CONFIG.RESULTS_PAGE_SIZE;
             render();
             return;
         }
@@ -2703,6 +2866,7 @@
         if (!state.loaded) {
             // loadAll() was already triggered in init(); it just hasn't finished yet.
             state.results = [];
+            state.visibleCount = CONFIG.RESULTS_PAGE_SIZE;
             render();
             return;
         }
@@ -2792,7 +2956,13 @@
 
         state.detail = detail;
         state.segmentCounts = computeCounts(results);
-        state.fullResults = results.slice(0, CONFIG.MAX_RESULTS);
+        // Command output (>ghost, >near, >ocean...) already self-limits
+        // to CONFIG.MAX_RESULTS while building its rows; free-text
+        // search results are kept in full here so segment filtering
+        // (Tab / chips) sees every match instead of only whatever
+        // happened to survive an earlier "all types mixed" cutoff.
+        // Rendering itself is paginated separately via visibleCount.
+        state.fullResults = results;
         applySegment();
         render();
     }
@@ -3104,6 +3274,7 @@
                     <div id="qf-footer-shortcuts">
                         <span>${escapeHTML(translate('footerTab'))}</span>
                         <span id="qf-footer-fav">${escapeHTML(translate('footerFav'))}</span>
+                        <span id="qf-footer-bbcode">${escapeHTML(translate('footerBBCode'))}</span>
                         <span id="qf-footer-refresh">${escapeHTML(translate('footerRefresh'))}</span>
                         <span id="qf-footer-help">${escapeHTML(translate('footerHelp'))}</span>
                     </div>
@@ -3123,7 +3294,14 @@
         input.addEventListener('input', (event) => scheduleSearch(event.target.value));
         input.addEventListener('keydown', handleInputKeydown);
 
-        overlay.querySelector('#qf-results').addEventListener('mousedown', handleResultClick);
+        const resultsEl = overlay.querySelector('#qf-results');
+        resultsEl.addEventListener('mousedown', handleResultClick);
+        resultsEl.addEventListener('scroll', () => {
+            const nearBottom = resultsEl.scrollTop + resultsEl.clientHeight >= resultsEl.scrollHeight - 120;
+            if (nearBottom) {
+                loadMoreResults();
+            }
+        });
         overlay.querySelector('#qf-segments').addEventListener('mousedown', (event) => {
             const chip = event.target.closest('.qf-chip');
             if (!chip) return;
@@ -3196,6 +3374,7 @@
             state.segmentCounts = null;
             state.results = [];
             state.selected = 0;
+            state.visibleCount = CONFIG.RESULTS_PAGE_SIZE;
             results.innerHTML = `
                 <div class="qf-loading">
                     <div class="qf-spinner"></div>
@@ -3223,12 +3402,74 @@
             return;
         }
 
-        results.innerHTML = state.results.map((item, index) => renderResult(item, index)).join('');
+        renderResultRows(results);
 
         const selectedEl = results.querySelector('.qf-selected');
         if (selectedEl) {
             selectedEl.scrollIntoView({ block: 'nearest' });
         }
+    }
+
+    /*
+     * Only the first `state.visibleCount` rows are drawn: with a
+     * broad query (e.g. a single letter) a world can match thousands
+     * of towns, and building/parsing that much HTML on every
+     * keystroke is what made the palette feel sluggish. More rows
+     * are appended as the user scrolls near the bottom (see the
+     * #qf-results scroll listener in createUI), so every result is
+     * still reachable, just not all rendered upfront.
+     */
+    function renderResultRows(container) {
+        const total = state.results.length;
+        // Keyboard navigation (ArrowDown/End) can move state.selected
+        // past what's currently rendered; grow the visible window so
+        // the selected row is always actually in the DOM instead of
+        // silently doing nothing when it's off-screen below the fold.
+        if (state.selected >= state.visibleCount) {
+            state.visibleCount = Math.min(
+                total,
+                Math.ceil((state.selected + 1) / CONFIG.RESULTS_PAGE_SIZE) * CONFIG.RESULTS_PAGE_SIZE
+            );
+        }
+        const count = Math.min(state.visibleCount, total);
+        let html = '';
+        for (let i = 0; i < count; i++) {
+            html += renderResult(state.results[i], i);
+        }
+        if (count < total) {
+            html += `<div class="qf-results-more">${escapeHTML(translate('resultsMore', { shown: count, total }))}</div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    /*
+     * Grows visibleCount and appends just the newly-revealed rows
+     * (instead of re-running the full render()), so scrolling to
+     * load more never resets scroll position or re-touches rows
+     * already on screen.
+     */
+    function loadMoreResults() {
+        const total = state.results.length;
+        if (state.visibleCount >= total) {
+            return;
+        }
+        const results = document.getElementById('qf-results');
+        if (!results) return;
+
+        const more = results.querySelector('.qf-results-more');
+        if (more) more.remove();
+
+        const start = state.visibleCount;
+        state.visibleCount = Math.min(state.visibleCount + CONFIG.RESULTS_PAGE_SIZE, total);
+
+        let html = '';
+        for (let i = start; i < state.visibleCount; i++) {
+            html += renderResult(state.results[i], i);
+        }
+        if (state.visibleCount < total) {
+            html += `<div class="qf-results-more">${escapeHTML(translate('resultsMore', { shown: state.visibleCount, total }))}</div>`;
+        }
+        results.insertAdjacentHTML('beforeend', html);
     }
 
     /*
@@ -3318,6 +3559,7 @@
             ['Tab', translate('footerTab')],
             ['Home / End', translate('shortcutsFirstLast')],
             ['Ctrl+F', translate('footerFav')],
+            ['Ctrl+B', translate('footerBBCode')],
             ['Ctrl+R', translate('footerRefresh')],
             ['Esc', translate('footerClose')],
             ['?', translate('shortcutsHelp')],
@@ -3379,7 +3621,8 @@
         command: svgIcon('<rect x="3" y="4" width="18" height="16" rx="2"></rect><polyline points="7 9 10.5 12 7 15"></polyline><line x1="12.5" y1="15" x2="17" y2="15"></line>'),
         coordinate: svgIcon('<path d="M12 21s7-7.5 7-12a7 7 0 1 0-14 0c0 4.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle>'),
         info: svgIcon('<circle cx="12" cy="12" r="9"></circle><line x1="12" y1="11" x2="12" y2="16"></line><circle cx="12" cy="7.7" r="0.9" fill="currentColor" stroke="none"></circle>'),
-        external: svgIcon('<path d="M14 4h6v6"></path><path d="M20 4l-9 9"></path><path d="M9 5H5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-4"></path>'),
+        bbcode: svgIcon('<polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline>'),
+        check: svgIcon('<polyline points="4 12 9.5 17.5 20 6"></polyline>'),
         starOutline: svgIcon('<path d="M12 3.3l2.6 5.4 5.9.7-4.3 4.1 1.1 5.9L12 16.6l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.7L12 3.3z"></path>'),
         starFilled: svgIcon('<path d="M12 3.3l2.6 5.4 5.9.7-4.3 4.1 1.1 5.9L12 16.6l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.7L12 3.3z" fill="currentColor" stroke="none"></path>'),
     };
@@ -3410,7 +3653,6 @@
         let badge = '';
         let badgeClass = '';
         let meta = '';
-        let external = '';
         let title = '';
         let info = false;
 
@@ -3429,10 +3671,6 @@
                     if (alliance) parts.push(escapeHTML(alliance.name));
                     meta = parts.join(' &middot; ');
                 }
-                const url = externalStatsUrl('player', item.id);
-                if (url) {
-                    external = `<a class="qf-external" href="${url}" target="_blank" rel="noopener noreferrer" title="${escapeHTML(translate('externalStats'))}">${ICONS.external}</a>`;
-                }
                 break;
             }
 
@@ -3449,20 +3687,17 @@
                     ];
                     meta = parts.join(' &middot; ');
                 }
-                const url = externalStatsUrl('alliance', item.id);
-                if (url) {
-                    external = `<a class="qf-external" href="${url}" target="_blank" rel="noopener noreferrer" title="${escapeHTML(translate('externalStats'))}">${ICONS.external}</a>`;
-                }
                 break;
             }
 
             case 'town': {
-                const isGhost = item.data ? item.data.playerId === 0 : !item.playerName;
+                const { playerName, allianceName } = townOwnerNames(item);
+                const isGhost = item.data ? item.data.playerId === 0 : !playerName;
                 icon = isGhost ? ICONS.ghost : ICONS.town;
                 badge = isGhost ? translate('ghostLabel') : translate('badgeTown');
                 badgeClass = isGhost ? 'qf-badge-coordinate' : 'qf-badge-town';
-                const owner = item.playerName ? ` &middot; ${escapeHTML(item.playerName)}` : '';
-                const alliance = item.allianceName ? ` &middot; ${escapeHTML(item.allianceName)}` : '';
+                const owner = playerName ? ` &middot; ${escapeHTML(playerName)}` : '';
+                const alliance = allianceName ? ` &middot; ${escapeHTML(allianceName)}` : '';
                 const points = item.data ? item.data.points : (item.points || 0);
                 const pts = points ? ` &middot; ${points.toLocaleString()} ${translate('ptsSuffix')}` : '';
                 const sea = getSea(item.x, item.y);
@@ -3537,7 +3772,6 @@
                     </div>
                     ${meta ? `<div class="qf-result-meta">${meta}</div>` : ''}
                 </div>
-                ${external}
             </div>
         `;
     }
@@ -3563,6 +3797,12 @@
                 if (!state.loading) {
                     refreshData();
                 }
+                return;
+            }
+
+            if (key === CONFIG.BBCODE_KEY) {
+                event.preventDefault();
+                copySelectedBBCode();
                 return;
             }
         }
@@ -3624,11 +3864,6 @@
      */
 
     function handleResultClick(event) {
-        // External-stats links must not bubble into row opening.
-        if (event.target.closest('.qf-external')) {
-            return;
-        }
-
         const row = event.target.closest('.qf-result');
         if (!row) return;
 
@@ -3683,6 +3918,7 @@
             state.fullResults = buildHistoryResults();
             state.results = state.fullResults;
             state.selected = 0;
+            state.visibleCount = CONFIG.RESULTS_PAGE_SIZE;
             state.segment = CONFIG.DEFAULT_SEGMENT;
             state.segmentCounts = null;
             state.showHelp = false;
@@ -3712,6 +3948,37 @@
         } else {
             open();
         }
+    }
+
+    let toastTimer = null;
+
+    /*
+     * Brief confirmation toast, independent from #qf-overlay so it is
+     * still visible after Ctrl+B closes the palette (otherwise the
+     * only feedback for a copy would be the palette silently
+     * vanishing, indistinguishable from nothing having happened).
+     */
+    function showToast(label, code) {
+        let toast = document.getElementById('qf-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'qf-toast';
+            document.body.appendChild(toast);
+        }
+
+        const codeHTML = code ? `<code>${escapeHTML(code)}</code>` : '';
+        toast.innerHTML = `${ICONS.check}<span>${escapeHTML(label)}</span>${codeHTML}`;
+
+        clearTimeout(toastTimer);
+        // Force reflow so re-triggering the toast while already visible
+        // still restarts the fade-in transition instead of no-op'ing.
+        toast.classList.remove('qf-toast-visible');
+        void toast.offsetWidth;
+        toast.classList.add('qf-toast-visible');
+
+        toastTimer = setTimeout(() => {
+            toast.classList.remove('qf-toast-visible');
+        }, 1800);
     }
 
     /*
@@ -3777,6 +4044,59 @@
             inset: 0;
             z-index: 2147483647;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        }
+
+        /*
+         * Toast confirming a BBCode copy. Lives outside #qf-overlay and
+         * outlives it (Ctrl+B copies AND closes the palette in one go,
+         * mirroring Enter), so without this the only feedback would be
+         * the palette silently vanishing — indistinguishable from
+         * nothing having happened. Styled to match #qf-window/#qf-esc-key
+         * (same gradient, border and shadow language) instead of
+         * introducing a new visual style.
+         */
+        #qf-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 48px;
+            transform: translateX(-50%) translateY(6px);
+            z-index: 2147483647;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #2c2c2c, #1a1a1a);
+            border: 1px solid rgba(255, 255, 255, .16);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, .55);
+            color: #eee;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            font-size: 12.5px;
+            font-weight: 500;
+            letter-spacing: .1px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .12s ease-out, transform .12s ease-out;
+        }
+
+        #qf-toast.qf-toast-visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #qf-toast .qf-icon-svg {
+            flex: 0 0 auto;
+            width: 15px;
+            height: 15px;
+            color: #d7a33f;
+        }
+
+        #qf-toast code {
+            padding: 1px 5px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, .06);
+            color: rgba(255, 255, 255, .78);
+            font-size: 11.5px;
         }
 
         /*
@@ -4082,22 +4402,12 @@
             color: #e6bd6c;
         }
 
-        .qf-external {
-            flex: 0 0 auto;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 22px;
-            height: 22px;
-            padding: 4px;
-            border-radius: 5px;
-            color: rgba(255, 255, 255, .28);
-            text-decoration: none;
-        }
-
-        .qf-external:hover {
-            color: #d7a33f;
-            background: rgba(255, 255, 255, .06);
+        .qf-results-more {
+            padding: 10px 20px 12px;
+            text-align: center;
+            color: rgba(255, 255, 255, .32);
+            font-size: 11px;
+            cursor: default;
         }
 
         .qf-result-info {
@@ -4355,10 +4665,6 @@
             if (!state.query) return;
             setSegment(name);
             return state.results;
-        },
-
-        statsUrl(type, id) {
-            return externalStatsUrl(type, id);
         },
 
         /*
