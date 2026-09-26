@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.7.0
+// @version      2.8.0
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market.
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.7.0';
+    const VERSION = '2.8.0';
 
     /*
      * ============================================================
@@ -170,6 +170,8 @@
             dataError: 'Data error',
             shortcutsTitle: 'Shortcuts',
             shortcutsFirstLast: 'Jump to first/last result',
+            shortcutsRemoveRecent: 'Remove selected from history',
+            shortcutsClearRecent: 'Clear entire Recent list',
             shortcutsHelp: 'Show this help',
             commandHelpTitle: 'Commands',
             commandGotoHelp: '>goto 123:456 \u2014 jump to an island',
@@ -269,6 +271,8 @@
             dataError: 'Error de datos',
             shortcutsTitle: 'Atajos',
             shortcutsFirstLast: 'saltar al primer/\u00faltimo resultado',
+            shortcutsRemoveRecent: 'Quitar el seleccionado del historial',
+            shortcutsClearRecent: 'Vaciar todo el historial reciente',
             shortcutsHelp: 'mostrar esta ayuda',
             commandHelpTitle: 'Comandos',
             commandGotoHelp: '>goto 123:456 \u2014 saltar a una isla',
@@ -368,6 +372,8 @@
             dataError: 'Datenfehler',
             shortcutsTitle: 'Tastenk\u00fcrzel',
             shortcutsFirstLast: 'zum ersten/letzten Ergebnis springen',
+            shortcutsRemoveRecent: 'Ausgewähltes aus dem Verlauf entfernen',
+            shortcutsClearRecent: 'Gesamten Verlauf leeren',
             shortcutsHelp: 'diese Hilfe anzeigen',
             commandHelpTitle: 'Befehle',
             commandGotoHelp: '>goto 123:456 \u2014 zu einer Insel springen',
@@ -467,6 +473,8 @@
             dataError: 'Erreur de donn\u00e9es',
             shortcutsTitle: 'Raccourcis',
             shortcutsFirstLast: 'aller au premier/dernier r\u00e9sultat',
+            shortcutsRemoveRecent: 'Retirer la sélection de l’historique',
+            shortcutsClearRecent: 'Vider tout l’historique récent',
             shortcutsHelp: 'afficher cette aide',
             commandHelpTitle: 'Commandes',
             commandGotoHelp: '>goto 123:456 \u2014 aller \u00e0 une \u00eele',
@@ -566,6 +574,8 @@
             dataError: 'Errore dati',
             shortcutsTitle: 'Scorciatoie',
             shortcutsFirstLast: 'vai al primo/ultimo risultato',
+            shortcutsRemoveRecent: 'Rimuovi la selezione dalla cronologia',
+            shortcutsClearRecent: 'Svuota tutta la cronologia recente',
             shortcutsHelp: 'mostra questo aiuto',
             commandHelpTitle: 'Comandi',
             commandGotoHelp: '>goto 123:456 \u2014 vai a un\u2019isola',
@@ -665,6 +675,8 @@
             dataError: 'Gegevensfout',
             shortcutsTitle: 'Sneltoetsen',
             shortcutsFirstLast: 'naar eerste/laatste resultaat gaan',
+            shortcutsRemoveRecent: 'Selectie verwijderen uit geschiedenis',
+            shortcutsClearRecent: 'Hele recente geschiedenis wissen',
             shortcutsHelp: 'deze hulp tonen',
             commandHelpTitle: 'Opdrachten',
             commandGotoHelp: '>goto 123:456 \u2014 naar een eiland springen',
@@ -764,6 +776,8 @@
             dataError: 'B\u0142\u0105d danych',
             shortcutsTitle: 'Skr\u00f3ty',
             shortcutsFirstLast: 'przejd\u017a do pierwszego/ostatniego wyniku',
+            shortcutsRemoveRecent: 'Usuń wybrane z historii',
+            shortcutsClearRecent: 'Wyczyść całą historię ostatnich',
             shortcutsHelp: 'poka\u017c t\u0119 pomoc',
             commandHelpTitle: 'Polecenia',
             commandGotoHelp: '>goto 123:456 \u2014 przeskocz na wysp\u0119',
@@ -865,6 +879,8 @@
             commandHelpTitle: 'Comandos',
             commandGotoHelp: '>goto 123:456 \u2014 saltar para uma ilha',
             shortcutsFirstLast: 'ir para o primeiro/\u00faltimo resultado',
+            shortcutsRemoveRecent: 'Remover selecionado do histórico',
+            shortcutsClearRecent: 'Limpar todo o histórico recente',
             shortcutsHelp: 'mostrar esta ajuda',
             commandGhostHelp: '>ghost [minPts] \u2014 listar cidades fantasma',
             commandDistHelp: '>dist X:Y [X:Y] \u2014 dist\u00e2ncia de ilhas',
@@ -964,6 +980,8 @@
             commandHelpTitle: 'Comandos',
             commandGotoHelp: '>goto 123:456 \u2014 pular para uma ilha',
             shortcutsFirstLast: 'ir para o primeiro/\u00faltimo resultado',
+            shortcutsRemoveRecent: 'Remover selecionado do histórico',
+            shortcutsClearRecent: 'Limpar todo o histórico recente',
             shortcutsHelp: 'mostrar esta ajuda',
             commandGhostHelp: '>ghost [minPts] \u2014 listar cidades fantasma',
             commandDistHelp: '>dist X:Y [X:Y] \u2014 dist\u00e2ncia de ilhas',
@@ -1061,6 +1079,8 @@
             dataError: 'Veri hatas\u0131',
             shortcutsTitle: 'K\u0131sayollar',
             shortcutsFirstLast: 'ilk/son sonuca git',
+            shortcutsRemoveRecent: 'Seçileni geçmişden kaldır',
+            shortcutsClearRecent: 'Tüm son geçmişi temizle',
             shortcutsHelp: 'bu yard\u0131m\u0131 g\u00f6ster',
             commandHelpTitle: 'Komutlar',
             commandGotoHelp: '>goto 123:456 \u2014 bir adaya git',
@@ -1160,6 +1180,8 @@
             dataError: '\u041e\u0448\u0438\u0431\u043a\u0430 \u0434\u0430\u043d\u043d\u044b\u0445',
             shortcutsTitle: '\u0413\u043e\u0440\u044f\u0447\u0438\u0435 \u043a\u043b\u0430\u0432\u0438\u0448\u0438',
             shortcutsFirstLast: '\u043f\u0435\u0440\u0435\u0439\u0442\u0438 \u043a \u043f\u0435\u0440\u0432\u043e\u043c\u0443/\u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0435\u043c\u0443 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u0443',
+            shortcutsRemoveRecent: 'удалить выбранное из истории',
+            shortcutsClearRecent: 'очистить всю историю',
             shortcutsHelp: '\u043f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u044d\u0442\u0443 \u0441\u043f\u0440\u0430\u0432\u043a\u0443',
             commandHelpTitle: '\u041a\u043e\u043c\u0430\u043d\u0434\u044b',
             commandGotoHelp: '>goto 123:456 \u2014 \u043f\u0435\u0440\u0435\u0439\u0442\u0438 \u043a \u043e\u0441\u0442\u0440\u043e\u0432\u0443',
@@ -1259,6 +1281,8 @@
             dataError: '\u03a3\u03c6\u03ac\u03bb\u03bc\u03b1 \u03b4\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03c9\u03bd',
             shortcutsTitle: '\u03a3\u03c5\u03bd\u03c4\u03bf\u03bc\u03b5\u03cd\u03c3\u03b5\u03b9\u03c2',
             shortcutsFirstLast: '\u03bc\u03b5\u03c4\u03ac\u03b2\u03b1\u03c3\u03b7 \u03c3\u03c4\u03bf \u03c0\u03c1\u03ce\u03c4\u03bf/\u03c4\u03b5\u03bb\u03b5\u03c5\u03c4\u03b1\u03af\u03bf \u03b1\u03c0\u03bf\u03c4\u03ad\u03bb\u03b5\u03c3\u03bc\u03b1',
+            shortcutsRemoveRecent: 'αφαίρεση επιλεγμένου από το ιστορικό',
+            shortcutsClearRecent: 'εκκαθάριση όλου του πρόσφατου ιστορικού',
             shortcutsHelp: '\u03b5\u03bc\u03c6\u03ac\u03bd\u03b9\u03c3\u03b7 \u03b1\u03c5\u03c4\u03ae\u03c2 \u03c4\u03b7\u03c2 \u03b2\u03bf\u03ae\u03b8\u03b5\u03b9\u03b1\u03c2',
             commandHelpTitle: '\u0395\u03bd\u03c4\u03bf\u03bb\u03ad\u03c2',
             commandGotoHelp: '>goto 123:456 \u2014 \u03bc\u03b5\u03c4\u03ac\u03b2\u03b1\u03c3\u03b7 \u03c3\u03b5 \u03bd\u03b7\u03c3\u03af',
@@ -1358,6 +1382,8 @@
             dataError: 'Adathiba',
             shortcutsTitle: 'Gyorsbillenty\u0171k',
             shortcutsFirstLast: 'ugr\u00e1s az els\u0151/utols\u00f3 tal\u00e1lathoz',
+            shortcutsRemoveRecent: 'kijelölt eltávolítása az előzményekből',
+            shortcutsClearRecent: 'teljes előzménylista törlése',
             shortcutsHelp: 's\u00fag\u00f3 megjelen\u00edt\u00e9se',
             commandHelpTitle: 'Parancsok',
             commandGotoHelp: '>goto 123:456 \u2014 ugr\u00e1s egy szigetre',
@@ -1457,6 +1483,8 @@
             dataError: 'Eroare de date',
             shortcutsTitle: 'Scurt\u0103turi',
             shortcutsFirstLast: 'mergi la primul/ultimul rezultat',
+            shortcutsRemoveRecent: 'elimină selecția din istoric',
+            shortcutsClearRecent: 'golește tot istoricul recent',
             shortcutsHelp: 'afi\u0219eaz\u0103 acest ajutor',
             commandHelpTitle: 'Comenzi',
             commandGotoHelp: '>goto 123:456 \u2014 mergi la o insul\u0103',
@@ -1556,6 +1584,8 @@
             dataError: 'Chyba dat',
             shortcutsTitle: 'Zkr\u00e1tky',
             shortcutsFirstLast: 'p\u0159esko\u010dit na prvn\u00ed/posledn\u00ed v\u00fdsledek',
+            shortcutsRemoveRecent: 'odebrat vybrané z historie',
+            shortcutsClearRecent: 'vymazat celou historii posledních',
             shortcutsHelp: 'zobrazit tuto n\u00e1pov\u011bdu',
             commandHelpTitle: 'P\u0159\u00edkazy',
             commandGotoHelp: '>goto 123:456 \u2014 p\u0159esko\u010dit na ostrov',
@@ -1655,6 +1685,8 @@
             dataError: 'Chyba d\u00e1t',
             shortcutsTitle: 'Skratky',
             shortcutsFirstLast: 'prejs\u0165 na prv\u00fd/posledn\u00fd v\u00fdsledok',
+            shortcutsRemoveRecent: 'odstrániť vybrané z histórie',
+            shortcutsClearRecent: 'vymazať celú históriu posledných',
             shortcutsHelp: 'zobrazi\u0165 t\u00fato pomoc',
             commandHelpTitle: 'Pr\u00edkazy',
             commandGotoHelp: '>goto 123:456 \u2014 sko\u010di\u0165 na ostrov',
@@ -3177,6 +3209,22 @@
     }
 
     /*
+     * Keyboard equivalent of clicking the per-row trash icon: removes
+     * the selected row from Recent history. Only meaningful in the
+     * history view, and only for 'recent' rows — favorites are
+     * managed via Ctrl+F/the star instead, matching the mouse path
+     * in handleResultClick.
+     */
+    function removeSelectedHistoryItem() {
+        const item = state.results[state.selected];
+        if (!item || item.section !== 'recent') {
+            return;
+        }
+        removeHistoryItem(item);
+        performSearch('', ++searchToken);
+    }
+
+    /*
      * ============================================================
      * BBCODE
      * ============================================================
@@ -3241,13 +3289,14 @@
     }
 
     /*
-     * Copies the BBCode for the selected result and closes the
-     * palette, mirroring Enter's "act on the selection, then close"
-     * behavior. Silently no-ops for rows without a BBCode equivalent
-     * instead of copying nothing useful or throwing.
+     * Copies the BBCode for a given result and closes the palette,
+     * mirroring Enter's "act on the selection, then close" behavior.
+     * Silently no-ops for rows without a BBCode equivalent instead of
+     * copying nothing useful or throwing. Shared by the Ctrl+B
+     * shortcut and the per-row BBCode icon (see handleResultClick),
+     * so both input methods behave identically.
      */
-    function copySelectedBBCode() {
-        const item = state.results[state.selected];
+    function copyBBCode(item) {
         const code = bbcodeFor(item);
         if (!code) {
             return;
@@ -3257,6 +3306,10 @@
             close();
             showToast(translate('bbcodeCopied'), code);
         });
+    }
+
+    function copySelectedBBCode() {
+        copyBBCode(state.results[state.selected]);
     }
 
     let searchTimer = null;
@@ -3741,8 +3794,8 @@
                         <span id="qf-footer-tab">${escapeHTML(translate('footerTab'))}</span>
                         <span id="qf-footer-fav">${escapeHTML(translate('footerFav'))}</span>
                         <span id="qf-footer-bbcode">${escapeHTML(translate('footerBBCode'))}</span>
-                        <span id="qf-footer-refresh">${escapeHTML(translate('footerRefresh'))}</span>
-                        <span id="qf-footer-help">${escapeHTML(translate('footerHelp'))}</span>
+                        <button type="button" id="qf-footer-refresh" class="qf-footer-action">${escapeHTML(translate('footerRefresh'))}</button>
+                        <button type="button" id="qf-footer-help" class="qf-footer-action">${escapeHTML(translate('footerHelp'))}</button>
                     </div>
                     <div id="qf-footer-meta">
                         <span id="qf-status"></span>
@@ -3778,6 +3831,18 @@
         overlay.querySelector('#qf-settings-btn').addEventListener('click', (event) => {
             event.preventDefault();
             openSettings();
+        });
+
+        overlay.querySelector('#qf-footer-refresh').addEventListener('click', (event) => {
+            event.preventDefault();
+            if (!state.loading) {
+                refreshData();
+            }
+        });
+
+        overlay.querySelector('#qf-footer-help').addEventListener('click', (event) => {
+            event.preventDefault();
+            toggleHelp();
         });
     }
 
@@ -4041,6 +4106,8 @@
             ['Ctrl+F', translate('footerFav')],
             ['Ctrl+B', translate('footerBBCode')],
             ['Ctrl+R', translate('footerRefresh')],
+            ['Delete', translate('shortcutsRemoveRecent')],
+            ['Ctrl+Shift+Delete', translate('shortcutsClearRecent')],
             ['Esc', translate('footerClose')],
             ['?', translate('shortcutsHelp')],
         ];
@@ -4420,6 +4487,12 @@
         const removeBtn = item.section === 'recent'
             ? `<span class="qf-remove" title="${escapeHTML(translate('recentRemove'))}">${ICONS.trash}</span>`
             : '';
+        // Mouse equivalent of Ctrl+B: every row that has a BBCode
+        // representation (see bbcodeFor) gets a clickable icon, so
+        // copying isn't keyboard-only.
+        const bbcodeBtn = bbcodeFor(item)
+            ? `<span class="qf-bbcode-btn" title="${escapeHTML(translate('footerBBCode'))}">${ICONS.bbcode}</span>`
+            : '';
 
         return `
             <div class="qf-result${selected}${favorite}${header}" data-index="${index}"${title}>
@@ -4428,6 +4501,7 @@
                     <div class="qf-result-line1">
                         <span class="qf-result-name">${escapeHTML(item.name)}</span>
                         ${star}
+                        ${bbcodeBtn}
                         ${removeBtn}
                         ${badge ? `<span class="qf-badge ${badgeClass}">${escapeHTML(badge)}</span>` : ''}
                     </div>
@@ -4464,6 +4538,27 @@
             if (key === CONFIG.BBCODE_KEY) {
                 event.preventDefault();
                 copySelectedBBCode();
+                return;
+            }
+        }
+
+        // Keyboard equivalents of the Recent history mouse controls:
+        // Delete removes the selected recent row (same guard as the
+        // trash icon click), Ctrl+Shift+Delete wipes the whole
+        // Recent list (same guard as the "Clear" button click).
+        if (event.key === 'Delete') {
+            if (event.ctrlKey && event.shiftKey) {
+                event.preventDefault();
+                if (!state.query && state.fullResults.some((item) => item.section === 'recent')) {
+                    clearHistory();
+                    showToast(translate('recentCleared'));
+                    performSearch('', ++searchToken);
+                }
+                return;
+            }
+            if (!event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
+                event.preventDefault();
+                removeSelectedHistoryItem();
                 return;
             }
         }
@@ -4558,6 +4653,12 @@
             return;
         }
 
+        if (event.target.closest('.qf-bbcode-btn')) {
+            event.stopPropagation();
+            copyBBCode(item);
+            return;
+        }
+
         state.selected = index;
         openResult(item);
     }
@@ -4614,6 +4715,20 @@
             render();
             requestAnimationFrame(() => input.focus());
         }
+    }
+
+    /*
+     * Mouse equivalent of typing '?': shows the help panel, or (since
+     * a click has no "already typed" state to fall back to) clears
+     * the query back to the history view if help is already open,
+     * so the footer button/icon acts as a toggle either way.
+     */
+    function toggleHelp() {
+        const input = document.getElementById('qf-input');
+        const nextQuery = state.showHelp ? '' : CONFIG.HELP_CHAR;
+        input.value = nextQuery;
+        performSearch(nextQuery, ++searchToken);
+        input.focus();
     }
 
     function close() {
@@ -5183,6 +5298,31 @@
             color: #e6bd6c;
         }
 
+        .qf-bbcode-btn {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            padding: 3px;
+            margin: -2px -2px -2px 0;
+            border-radius: 4px;
+            color: rgba(255, 255, 255, 0);
+            opacity: 0;
+            transition: color .06s ease, background-color .06s ease, opacity .06s ease;
+        }
+
+        .qf-result:hover .qf-bbcode-btn {
+            color: rgba(255, 255, 255, .45);
+            opacity: 1;
+        }
+
+        .qf-bbcode-btn:hover {
+            color: rgba(255, 255, 255, .8) !important;
+            background: rgba(255, 255, 255, .08);
+        }
+
         .qf-remove {
             flex: 0 0 auto;
             display: inline-flex;
@@ -5359,6 +5499,25 @@
             gap: 14px;
             color: rgba(255, 255, 255, .34);
             font-size: 10px;
+        }
+
+        /*
+         * Mouse equivalents of Ctrl+R (refresh) and '?' (help): plain
+         * <button> elements styled to match the surrounding <span>
+         * shortcut hints, so the footer keeps its uniform look while
+         * two of its five entries are now also clickable.
+         */
+        .qf-footer-action {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .qf-footer-action:hover {
+            color: rgba(255, 255, 255, .7);
         }
 
         #qf-footer-meta {

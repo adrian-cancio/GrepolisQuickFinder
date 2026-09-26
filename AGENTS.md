@@ -66,6 +66,38 @@ real game data over HTTP). To verify changes:
 - No comments unless they explain non-obvious behavior (matching the existing
   style of documenting *why*, not *what*).
 
+## Interaction parity (keyboard + mouse)
+
+QuickFinder is a command palette: everything reachable once the overlay is
+open must work identically with the keyboard alone or with the mouse alone.
+Neither input method is a second-class citizen — do not ship a
+keyboard-only shortcut without a clickable equivalent, and do not ship a
+clickable control without a keyboard shortcut.
+
+When adding a new action inside the overlay:
+
+- **Mouse-first features need a keyboard shortcut.** e.g. the per-row
+  favorite star has `Ctrl+F`, the per-row BBCode icon has `Ctrl+B`, the
+  per-row Recent trash icon has `Delete`, the "Clear" button on the Recent
+  section header has `Ctrl+Shift+Delete`.
+- **Keyboard-first features need a clickable control.** e.g. the footer
+  "refresh" and "help" entries are `<button>` elements (not plain `<span>`)
+  so `Ctrl+R` and `?` both have a mouse equivalent; the settings gear icon
+  mirrors `>settings`.
+- **List every new shortcut in `renderHelp()`** (the `shortcuts` array) so
+  `?`/`>help` stays the single source of truth for what's available, and
+  add the matching translation keys across all 16 `LOCALES` entries (see
+  Localization above for the workflow).
+- **Row-scoped actions must guard on the selected item's shape** the same
+  way on both paths (e.g. compare `item.section === 'recent'` or
+  `item.type !== 'info'` in both the click handler and the keydown
+  handler) so a stray click/keypress on an ineligible row is a silent
+  no-op instead of an error, and both paths stay behaviorally identical.
+- Prefer reusing one shared function for the actual action (e.g.
+  `copyBBCode(item)`, `removeHistoryItem(item)`) and calling it from both
+  the click handler and the keydown handler, instead of duplicating the
+  logic per input method.
+
 ## UI style & theme
 
 All CSS lives in a single `document.createElement('style')` block near the

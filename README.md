@@ -11,8 +11,8 @@ and coordinates, with real in-game navigation (no new tabs).
 - **Segments & Tab cycling**: Filter results by type (*All*, *Players*, *Alliances*, *Towns*, *Islands*, *Coordinates*) with live match counters, or cycle through them with `Tab` / `Shift+Tab`.
 - **Scope prefixes**: Target specific categories directly using `@p` (players), `@a` (alliances), `@t` (towns), `@i` (islands), or `@c` (coordinates). An exact `@p`/`@a` match drills into that player's towns or that alliance's member/ocean spread instead of a flat list.
 - **Island awareness**: Searching a coordinate that has more than one town (an island can host up to 20) resolves to an island row listing every town on it.
-- **BBCode Export**: Press `Ctrl+B` on any result row to instantly copy its BBCode (`[player]`, `[alliance]`, `[town]`, `[island]`) to your clipboard.
-- **History & Favorites**: Press `Ctrl+F` on any result to pin it as a favorite. Opening the palette with an empty search displays your pinned favorites and recent searches. Hover a recent entry to reveal a remove button, or use the "Clear" button on the Recent section header to wipe the whole recent list (favorites are unaffected either way).
+- **BBCode Export**: Press `Ctrl+B`, or click the per-row BBCode icon, to instantly copy its BBCode (`[player]`, `[alliance]`, `[town]`, `[island]`) to your clipboard.
+- **History & Favorites**: Press `Ctrl+F` on any result to pin it as a favorite. Opening the palette with an empty search displays your pinned favorites and recent searches. Remove a single recent entry with `Delete` or its per-row trash icon, or wipe the whole Recent list with `Ctrl+Shift+Delete` or the "Clear" button on the Recent section header (favorites are unaffected either way).
 - **Command mode**: Type `>` to access utility commands:
   - `>goto <x>:<y>` — Jump directly to coordinates on the world map.
   - `>ghost [minPts] [near]` — List ghost towns sorted by points, or by distance from your active city with `near`.
@@ -22,9 +22,9 @@ and coordinates, with real in-game navigation (no new tabs).
   - `>ocean <M##> [alliance]` — Snapshot of an ocean, optionally filtered to one alliance's towns in it.
   - `>settings` — Open the settings panel.
   - `>help` — Display command and shortcut documentation.
-- **Help overlay**: Type `?` anytime in the search input to toggle the shortcut and command cheat sheet (also lists the palette's own open/close shortcut).
+- **Help overlay**: Type `?` anytime in the search input, or click the "help" footer button, to toggle the shortcut and command cheat sheet (also lists the palette's own open/close shortcut).
 - **Settings panel**: Click the gear icon in the search bar, or type `>settings`, to customize the language override, keyboard shortcut, results-per-page/command result caps, world data cache duration, and the default radius/points used by `>near` and `>ghost`. Settings are stored globally (shared across every world) and apply instantly, no reload required.
-- **Manual refresh**: Press `Ctrl+R` to force-refresh world data from game servers.
+- **Manual refresh**: Press `Ctrl+R`, or click the "refresh" footer button, to force-refresh world data from game servers.
 - **Automatic localization**: Fully localized across 16 supported languages based on the Grepolis market detected from the world subdomain (e.g. `en37`, `es12`, `de44`, `zz2`), with an optional manual override in Settings.
 
 ## Installation
@@ -66,11 +66,13 @@ Grepolis worlds are hosted on subdomains shaped like `<market><number>.grepolis.
 
 - `Ctrl+Shift+F` (customizable in Settings), the **QuickFinder** menu item, or the gear icon — open the palette / open settings.
 - `Tab` / `Shift+Tab` — cycle result category filters (All / Players / Alliances / Towns / Islands / Coordinates).
-- `Ctrl+B` — copy BBCode for selected result.
+- `Ctrl+B` (or the per-row BBCode icon) — copy BBCode for selected result.
 - `Ctrl+F` — toggle favorite on selected result.
-- `Ctrl+R` — force refresh world data.
+- `Delete` (or the per-row trash icon) — remove the selected entry from Recent history.
+- `Ctrl+Shift+Delete` (or the "Clear" button) — wipe the whole Recent history list.
+- `Ctrl+R` (or the "refresh" footer button) — force refresh world data.
 - `Home` / `End` — jump to first or last result.
-- `?` — toggle in-app help overlay (also shown via `>help`).
+- `?` (or the "help" footer button) — toggle in-app help overlay (also shown via `>help`).
 - `@p`, `@a`, `@t`, `@i`, `@c` — scope query to players, alliances, towns, islands, or coordinates.
 - `>goto`, `>ghost`, `>dist`, `>island`, `>near`, `>ocean`, `>settings`, `>help` — execute commands.
 - `↑` / `↓` — navigate results.
