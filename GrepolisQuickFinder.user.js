@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.10.0
+// @version      2.11.0
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market. (Privacy policy: https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md)
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.10.0';
+    const VERSION = '2.11.0';
 
     /*
      * ============================================================
@@ -50,6 +50,7 @@
         SAVED_SEARCHES_MAX: 20,
         CACHE_TTL: 6 * 60 * 60 * 1000, // reuse world data for at most this long
         GHOST_MIN_POINTS: 0,
+        HIERARCHY_MAX_DEPTH: 2, // alliance->player->town or island->town: at most 2 pushes
     };
 
     /*
@@ -250,6 +251,8 @@
             badgeSavedSearch: 'Saved',
             shortcutsSaveSearch: 'Save current search',
             shortcutsRenameSaved: 'Rename selected saved search',
+            hierarchyDrillTooltip: 'View details (→)',
+            shortcutsHierarchyNav: '← → drill in/out',
         },
         es: {
             searchPlaceholder: 'Buscar jugadores, alianzas o ciudades...',
@@ -370,6 +373,8 @@
             badgeSavedSearch: 'Guardada',
             shortcutsSaveSearch: 'Guardar búsqueda actual',
             shortcutsRenameSaved: 'Renombrar la búsqueda guardada seleccionada',
+            hierarchyDrillTooltip: 'Ver detalles (→)',
+            shortcutsHierarchyNav: '← → entrar/salir',
         },
         de: {
             searchPlaceholder: 'Spieler, Allianzen oder St\u00e4dte suchen...',
@@ -490,6 +495,8 @@
             badgeSavedSearch: 'Gespeichert',
             shortcutsSaveSearch: 'Aktuelle Suche speichern',
             shortcutsRenameSaved: 'Ausgewählte gespeicherte Suche umbenennen',
+            hierarchyDrillTooltip: 'Details anzeigen (→)',
+            shortcutsHierarchyNav: '← → rein/raus',
         },
         fr: {
             searchPlaceholder: 'Rechercher des joueurs, alliances ou villes...',
@@ -610,6 +617,8 @@
             badgeSavedSearch: 'Enregistrée',
             shortcutsSaveSearch: 'Enregistrer la recherche actuelle',
             shortcutsRenameSaved: 'Renommer la recherche enregistrée sélectionnée',
+            hierarchyDrillTooltip: 'Voir les détails (→)',
+            shortcutsHierarchyNav: '← → entrer/sortir',
         },
         it: {
             searchPlaceholder: 'Cerca giocatori, alleanze o citt\u00e0...',
@@ -730,6 +739,8 @@
             badgeSavedSearch: 'Salvata',
             shortcutsSaveSearch: 'Salva la ricerca attuale',
             shortcutsRenameSaved: 'Rinomina la ricerca salvata selezionata',
+            hierarchyDrillTooltip: 'Vedi dettagli (→)',
+            shortcutsHierarchyNav: '← → entra/esci',
         },
         nl: {
             searchPlaceholder: 'Zoek spelers, allianties of steden...',
@@ -850,6 +861,8 @@
             badgeSavedSearch: 'Opgeslagen',
             shortcutsSaveSearch: 'Huidige zoekopdracht opslaan',
             shortcutsRenameSaved: 'Geselecteerde opgeslagen zoekopdracht hernoemen',
+            hierarchyDrillTooltip: 'Details bekijken (→)',
+            shortcutsHierarchyNav: '← → in/uit',
         },
         pl: {
             searchPlaceholder: 'Szukaj graczy, sojuszy lub miast...',
@@ -970,6 +983,8 @@
             badgeSavedSearch: 'Zapisane',
             shortcutsSaveSearch: 'Zapisz bieżące wyszukiwanie',
             shortcutsRenameSaved: 'Zmień nazwę wybranego zapisanego wyszukiwania',
+            hierarchyDrillTooltip: 'Zobacz szczegóły (→)',
+            shortcutsHierarchyNav: '← → wejdź/wyjdź',
         },
         pt: {
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
@@ -1090,6 +1105,8 @@
             badgeSavedSearch: 'Guardada',
             shortcutsSaveSearch: 'Guardar pesquisa atual',
             shortcutsRenameSaved: 'Renomear a pesquisa guardada selecionada',
+            hierarchyDrillTooltip: 'Ver detalhes (→)',
+            shortcutsHierarchyNav: '← → entrar/sair',
         },
         br: {
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
@@ -1210,6 +1227,8 @@
             badgeSavedSearch: 'Salva',
             shortcutsSaveSearch: 'Salvar pesquisa atual',
             shortcutsRenameSaved: 'Renomear a pesquisa salva selecionada',
+            hierarchyDrillTooltip: 'Ver detalhes (→)',
+            shortcutsHierarchyNav: '← → entrar/sair',
         },
         tr: {
             searchPlaceholder: 'Oyuncu, ittifak veya \u015fehir ara...',
@@ -1330,6 +1349,8 @@
             badgeSavedSearch: 'Kayıtlı',
             shortcutsSaveSearch: 'Geçerli aramayı kaydet',
             shortcutsRenameSaved: 'Seçili kayıtlı aramayı yeniden adlandır',
+            hierarchyDrillTooltip: 'Ayrıntıları görüntüle (→)',
+            shortcutsHierarchyNav: '← → gir/çık',
         },
         ru: {
             searchPlaceholder: '\u041f\u043e\u0438\u0441\u043a \u0438\u0433\u0440\u043e\u043a\u043e\u0432, \u0430\u043b\u044c\u044f\u043d\u0441\u043e\u0432 \u0438\u043b\u0438 \u0433\u043e\u0440\u043e\u0434\u043e\u0432...',
@@ -1450,6 +1471,8 @@
             badgeSavedSearch: 'Сохранён',
             shortcutsSaveSearch: 'Сохранить текущий поиск',
             shortcutsRenameSaved: 'Переименовать выбранный сохранённый поиск',
+            hierarchyDrillTooltip: 'Подробнее (→)',
+            shortcutsHierarchyNav: '← → войти/выйти',
         },
         el: {
             searchPlaceholder: '\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03c0\u03b1\u03b9\u03ba\u03c4\u03ce\u03bd, \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03b9\u03ce\u03bd \u03ae \u03c0\u03cc\u03bb\u03b5\u03c9\u03bd...',
@@ -1570,6 +1593,8 @@
             badgeSavedSearch: 'Αποθηκευμένη',
             shortcutsSaveSearch: 'Αποθήκευση τρέχουσας αναζήτησης',
             shortcutsRenameSaved: 'Μετονομασία επιλεγμένης αποθηκευμένης αναζήτησης',
+            hierarchyDrillTooltip: 'Προβολή λεπτομερειών (→)',
+            shortcutsHierarchyNav: '← → είσοδος/έξοδος',
         },
         hu: {
             searchPlaceholder: 'J\u00e1t\u00e9kosok, sz\u00f6vets\u00e9gek vagy v\u00e1rosok keres\u00e9se...',
@@ -1690,6 +1715,8 @@
             badgeSavedSearch: 'Mentett',
             shortcutsSaveSearch: 'Jelenlegi keresés mentése',
             shortcutsRenameSaved: 'Kijelölt mentett keresés átnevezése',
+            hierarchyDrillTooltip: 'Részletek megtekintése (→)',
+            shortcutsHierarchyNav: '← → be/ki',
         },
         ro: {
             searchPlaceholder: 'Caut\u0103 juc\u0103tori, alian\u021be sau ora\u0219e...',
@@ -1810,6 +1837,8 @@
             badgeSavedSearch: 'Salvată',
             shortcutsSaveSearch: 'Salvează căutarea curentă',
             shortcutsRenameSaved: 'Redenumește căutarea salvată selectată',
+            hierarchyDrillTooltip: 'Vezi detalii (→)',
+            shortcutsHierarchyNav: '← → intră/ieși',
         },
         cs: {
             searchPlaceholder: 'Hledat hr\u00e1\u010de, aliance nebo m\u011bsta...',
@@ -1930,6 +1959,8 @@
             badgeSavedSearch: 'Uložené',
             shortcutsSaveSearch: 'Uložit aktuální hledání',
             shortcutsRenameSaved: 'Přejmenovat vybrané uložené hledání',
+            hierarchyDrillTooltip: 'Zobrazit podrobnosti (→)',
+            shortcutsHierarchyNav: '← → vstoupit/opustit',
         },
         sk: {
             searchPlaceholder: 'H\u013ead\u0165 hr\u00e1\u010dov, alianciu alebo mest\u00e1...',
@@ -2050,6 +2081,8 @@
             badgeSavedSearch: 'Uložené',
             shortcutsSaveSearch: 'Uložiť aktuálne vyhľadávanie',
             shortcutsRenameSaved: 'Premenovať vybrané uložené vyhľadávanie',
+            hierarchyDrillTooltip: 'Zobraziť podrobnosti (→)',
+            shortcutsHierarchyNav: '← → vstúpiť/opustiť',
         },
     };
 
@@ -2237,6 +2270,15 @@
         // How many of state.results are currently rendered; grows as the
         // user scrolls down instead of rendering thousands of rows at once.
         visibleCount: CONFIG.RESULTS_PAGE_SIZE,
+        // Right-hand drill-down pane (Alliance -> Player -> Town, Island ->
+        // Town). Each stack entry is { source: item, rows, selected,
+        // premiumBlocked }. Navigated with ArrowRight/ArrowLeft (mouse:
+        // the row chevron / the breadcrumb bar), independent from
+        // state.selected which always tracks the left-hand list.
+        hierarchyStack: [],
+        // 'list' | 'detail': which column currently owns ArrowUp/ArrowDown/
+        // Enter. Reset to 'list' whenever the stack empties.
+        focusPane: 'list',
     };
 
     /*
@@ -3290,13 +3332,15 @@
      * ============================================================
      *
      * Multi-city aggregation/listing views (>ghost, >island, >near,
-     * >ocean, and the player/alliance town drill-down) mirror the
-     * in-game Administrator advisor's overviews, so they are gated
-     * behind GameDataPremium.isAdvisorActivated('curator') the same
-     * way the real advisor gates its own overviews. Plain single-item
-     * search (player/alliance/town by name, single coordinate) is
-     * unaffected: that data is already public via the same-origin
-     * /data/*.txt dumps regardless of premium status.
+     * >ocean, the player/alliance town drill-down, and the hierarchy
+     * detail pane's Alliance->Player/Player->Town/Island->Town levels,
+     * see pushHierarchyLevel) mirror the in-game Administrator
+     * advisor's overviews, so they are gated behind
+     * GameDataPremium.isAdvisorActivated('curator') the same way the
+     * real advisor gates its own overviews. Plain single-item search
+     * (player/alliance/town by name, single coordinate) is unaffected:
+     * that data is already public via the same-origin /data/*.txt
+     * dumps regardless of premium status.
      */
     function isCuratorActive() {
         try {
@@ -3688,13 +3732,16 @@
     }
 
     function toggleFavoriteSelected() {
-        const item = state.results[state.selected];
+        const item = getFocusedItem();
         if (!item || item.type === 'info') {
             return;
         }
         toggleFavorite(item);
         // In the history view the row set must be rebuilt so a just-
-        // unfavorited item leaves the Favorites group.
+        // unfavorited item leaves the Favorites group. Toggling a
+        // favorite never changes an open detail pane's own rows (those
+        // are alliance members / a player's towns, not the history
+        // list), so the pane itself is left alone either way.
         if (!state.query) {
             performSearch('', ++searchToken);
         } else {
@@ -3710,7 +3757,11 @@
      * instead, matching the mouse path in handleResultClick.
      */
     function removeSelectedHistoryItem() {
-        const item = state.results[state.selected];
+        // Only ever meaningful for the left-hand history list — rows in
+        // an open detail pane (alliance members, a player's towns...)
+        // never carry a `.section`, so this naturally no-ops for them
+        // instead of needing an explicit pane check.
+        const item = getFocusedItem();
         if (!item) return;
         if (item.section === 'recent') {
             removeHistoryItem(item);
@@ -3728,7 +3779,7 @@
      * selected row isn't part of either clearable section.
      */
     function clearSelectedHistorySection() {
-        const item = state.results[state.selected];
+        const item = getFocusedItem();
         if (!item || (item.section !== 'recent' && item.section !== 'saved')) {
             return;
         }
@@ -3827,7 +3878,7 @@
     }
 
     function copySelectedBBCode() {
-        copyBBCode(state.results[state.selected]);
+        copyBBCode(getFocusedItem());
     }
 
     let searchTimer = null;
@@ -3851,6 +3902,9 @@
         state.query = query;
         state.showHelp = false;
         state.showSettings = false;
+        // The left-hand list is about to be rebuilt; any open detail
+        // pane refers to the old list's rows and must close with it.
+        resetHierarchy();
 
         // '?' and '>help' shortcuts render the help panel even while
         // the index is still loading, so those are handled first.
@@ -4302,6 +4356,134 @@
 
     /*
      * ============================================================
+     * HIERARCHY DRILL-DOWN (Alliance -> Player -> Town, Island -> Town)
+     * ============================================================
+     *
+     * A right-hand detail pane, navigated with ArrowRight (push a
+     * level) / ArrowLeft (pop a level); mouse equivalents are the
+     * row chevron and the breadcrumb bar (see the CLICK section and
+     * renderDetailPane below). Enter/click on a row keeps opening
+     * the native in-game window and closing the overlay exactly as
+     * before, in both panes: this feature only adds a way to peek at
+     * an entity's children without leaving the palette, it never
+     * changes what Enter does. Only downward navigation is
+     * supported (no Town -> Owner/Island); every level that
+     * aggregates more than one child (alliance members, a player's
+     * towns, an island's towns) is gated behind isCuratorActive(),
+     * mirroring playerDetailRows/allianceDetailRows/islandRows.
+     */
+
+    function isDrillable(item) {
+        return Boolean(item) && (item.type === 'alliance' || item.type === 'player' || item.type === 'island');
+    }
+
+    function childRowsFor(item) {
+        switch (item.type) {
+            case 'alliance': {
+                const alliance = item.data || DATA.allianceById.get(item.id);
+                if (!alliance) return [];
+                return DATA.players
+                    .filter((player) => player.allianceId === alliance.id)
+                    .sort((a, b) => b.points - a.points)
+                    .map((member) => ({ type: 'player', id: member.id, name: member.name, data: member, score: member.points }));
+            }
+            case 'player': {
+                const towns = (DATA.townsByPlayer.get(item.id) || []).slice().sort((a, b) => b.points - a.points);
+                const origin = activeTownCoords();
+                return towns.map((town) => townResult(town, origin ? {
+                    distance: islandDistance(origin, { x: town.islandX, y: town.islandY }),
+                } : null));
+            }
+            case 'island': {
+                return townsOnIsland(item.x, item.y).slice().sort((a, b) => b.points - a.points).map((town) => townResult(town));
+            }
+            default:
+                return [];
+        }
+    }
+
+    function currentHierarchyLevel() {
+        return state.hierarchyStack[state.hierarchyStack.length - 1] || null;
+    }
+
+    function currentHierarchyRows() {
+        const level = currentHierarchyLevel();
+        return level ? level.rows : [];
+    }
+
+    function resetHierarchy() {
+        state.hierarchyStack = [];
+        state.focusPane = 'list';
+    }
+
+    /*
+     * Pushes a new detail-pane level for `item`. Starting a chain
+     * from the left-hand list (fromDetailPane=false) always replaces
+     * whatever chain was open before, since picking a different list
+     * row is a fresh top-level choice; drilling from an already-open
+     * detail-pane row (fromDetailPane=true) extends the current
+     * chain instead, up to CONFIG.HIERARCHY_MAX_DEPTH.
+     */
+    function pushHierarchyLevel(item, fromDetailPane) {
+        if (!isDrillable(item)) return false;
+
+        if (!fromDetailPane) {
+            state.hierarchyStack = [];
+        } else if (state.hierarchyStack.length >= CONFIG.HIERARCHY_MAX_DEPTH) {
+            return false;
+        }
+
+        const premiumBlocked = !isCuratorActive();
+        const rows = premiumBlocked ? premiumRequiredRows() : childRowsFor(item).slice(0, CONFIG.MAX_RESULTS);
+
+        state.hierarchyStack.push({ source: item, rows, selected: 0, premiumBlocked });
+        state.focusPane = 'detail';
+        return true;
+    }
+
+    function popHierarchyLevel() {
+        if (!state.hierarchyStack.length) return false;
+        state.hierarchyStack.pop();
+        state.focusPane = state.hierarchyStack.length ? 'detail' : 'list';
+        return true;
+    }
+
+    /*
+     * Breadcrumb click: jumps back to the level at `depth`, dropping
+     * everything drilled into after it.
+     */
+    function popHierarchyToDepth(depth) {
+        if (depth < 0 || depth >= state.hierarchyStack.length - 1) return;
+        state.hierarchyStack.length = depth + 1;
+        state.focusPane = 'detail';
+    }
+
+    /*
+     * The item that ArrowUp/ArrowDown/Enter/Ctrl+F/Ctrl+B currently
+     * act on: the selected row of the detail pane while it has
+     * focus, otherwise the selected row of the left-hand list.
+     */
+    function getFocusedItem() {
+        if (state.focusPane === 'detail') {
+            const level = currentHierarchyLevel();
+            return level ? level.rows[level.selected] || null : null;
+        }
+        return state.results[state.selected] || null;
+    }
+
+    function setPaneSelected(inDetailPane, index) {
+        if (inDetailPane) {
+            const level = currentHierarchyLevel();
+            if (level) level.selected = index;
+            state.focusPane = 'detail';
+        } else {
+            state.selected = index;
+            state.focusPane = 'list';
+        }
+    }
+
+    /*
+     * ============================================================
      * UI CREATION
      * ============================================================
      */
@@ -4331,7 +4513,10 @@
                     <kbd id="qf-esc-key">ESC</kbd>
                 </div>
                 <div id="qf-segments" hidden></div>
-                <div id="qf-results"></div>
+                <div id="qf-panes">
+                    <div id="qf-results"></div>
+                    <div id="qf-detail-pane" hidden></div>
+                </div>
                 <div id="qf-footer">
                     <div id="qf-footer-shortcuts">
                         <span id="qf-footer-tab">${escapeHTML(translate('footerTab'))}</span>
@@ -4364,6 +4549,9 @@
                 loadMoreResults();
             }
         });
+
+        const detailPaneEl = overlay.querySelector('#qf-detail-pane');
+        detailPaneEl.addEventListener('mousedown', handleDetailPaneMousedown);
         overlay.querySelector('#qf-segments').addEventListener('mousedown', (event) => {
             const chip = event.target.closest('.qf-chip');
             if (!chip) return;
@@ -4408,8 +4596,10 @@
         createUI();
 
         const overlay = document.getElementById('qf-overlay');
+        const windowEl = document.getElementById('qf-window');
         const input = document.getElementById('qf-input');
         const results = document.getElementById('qf-results');
+        const detailPane = document.getElementById('qf-detail-pane');
         const segmentsEl = document.getElementById('qf-segments');
 
         if (!state.open) {
@@ -4418,6 +4608,22 @@
         }
 
         overlay.style.display = 'block';
+
+        // The help/settings/save-search panels replace #qf-results
+        // outright and are never split; any open detail pane from a
+        // previous view is stale once one of them is showing.
+        const inPanel = state.showHelp || state.showSettings || state.showSaveSearch;
+        if (inPanel && state.hierarchyStack.length) {
+            resetHierarchy();
+        }
+        const splitOpen = !inPanel && state.hierarchyStack.length > 0;
+        windowEl.classList.toggle('qf-window-split', splitOpen);
+        detailPane.hidden = !splitOpen;
+        if (splitOpen) {
+            renderDetailPane(detailPane);
+        } else {
+            detailPane.innerHTML = '';
+        }
 
         if (document.activeElement !== input) {
             requestAnimationFrame(() => input.focus());
@@ -4432,7 +4638,6 @@
         // while browsing the empty-query history view; command output
         // (ghost/dist) and the help/settings/save-search panels are not
         // segmentable.
-        const inPanel = state.showHelp || state.showSettings || state.showSaveSearch;
         const showSearchSegments = Boolean(state.query) && !inPanel && !isCommand(state.query) && state.segmentCounts && !state.loading;
         const showHistorySegments = !state.query && !inPanel && state.historyCounts;
         segmentsEl.hidden = !showSearchSegments && !showHistorySegments;
@@ -4686,6 +4891,7 @@
         const shortcuts = [
             [hotkeyLabel(), translate('shortcutsOpen')],
             ['\u2191 \u2193', translate('footerNavigate')],
+            ['\u2190 \u2192', translate('shortcutsHierarchyNav')],
             ['Enter', translate('footerOpen')],
             ['Tab', translate('footerTab')],
             ['Home / End', translate('shortcutsFirstLast')],
@@ -5007,6 +5213,8 @@
         trash: svgIcon('<polyline points="4 7 20 7"></polyline><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>'),
         bookmark: svgIcon('<path d="M6 3.8a1.5 1.5 0 0 1 1.5-1.5h9A1.5 1.5 0 0 1 18 3.8v16.4l-6-3.6-6 3.6V3.8z"></path>'),
         pencil: svgIcon('<path d="M4 20l.9-4.2L15.4 5.3a1.8 1.8 0 0 1 2.5 0l1.8 1.8a1.8 1.8 0 0 1 0 2.5L9.2 19.1 4 20z"></path><line x1="14" y1="6.7" x2="17.3" y2="10"></line>'),
+        chevronRight: svgIcon('<polyline points="9 5 16 12 9 19"></polyline>'),
+        chevronLeft: svgIcon('<polyline points="15 5 8 12 15 19"></polyline>'),
     };
 
     /*
@@ -5022,14 +5230,42 @@
      * so it gets a slightly bolder visual treatment instead of
      * blending in as just another selectable row.
      */
-    function isDetailHeader(item, index) {
-        return index === 0 && state.detail && (item.type === 'player' || item.type === 'alliance' || item.type === 'island');
+    function isDetailHeader(item, index, pane) {
+        // Only the left-hand list ever has this kind of "header + list
+        // of children" shape (built by playerDetailRows/
+        // allianceDetailRows/islandRows via performSearch's state.detail
+        // flag). The hierarchy detail pane's own rows are always a flat,
+        // homogeneous list of children (all players, or all towns), so
+        // this never applies there even if state.detail also happens to
+        // be true for the unrelated left-hand list at the same time.
+        return pane !== 'detail' && index === 0 && state.detail && (item.type === 'player' || item.type === 'alliance' || item.type === 'island');
     }
 
-    function renderResult(item, index) {
-        const selected = index === state.selected ? ' qf-selected' : '';
+    /*
+     * Shared row renderer for both the left-hand list and the
+     * right-hand detail pane. `pane` ('list' | 'detail') controls
+     * which selection index applies and is stamped as data-pane so
+     * click handlers route to the right stack; `selectedIndex`
+     * defaults to that pane's own tracked selection.
+     */
+    function renderResult(item, index, pane, selectedIndex) {
+        pane = pane || 'list';
+        if (selectedIndex === undefined) {
+            selectedIndex = pane === 'detail' ? (currentHierarchyLevel() || {}).selected : state.selected;
+        }
+        const selected = index === selectedIndex ? ' qf-selected' : '';
         const favorite = item.type !== 'info' && item.type !== 'saved-search' && isFavorite(item) ? ' qf-favorite' : '';
-        const header = isDetailHeader(item, index) ? ' qf-result-header' : '';
+        const header = isDetailHeader(item, index, pane) ? ' qf-result-header' : '';
+        const paneAttr = ` data-pane="${pane}"`;
+        // Alliance/player/island rows have children (members/towns) worth
+        // drilling into; the chevron is always shown (even without
+        // Curator) so the affordance is discoverable, same as the
+        // >ghost/>island/>near/>ocean commands always appearing in >help
+        // — the premium gate only applies once the user actually drills
+        // in (see pushHierarchyLevel).
+        const chevron = isDrillable(item)
+            ? `<span class="qf-chevron" title="${escapeHTML(translate('hierarchyDrillTooltip'))}">${ICONS.chevronRight}</span>`
+            : '';
 
         let icon = ICONS.coordinate;
         let badge = '';
@@ -5142,7 +5378,7 @@
 
         if (info) {
             return `
-                <div class="qf-result-info" data-index="${index}">
+                <div class="qf-result-info" data-index="${index}"${paneAttr}>
                     <span class="qf-result-info-icon">${icon}</span>
                     <span class="qf-result-info-text">${escapeHTML(item.name)}</span>
                 </div>
@@ -5157,7 +5393,7 @@
             const editBtn = `<span class="qf-saved-edit" title="${escapeHTML(translate('saveSearchEditTooltip'))}">${ICONS.pencil}</span>`;
             const removeBtn = `<span class="qf-saved-remove" title="${escapeHTML(translate('saveSearchRemove'))}">${ICONS.trash}</span>`;
             return `
-                <div class="qf-result${selected}${header}" data-index="${index}">
+                <div class="qf-result${selected}${header}" data-index="${index}"${paneAttr}>
                     <span class="qf-result-icon">${icon}</span>
                     <div class="qf-result-body">
                         <div class="qf-result-line1">
@@ -5188,7 +5424,7 @@
             : '';
 
         return `
-            <div class="qf-result${selected}${favorite}${header}" data-index="${index}"${title}>
+            <div class="qf-result${selected}${favorite}${header}" data-index="${index}"${paneAttr}${title}>
                 <span class="qf-result-icon">${icon}</span>
                 <div class="qf-result-body">
                     <div class="qf-result-line1">
@@ -5197,11 +5433,62 @@
                         ${bbcodeBtn}
                         ${removeBtn}
                         ${badge ? `<span class="qf-badge ${badgeClass}">${escapeHTML(badge)}</span>` : ''}
+                        ${chevron}
                     </div>
                     ${meta ? `<div class="qf-result-meta">${meta}</div>` : ''}
                 </div>
             </div>
         `;
+    }
+
+    /*
+     * ============================================================
+     * DETAIL PANE (hierarchy drill-down)
+     * ============================================================
+     *
+     * Renders the right-hand pane: a breadcrumb bar (one clickable
+     * segment per stack level, jumping back to it) plus the current
+     * level's rows, reusing renderResult() with pane='detail' so the
+     * row markup/CSS stays identical to the left-hand list.
+     */
+
+    function renderDetailPane(container) {
+        const level = currentHierarchyLevel();
+        if (!level) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const breadcrumb = state.hierarchyStack
+            .map((entry, depth) => {
+                const isLast = depth === state.hierarchyStack.length - 1;
+                const label = escapeHTML(entry.source.name);
+                return isLast
+                    ? `<span class="qf-breadcrumb-item qf-breadcrumb-current">${label}</span>`
+                    : `<button type="button" class="qf-breadcrumb-item" data-depth="${depth}">${label}</button>`;
+            })
+            .join('<span class="qf-breadcrumb-sep">&rsaquo;</span>');
+
+        let rowsHTML;
+        if (!level.rows.length) {
+            rowsHTML = `
+                <div class="qf-empty">
+                    <div class="qf-empty-title">${escapeHTML(translate('noResults'))}</div>
+                </div>
+            `;
+        } else {
+            rowsHTML = level.rows.map((item, index) => renderResult(item, index, 'detail', level.selected)).join('');
+        }
+
+        container.innerHTML = `
+            <div class="qf-detail-breadcrumb">${breadcrumb}</div>
+            <div class="qf-detail-rows">${rowsHTML}</div>
+        `;
+
+        const selectedEl = container.querySelector('.qf-selected');
+        if (selectedEl) {
+            selectedEl.scrollIntoView({ block: 'nearest' });
+        }
     }
 
     /*
@@ -5268,19 +5555,44 @@
             }
         }
 
+        const inDetailPane = state.focusPane === 'detail' && state.hierarchyStack.length > 0;
+        const activeList = inDetailPane ? currentHierarchyRows() : state.results;
+        const activeSelected = inDetailPane ? currentHierarchyLevel().selected : state.selected;
+
         switch (event.key) {
             case 'ArrowDown':
                 event.preventDefault();
-                if (state.results.length) {
-                    state.selected = (state.selected + 1) % state.results.length;
+                if (activeList.length) {
+                    setPaneSelected(inDetailPane, (activeSelected + 1) % activeList.length);
                     render();
                 }
                 break;
 
             case 'ArrowUp':
                 event.preventDefault();
-                if (state.results.length) {
-                    state.selected = (state.selected - 1 + state.results.length) % state.results.length;
+                if (activeList.length) {
+                    setPaneSelected(inDetailPane, (activeSelected - 1 + activeList.length) % activeList.length);
+                    render();
+                }
+                break;
+
+            // Drill into (Right) / back out of (Left) the hierarchy pane.
+            // Free everywhere else in the file: no prior ArrowLeft/
+            // ArrowRight bindings exist to conflict with.
+            case 'ArrowRight': {
+                const item = activeList[activeSelected];
+                if (isDrillable(item)) {
+                    event.preventDefault();
+                    pushHierarchyLevel(item, inDetailPane);
+                    render();
+                }
+                break;
+            }
+
+            case 'ArrowLeft':
+                if (inDetailPane) {
+                    event.preventDefault();
+                    popHierarchyLevel();
                     render();
                 }
                 break;
@@ -5296,28 +5608,37 @@
 
             case 'Home':
                 event.preventDefault();
-                if (state.results.length) {
-                    state.selected = 0;
+                if (activeList.length) {
+                    setPaneSelected(inDetailPane, 0);
                     render();
                 }
                 break;
 
             case 'End':
                 event.preventDefault();
-                if (state.results.length) {
-                    state.selected = state.results.length - 1;
+                if (activeList.length) {
+                    setPaneSelected(inDetailPane, activeList.length - 1);
                     render();
                 }
                 break;
 
             case 'Enter':
                 event.preventDefault();
-                openResult(state.results[state.selected]);
+                openResult(activeList[activeSelected]);
                 break;
 
             case 'Escape':
                 event.preventDefault();
-                close();
+                // First Esc only backs out of an open detail pane (pop
+                // every level at once, back to the left-hand list);
+                // a second Esc then closes the whole overlay, same as
+                // when no pane was ever open.
+                if (state.hierarchyStack.length) {
+                    resetHierarchy();
+                    render();
+                } else {
+                    close();
+                }
                 break;
         }
     }
@@ -5328,12 +5649,31 @@
      * ============================================================
      */
 
+    /*
+     * Shared by both #qf-results and #qf-detail-pane (see data-pane
+     * stamped on every row by renderResult): resolves which list/
+     * selection setter a click applies to, then handles the same set
+     * of per-row icons either pane can show, plus the chevron that
+     * pushes a new detail-pane level.
+     */
     function handleResultClick(event) {
         const row = event.target.closest('.qf-result');
         if (!row) return;
 
+        const inDetailPane = row.dataset.pane === 'detail';
         const index = Number(row.dataset.index);
-        const item = state.results[index];
+        const list = inDetailPane ? currentHierarchyRows() : state.results;
+        const item = list[index];
+
+        if (event.target.closest('.qf-chevron')) {
+            event.stopPropagation();
+            if (isDrillable(item)) {
+                setPaneSelected(inDetailPane, index);
+                pushHierarchyLevel(item, inDetailPane);
+                render();
+            }
+            return;
+        }
 
         if (event.target.closest('.qf-star')) {
             event.stopPropagation();
@@ -5374,7 +5714,7 @@
         if (event.target.closest('.qf-saved-edit')) {
             event.stopPropagation();
             if (item && item.type === 'saved-search') {
-                state.selected = index;
+                setPaneSelected(inDetailPane, index);
                 openRenameSavedSearchPanel(item);
             }
             return;
@@ -5386,7 +5726,7 @@
             return;
         }
 
-        state.selected = index;
+        setPaneSelected(inDetailPane, index);
         openResult(item);
     }
 
@@ -5414,6 +5754,23 @@
     }
 
     /*
+     * The detail pane has its own breadcrumb bar (outside any
+     * .qf-result row) on top of the same per-row icons/chevron the
+     * left-hand list has, so it gets its own delegated mousedown
+     * handler instead of reusing handleResultsMousedown verbatim.
+     */
+    function handleDetailPaneMousedown(event) {
+        const crumb = event.target.closest('.qf-breadcrumb-item[data-depth]');
+        if (crumb) {
+            event.stopPropagation();
+            popHierarchyToDepth(Number(crumb.dataset.depth));
+            render();
+            return;
+        }
+        handleResultClick(event);
+    }
+
+    /*
      * ============================================================
      * OPEN / CLOSE
      * ============================================================
@@ -5423,6 +5780,7 @@
         createUI();
 
         state.open = true;
+        resetHierarchy();
 
         const input = document.getElementById('qf-input');
 
@@ -5816,6 +6174,16 @@
             border-radius: 12px;
             box-shadow: 0 30px 100px rgba(0, 0, 0, .8);
             animation: qf-window-in .12s ease-out;
+            transition: width .15s ease;
+        }
+
+        /*
+         * Applied while a hierarchy detail pane (Alliance -> Player ->
+         * Town, Island -> Town) is open, widening the window so both
+         * columns stay readable instead of splitting the fixed 720px.
+         */
+        #qf-window.qf-window-split {
+            width: min(1100px, calc(100vw - 30px));
         }
 
         @keyframes qf-window-in {
@@ -5897,7 +6265,21 @@
             letter-spacing: .3px;
         }
 
+        /*
+         * Wraps #qf-results and #qf-detail-pane side by side. A plain
+         * flex row: #qf-results always takes the left half (or the
+         * full width when the detail pane is hidden), #qf-detail-pane
+         * takes the right half only while a hierarchy level is open.
+         */
+        #qf-panes {
+            display: flex;
+            align-items: stretch;
+            min-width: 0;
+        }
+
         #qf-results {
+            flex: 1 1 50%;
+            min-width: 0;
             max-height: 480px;
             overflow-y: auto;
             overflow-x: hidden;
@@ -5917,6 +6299,96 @@
 
         #qf-results::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, .22);
+        }
+
+        #qf-detail-pane {
+            flex: 1 1 50%;
+            min-width: 0;
+            max-height: 480px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, .16) transparent;
+            padding: 6px 0;
+            border-left: 1px solid rgba(255, 255, 255, .09);
+            animation: qf-detail-pane-in .12s ease-out;
+        }
+
+        #qf-detail-pane[hidden] {
+            display: none;
+        }
+
+        @keyframes qf-detail-pane-in {
+            from { opacity: 0; transform: translateX(6px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        #qf-detail-pane::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #qf-detail-pane::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .14);
+            border-radius: 4px;
+        }
+
+        #qf-detail-pane::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, .22);
+        }
+
+        .qf-detail-breadcrumb {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 20px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, .06);
+            margin-bottom: 4px;
+        }
+
+        .qf-breadcrumb-item {
+            border: 0;
+            padding: 0;
+            background: transparent;
+            color: rgba(255, 255, 255, .5);
+            font-size: 11.5px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        button.qf-breadcrumb-item:hover {
+            color: #e6bd6c;
+            text-decoration: underline;
+        }
+
+        .qf-breadcrumb-current {
+            color: #d7a33f;
+            font-weight: 600;
+            cursor: default;
+        }
+
+        .qf-breadcrumb-sep {
+            color: rgba(255, 255, 255, .25);
+            font-size: 12px;
+        }
+
+        .qf-chevron {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            margin-left: 2px;
+            color: rgba(255, 255, 255, .3);
+        }
+
+        .qf-result:hover .qf-chevron {
+            color: rgba(255, 255, 255, .55);
+        }
+
+        .qf-selected .qf-chevron {
+            color: #d7a33f;
         }
 
         #qf-segments {

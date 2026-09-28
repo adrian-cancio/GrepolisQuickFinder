@@ -84,6 +84,26 @@ backdoor. To verify changes:
    section's "Clear" button) — with both a saved search and a recent entry
    present, confirm `Ctrl+Shift+Delete` only clears the section the
    currently selected row belongs to.
+8. To test the hierarchy drill-down pane: with the Curator stub (see step
+   6) returning `true`, search an alliance with several members and press
+   `→` (or click the row's `›` chevron) — the palette window should widen
+   and a right-hand pane should open listing that alliance's members, with
+   a breadcrumb showing the alliance name. Press `→` again on a member row
+   to drill one level deeper into that player's towns (breadcrumb now
+   shows `Alliance › Player`); confirm a third `→` on a town row does
+   nothing (towns are leaves). Press `←` to pop back one level, then click
+   the alliance's breadcrumb segment to jump straight back to it from two
+   levels deep. Confirm `↑`/`↓`/`Ctrl+F`/`Ctrl+B` act on whichever pane
+   (left list or right detail pane) currently has focus, and that
+   `Enter`/click on a town row in the detail pane still opens the native
+   town-info window and closes the whole palette, exactly like a town row
+   in the left-hand list. Press `Esc` once to close only the detail pane
+   (palette stays open, window narrows back down); press `Esc` again to
+   close the whole palette. Repeat the same alliance/player search with
+   the Curator stub returning `false`: the chevron must still be visible,
+   but pressing `→` should open the pane showing the `premiumRequired`
+   message instead of the member/town list. Also test an `Island → Town`
+   chain via a coordinate search that resolves to a multi-town island.
 
 ## Premium gating & policy compliance (Grepolis marketplace rules)
 
@@ -103,11 +123,17 @@ these three constraints in mind for every change:
    `premiumRequiredRows()` (command output) or a plain single-item result
    (search/coordinate paths) when it returns `false`. This currently covers:
    `>ghost`, `>island`, `>near`, `>ocean`, the player/alliance town
-   drill-down (`playerDetailRows`/`allianceDetailRows`), and the multi-town
-   island row for a coordinate search. **Features that resolve to exactly
-   one item are exempt** (single player/alliance/town lookup by name, a
-   single-town coordinate, `>goto`, `>dist` between two given coordinates) —
-   those aren't overviews, they're direct lookups of public per-entity data
+   drill-down (`playerDetailRows`/`allianceDetailRows`), the multi-town
+   island row for a coordinate search, and the hierarchy detail pane's
+   Alliance→Player, Player→Town, and Island→Town levels
+   (`pushHierarchyLevel`/`childRowsFor`, search `HIERARCHY DRILL-DOWN`) —
+   the `›` chevron itself is always shown (discoverability, same as
+   `>ghost`/`>island` always appearing in `>help`), but drilling in without
+   Curator active fills the pane with `premiumRequiredRows()` instead of
+   the actual children. **Features that resolve to exactly one item are
+   exempt** (single player/alliance/town lookup by name, a single-town
+   coordinate, `>goto`, `>dist` between two given coordinates) — those
+   aren't overviews, they're direct lookups of public per-entity data
    from `/data/*.txt`, same as clicking a name in-game.
    When adding a new command or drill-down, ask: *"does this list/aggregate
    more than one town/city in a single result?"* — if yes, gate it the same
@@ -156,8 +182,10 @@ When adding a new action inside the overlay:
   per-row Recent/Saved-searches trash icon has `Delete`, the "Clear" button
   on a history section header has `Ctrl+Shift+Delete` (scoped to whichever
   section — Recent or Saved searches — the currently selected row belongs
-  to), the bookmark icon (save current query) has `Ctrl+D`, and a saved
-  search's pencil icon (rename) has `Ctrl+E`.
+  to), the bookmark icon (save current query) has `Ctrl+D`, a saved
+  search's pencil icon (rename) has `Ctrl+E`, and a row's `›` chevron
+  (open the hierarchy detail pane) has `→`, with a breadcrumb segment
+  click as the mouse equivalent of `←` to step back out.
 - **Keyboard-first features need a clickable control.** e.g. the footer
   "refresh" and "help" entries are `<button>` elements (not plain `<span>`)
   so `Ctrl+R` and `?` both have a mouse equivalent; the settings gear icon
