@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder (Beta)
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.12.0-beta.1
+// @version      2.13.0-beta.1
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market. (Privacy policy: https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md)
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.12.0-beta.1';
+    const VERSION = '2.13.0-beta.1';
 
     /*
      * ============================================================
@@ -52,6 +52,10 @@
         GHOST_MIN_POINTS: 0,
         HIERARCHY_MAX_DEPTH: 2, // alliance->player->town or island->town: at most 2 pushes
         UPDATE_CHECK_INTERVAL_MS: 12 * 60 * 60 * 1000, // throttle the background update check
+        CONQUEST_HISTORY_ENABLED: false, // opt-in: /data/conquers.txt is multi-MB, see SETTINGS
+        CONQUEST_HISTORY_CACHE_TTL: 6 * 60 * 60 * 1000, // same freshness window as the main cache
+        RECENT_CONQUEST_WINDOW_MS: 3 * 24 * 60 * 60 * 1000, // "recently changed hands" badge threshold
+        HISTORY_MAX_EVENTS: 12, // rows shown by >history before truncating
     };
 
     /*
@@ -74,6 +78,7 @@
         cacheTtlHours: CONFIG.CACHE_TTL / (60 * 60 * 1000),
         nearMaxRadius: CONFIG.NEAR_MAX_RADIUS,
         ghostMinPoints: CONFIG.GHOST_MIN_POINTS,
+        conquestHistoryEnabled: CONFIG.CONQUEST_HISTORY_ENABLED,
     };
 
     const SETTINGS_BOUNDS = {
@@ -396,6 +401,20 @@
             updateAvailableTooltip: 'New version {version} available — click to download',
             settingsCheckUpdates: 'Check for updates',
             updateUpToDate: 'You already have the latest version',
+            settingsConquestHistory: 'Enable conquest history',
+            settingsConquestHistoryHint: 'Downloads a multi-MB file (conquers.txt) to power >history',
+            islandTownsWithCapacity: '{n}/{cap} towns',
+            recentlyConquered: 'conquered {n}d ago',
+            lastActivity: 'last activity {n}d ago',
+            commandHistoryHelp: '>history <name|x:y> — conquest history for a town, player or coordinate',
+            historyEmpty: 'No conquest history recorded for this entity.',
+            historyNotLoaded: 'Conquest history is still loading...',
+            historyDisabled: 'Enable "conquest history" in Settings to use >history.',
+            historyGhost: 'nobody (ghost)',
+            historyEventConquest: '{from} \u2192 {to}',
+            historyEventColonized: 'colonized by {to}',
+            historyEventCount: '{n} recorded events',
+            historyPlayerSummary: '{conquered} conquered \u00b7 {lost} lost',
         },
         es: {
             searchPlaceholder: 'Buscar jugadores, alianzas o ciudades...',
@@ -522,6 +541,20 @@
             updateAvailableTooltip: 'Nueva versión {version} disponible — haz clic para descargar',
             settingsCheckUpdates: 'Buscar actualizaciones',
             updateUpToDate: 'Ya tienes la última versión',
+            settingsConquestHistory: 'Activar historial de conquistas',
+            settingsConquestHistoryHint: 'Descarga un archivo de varios MB (conquers.txt) para >history',
+            islandTownsWithCapacity: '{n}/{cap} ciudades',
+            recentlyConquered: 'conquistada hace {n}d',
+            lastActivity: 'última actividad hace {n}d',
+            commandHistoryHelp: '>history <nombre|x:y> — historial de conquistas de una ciudad, jugador o coordenada',
+            historyEmpty: 'No hay historial de conquistas registrado para esto.',
+            historyNotLoaded: 'Cargando historial de conquistas...',
+            historyDisabled: 'Activa "historial de conquistas" en Ajustes para usar >history.',
+            historyGhost: 'nadie (fantasma)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: 'colonizada por {to}',
+            historyEventCount: '{n} eventos registrados',
+            historyPlayerSummary: '{conquered} conquistadas · {lost} perdidas',
         },
         de: {
             searchPlaceholder: 'Spieler, Allianzen oder St\u00e4dte suchen...',
@@ -648,6 +681,20 @@
             updateAvailableTooltip: 'Neue Version {version} verfügbar — klicken zum Herunterladen',
             settingsCheckUpdates: 'Nach Updates suchen',
             updateUpToDate: 'Du hast bereits die neueste Version',
+            settingsConquestHistory: 'Eroberungshistorie aktivieren',
+            settingsConquestHistoryHint: 'Lädt eine mehrere MB große Datei (conquers.txt) für >history',
+            islandTownsWithCapacity: '{n}/{cap} Städte',
+            recentlyConquered: 'erobert vor {n}T',
+            lastActivity: 'letzte Aktivität vor {n}T',
+            commandHistoryHelp: '>history <Name|x:y> — Eroberungshistorie einer Stadt, eines Spielers oder einer Koordinate',
+            historyEmpty: 'Keine Eroberungshistorie für diese Einheit vorhanden.',
+            historyNotLoaded: 'Eroberungshistorie wird noch geladen...',
+            historyDisabled: 'Aktiviere "Eroberungshistorie" in den Einstellungen, um >history zu nutzen.',
+            historyGhost: 'niemand (Geist)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: 'gegründet von {to}',
+            historyEventCount: '{n} erfasste Ereignisse',
+            historyPlayerSummary: '{conquered} erobert · {lost} verloren',
         },
         fr: {
             searchPlaceholder: 'Rechercher des joueurs, alliances ou villes...',
@@ -774,6 +821,20 @@
             updateAvailableTooltip: 'Nouvelle version {version} disponible — cliquez pour télécharger',
             settingsCheckUpdates: 'Vérifier les mises à jour',
             updateUpToDate: 'Vous avez déjà la dernière version',
+            settingsConquestHistory: 'Activer l’historique des conquêtes',
+            settingsConquestHistoryHint: 'Télécharge un fichier de plusieurs Mo (conquers.txt) pour >history',
+            islandTownsWithCapacity: '{n}/{cap} villes',
+            recentlyConquered: 'conquise il y a {n}j',
+            lastActivity: 'dernière activité il y a {n}j',
+            commandHistoryHelp: '>history <nom|x:y> — historique des conquêtes d’une ville, d’un joueur ou d’une coordonnée',
+            historyEmpty: 'Aucun historique de conquête enregistré pour cette entité.',
+            historyNotLoaded: 'Chargement de l’historique des conquêtes...',
+            historyDisabled: 'Activez « historique des conquêtes » dans les Paramètres pour utiliser >history.',
+            historyGhost: 'personne (fantôme)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: 'colonisée par {to}',
+            historyEventCount: '{n} événements enregistrés',
+            historyPlayerSummary: '{conquered} conquises · {lost} perdues',
         },
         it: {
             searchPlaceholder: 'Cerca giocatori, alleanze o citt\u00e0...',
@@ -900,6 +961,20 @@
             updateAvailableTooltip: 'Nuova versione {version} disponibile — clicca per scaricare',
             settingsCheckUpdates: 'Controlla aggiornamenti',
             updateUpToDate: 'Hai già l’ultima versione',
+            settingsConquestHistory: 'Attiva cronologia conquiste',
+            settingsConquestHistoryHint: 'Scarica un file di alcuni MB (conquers.txt) per >history',
+            islandTownsWithCapacity: '{n}/{cap} città',
+            recentlyConquered: 'conquistata {n}g fa',
+            lastActivity: 'ultima attività {n}g fa',
+            commandHistoryHelp: '>history <nome|x:y> — cronologia conquiste di una città, giocatore o coordinata',
+            historyEmpty: 'Nessuna cronologia di conquiste registrata per questo elemento.',
+            historyNotLoaded: 'Caricamento della cronologia conquiste...',
+            historyDisabled: 'Attiva "cronologia conquiste" nelle Impostazioni per usare >history.',
+            historyGhost: 'nessuno (fantasma)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: 'colonizzata da {to}',
+            historyEventCount: '{n} eventi registrati',
+            historyPlayerSummary: '{conquered} conquistate · {lost} perse',
         },
         nl: {
             searchPlaceholder: 'Zoek spelers, allianties of steden...',
@@ -1026,6 +1101,20 @@
             updateAvailableTooltip: 'Nieuwe versie {version} beschikbaar — klik om te downloaden',
             settingsCheckUpdates: 'Controleren op updates',
             updateUpToDate: 'Je hebt al de laatste versie',
+            settingsConquestHistory: 'Veroveringsgeschiedenis inschakelen',
+            settingsConquestHistoryHint: 'Downloadt een bestand van meerdere MB (conquers.txt) voor >history',
+            islandTownsWithCapacity: '{n}/{cap} steden',
+            recentlyConquered: '{n}d geleden veroverd',
+            lastActivity: 'laatste activiteit {n}d geleden',
+            commandHistoryHelp: '>history <naam|x:y> — veroveringsgeschiedenis van een stad, speler of coördinaat',
+            historyEmpty: 'Geen veroveringsgeschiedenis geregistreerd voor dit item.',
+            historyNotLoaded: 'Veroveringsgeschiedenis wordt geladen...',
+            historyDisabled: 'Schakel "veroveringsgeschiedenis" in bij Instellingen om >history te gebruiken.',
+            historyGhost: 'niemand (spook)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: 'gesticht door {to}',
+            historyEventCount: '{n} geregistreerde gebeurtenissen',
+            historyPlayerSummary: '{conquered} veroverd · {lost} verloren',
         },
         pl: {
             searchPlaceholder: 'Szukaj graczy, sojuszy lub miast...',
@@ -1152,6 +1241,20 @@
             updateAvailableTooltip: 'Dostępna nowa wersja {version} — kliknij, aby pobrać',
             settingsCheckUpdates: 'Sprawdź aktualizacje',
             updateUpToDate: 'Masz już najnowszą wersję',
+            settingsConquestHistory: 'Włącz historię podbojów',
+            settingsConquestHistoryHint: 'Pobiera kilkumegabajtowy plik (conquers.txt) dla >history',
+            islandTownsWithCapacity: '{n}/{cap} miast',
+            recentlyConquered: 'podbito {n}d temu',
+            lastActivity: 'ostatnia aktywność {n}d temu',
+            commandHistoryHelp: '>history <nazwa|x:y> — historia podbojów miasta, gracza lub współrzędnej',
+            historyEmpty: 'Brak zarejestrowanej historii podbojów dla tego elementu.',
+            historyNotLoaded: 'Trwa wczytywanie historii podbojów...',
+            historyDisabled: 'Włącz "historię podbojów" w Ustawieniach, aby korzystać z >history.',
+            historyGhost: 'nikt (duch)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: 'skolonizowane przez {to}',
+            historyEventCount: '{n} zarejestrowanych zdarzeń',
+            historyPlayerSummary: '{conquered} podbitych · {lost} utraconych',
         },
         pt: {
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
@@ -1278,6 +1381,20 @@
             updateAvailableTooltip: 'Nova versão {version} disponível — clique para descarregar',
             settingsCheckUpdates: 'Procurar atualizações',
             updateUpToDate: 'Já tem a versão mais recente',
+            settingsConquestHistory: 'Ativar histórico de conquistas',
+            settingsConquestHistoryHint: 'Descarrega um ficheiro de vários MB (conquers.txt) para >history',
+            islandTownsWithCapacity: '{n}/{cap} cidades',
+            recentlyConquered: 'conquistada há {n}d',
+            lastActivity: 'última atividade há {n}d',
+            commandHistoryHelp: '>history <nome|x:y> — histórico de conquistas de uma cidade, jogador ou coordenada',
+            historyEmpty: 'Sem histórico de conquistas registado para isto.',
+            historyNotLoaded: 'A carregar o histórico de conquistas...',
+            historyDisabled: 'Ative "histórico de conquistas" nas Definições para usar >history.',
+            historyGhost: 'ninguém (fantasma)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: 'colonizada por {to}',
+            historyEventCount: '{n} eventos registados',
+            historyPlayerSummary: '{conquered} conquistadas · {lost} perdidas',
         },
         br: {
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
@@ -1404,6 +1521,20 @@
             updateAvailableTooltip: 'Nova versão {version} disponível — clique para baixar',
             settingsCheckUpdates: 'Verificar atualizações',
             updateUpToDate: 'Você já tem a versão mais recente',
+            settingsConquestHistory: 'Ativar histórico de conquistas',
+            settingsConquestHistoryHint: 'Baixa um arquivo de vários MB (conquers.txt) para >history',
+            islandTownsWithCapacity: '{n}/{cap} cidades',
+            recentlyConquered: 'conquistada há {n}d',
+            lastActivity: 'última atividade há {n}d',
+            commandHistoryHelp: '>history <nome|x:y> — histórico de conquistas de uma cidade, jogador ou coordenada',
+            historyEmpty: 'Nenhum histórico de conquistas registrado para isso.',
+            historyNotLoaded: 'Carregando histórico de conquistas...',
+            historyDisabled: 'Ative "histórico de conquistas" nas Configurações para usar >history.',
+            historyGhost: 'ninguém (fantasma)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: 'colonizada por {to}',
+            historyEventCount: '{n} eventos registrados',
+            historyPlayerSummary: '{conquered} conquistadas · {lost} perdidas',
         },
         tr: {
             searchPlaceholder: 'Oyuncu, ittifak veya \u015fehir ara...',
@@ -1530,6 +1661,20 @@
             updateAvailableTooltip: 'Yeni sürüm {version} mevcut — indirmek için tıklayın',
             settingsCheckUpdates: 'Güncellemeleri denetle',
             updateUpToDate: 'Zaten en son sürüme sahipsiniz',
+            settingsConquestHistory: 'Fetih geçmişini etkinleştir',
+            settingsConquestHistoryHint: '>history için birkaç MB\'lık bir dosya (conquers.txt) indirir',
+            islandTownsWithCapacity: '{n}/{cap} şehir',
+            recentlyConquered: '{n} gün önce fethedildi',
+            lastActivity: 'son etkinlik {n} gün önce',
+            commandHistoryHelp: '>history <isim|x:y> — bir şehrin, oyuncunun veya koordinatın fetih geçmişi',
+            historyEmpty: 'Bunun için kayıtlı fetih geçmişi yok.',
+            historyNotLoaded: 'Fetih geçmişi yükleniyor...',
+            historyDisabled: '>history kullanmak için Ayarlar\'da "fetih geçmişi"ni etkinleştirin.',
+            historyGhost: 'kimse (hayalet)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: '{to} tarafından kuruldu',
+            historyEventCount: '{n} kayıtlı olay',
+            historyPlayerSummary: '{conquered} fethedildi · {lost} kaybedildi',
         },
         ru: {
             searchPlaceholder: '\u041f\u043e\u0438\u0441\u043a \u0438\u0433\u0440\u043e\u043a\u043e\u0432, \u0430\u043b\u044c\u044f\u043d\u0441\u043e\u0432 \u0438\u043b\u0438 \u0433\u043e\u0440\u043e\u0434\u043e\u0432...',
@@ -1656,6 +1801,20 @@
             updateAvailableTooltip: 'Доступна новая версия {version} — нажмите, чтобы скачать',
             settingsCheckUpdates: 'Проверить обновления',
             updateUpToDate: 'У вас уже установлена последняя версия',
+            settingsConquestHistory: 'Включить историю завоеваний',
+            settingsConquestHistoryHint: 'Загружает файл размером в несколько МБ (conquers.txt) для >history',
+            islandTownsWithCapacity: '{n}/{cap} городов',
+            recentlyConquered: 'завоёван {n} дн. назад',
+            lastActivity: 'последняя активность {n} дн. назад',
+            commandHistoryHelp: '>history <имя|x:y> — история завоеваний города, игрока или координаты',
+            historyEmpty: 'История завоеваний для этого объекта не найдена.',
+            historyNotLoaded: 'Загрузка истории завоеваний...',
+            historyDisabled: 'Включите «историю завоеваний» в Настройках, чтобы использовать >history.',
+            historyGhost: 'никто (призрак)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: 'основан игроком {to}',
+            historyEventCount: '{n} зарегистрированных событий',
+            historyPlayerSummary: 'завоёвано: {conquered} · потеряно: {lost}',
         },
         el: {
             searchPlaceholder: '\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03c0\u03b1\u03b9\u03ba\u03c4\u03ce\u03bd, \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03b9\u03ce\u03bd \u03ae \u03c0\u03cc\u03bb\u03b5\u03c9\u03bd...',
@@ -1782,6 +1941,20 @@
             updateAvailableTooltip: 'Διαθέσιμη νέα έκδοση {version} — κάντε κλικ για λήψη',
             settingsCheckUpdates: 'Έλεγχος για ενημερώσεις',
             updateUpToDate: 'Έχετε ήδη την πιο πρόσφατη έκδοση',
+            settingsConquestHistory: 'Ενεργοποίηση ιστορικού κατακτήσεων',
+            settingsConquestHistoryHint: 'Κατεβάζει ένα αρχείο πολλών MB (conquers.txt) για το >history',
+            islandTownsWithCapacity: '{n}/{cap} πόλεις',
+            recentlyConquered: 'κατακτήθηκε πριν από {n}μ',
+            lastActivity: 'τελευταία δραστηριότητα πριν από {n}μ',
+            commandHistoryHelp: '>history <όνομα|x:y> — ιστορικό κατακτήσεων μιας πόλης, παίκτη ή συντεταγμένης',
+            historyEmpty: 'Δεν υπάρχει καταγεγραμμένο ιστορικό κατακτήσεων για αυτό.',
+            historyNotLoaded: 'Φόρτωση ιστορικού κατακτήσεων...',
+            historyDisabled: 'Ενεργοποιήστε το «ιστορικό κατακτήσεων» στις Ρυθμίσεις για να χρησιμοποιήσετε το >history.',
+            historyGhost: 'κανείς (φάντασμα)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: 'αποικίστηκε από {to}',
+            historyEventCount: '{n} καταγεγραμμένα γεγονότα',
+            historyPlayerSummary: '{conquered} κατακτήθηκαν · {lost} χάθηκαν',
         },
         hu: {
             searchPlaceholder: 'J\u00e1t\u00e9kosok, sz\u00f6vets\u00e9gek vagy v\u00e1rosok keres\u00e9se...',
@@ -1908,6 +2081,20 @@
             updateAvailableTooltip: 'Új verzió elérhető: {version} — kattints a letöltéshez',
             settingsCheckUpdates: 'Frissítések keresése',
             updateUpToDate: 'Már a legújabb verziót használod',
+            settingsConquestHistory: 'Hódítási előzmények engedélyezése',
+            settingsConquestHistoryHint: 'Letölt egy több MB-os fájlt (conquers.txt) a >history parancshoz',
+            islandTownsWithCapacity: '{n}/{cap} város',
+            recentlyConquered: '{n} napja meghódítva',
+            lastActivity: 'utolsó aktivitás {n} napja',
+            commandHistoryHelp: '>history <név|x:y> — egy város, játékos vagy koordináta hódítási előzményei',
+            historyEmpty: 'Nincs rögzített hódítási előzmény ehhez.',
+            historyNotLoaded: 'Hódítási előzmények betöltése...',
+            historyDisabled: 'Engedélyezd a "hódítási előzmények" opciót a Beállításokban a >history használatához.',
+            historyGhost: 'senki (szellem)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: '{to} alapította',
+            historyEventCount: '{n} rögzített esemény',
+            historyPlayerSummary: '{conquered} meghódítva · {lost} elveszítve',
         },
         ro: {
             searchPlaceholder: 'Caut\u0103 juc\u0103tori, alian\u021be sau ora\u0219e...',
@@ -2034,6 +2221,20 @@
             updateAvailableTooltip: 'Versiune nouă {version} disponibilă — clic pentru descărcare',
             settingsCheckUpdates: 'Caută actualizări',
             updateUpToDate: 'Ai deja cea mai recentă versiune',
+            settingsConquestHistory: 'Activează istoricul cuceririlor',
+            settingsConquestHistoryHint: 'Descarcă un fișier de câțiva MB (conquers.txt) pentru >history',
+            islandTownsWithCapacity: '{n}/{cap} orașe',
+            recentlyConquered: 'cucerit acum {n}z',
+            lastActivity: 'ultima activitate acum {n}z',
+            commandHistoryHelp: '>history <nume|x:y> — istoricul cuceririlor unui oraș, jucător sau coordonate',
+            historyEmpty: 'Nu există istoric de cuceriri înregistrat pentru aceasta.',
+            historyNotLoaded: 'Se încarcă istoricul cuceririlor...',
+            historyDisabled: 'Activează „istoricul cuceririlor” din Setări pentru a folosi >history.',
+            historyGhost: 'nimeni (fantomă)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: 'colonizat de {to}',
+            historyEventCount: '{n} evenimente înregistrate',
+            historyPlayerSummary: '{conquered} cucerite · {lost} pierdute',
         },
         cs: {
             searchPlaceholder: 'Hledat hr\u00e1\u010de, aliance nebo m\u011bsta...',
@@ -2160,6 +2361,20 @@
             updateAvailableTooltip: 'K dispozici je nová verze {version} — klikněte pro stažení',
             settingsCheckUpdates: 'Zkontrolovat aktualizace',
             updateUpToDate: 'Již máte nejnovější verzi',
+            settingsConquestHistory: 'Povolit historii dobývání',
+            settingsConquestHistoryHint: 'Stáhne několika MB soubor (conquers.txt) pro >history',
+            islandTownsWithCapacity: '{n}/{cap} měst',
+            recentlyConquered: 'dobyto před {n} dny',
+            lastActivity: 'poslední aktivita před {n} dny',
+            commandHistoryHelp: '>history <jméno|x:y> — historie dobývání města, hráče nebo souřadnice',
+            historyEmpty: 'Pro tuto položku není zaznamenána žádná historie dobývání.',
+            historyNotLoaded: 'Načítání historie dobývání...',
+            historyDisabled: 'Povolte "historii dobývání" v Nastavení pro použití >history.',
+            historyGhost: 'nikdo (duch)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: 'založeno hráčem {to}',
+            historyEventCount: '{n} zaznamenaných událostí',
+            historyPlayerSummary: '{conquered} dobyto · {lost} ztraceno',
         },
         sk: {
             searchPlaceholder: 'H\u013ead\u0165 hr\u00e1\u010dov, alianciu alebo mest\u00e1...',
@@ -2286,6 +2501,20 @@
             updateAvailableTooltip: 'K dispozícii je nová verzia {version} — kliknite pre stiahnutie',
             settingsCheckUpdates: 'Skontrolovať aktualizácie',
             updateUpToDate: 'Už máte najnovšiu verziu',
+            settingsConquestHistory: 'Povoliť históriu dobýjania',
+            settingsConquestHistoryHint: 'Stiahne niekoľko MB veľký súbor (conquers.txt) pre >history',
+            islandTownsWithCapacity: '{n}/{cap} miest',
+            recentlyConquered: 'dobyté pred {n} dňami',
+            lastActivity: 'posledná aktivita pred {n} dňami',
+            commandHistoryHelp: '>history <meno|x:y> — história dobýjania mesta, hráča alebo súradnice',
+            historyEmpty: 'Pre túto položku nie je zaznamenaná žiadna história dobýjania.',
+            historyNotLoaded: 'Načítava sa história dobýjania...',
+            historyDisabled: 'Povoľte "históriu dobýjania" v Nastaveniach na použitie >history.',
+            historyGhost: 'nikto (duch)',
+            historyEventConquest: '{from} → {to}',
+            historyEventColonized: 'založené hráčom {to}',
+            historyEventCount: '{n} zaznamenaných udalostí',
+            historyPlayerSummary: '{conquered} dobyté · {lost} stratené',
         },
     };
 
@@ -2429,6 +2658,7 @@
         CONFIG.CACHE_TTL = clampSetting('cacheTtlHours', settings.cacheTtlHours) * 60 * 60 * 1000;
         CONFIG.NEAR_MAX_RADIUS = clampSetting('nearMaxRadius', settings.nearMaxRadius);
         CONFIG.GHOST_MIN_POINTS = clampSetting('ghostMinPoints', settings.ghostMinPoints);
+        CONFIG.CONQUEST_HISTORY_ENABLED = Boolean(settings.conquestHistoryEnabled);
     }
 
     settings = loadSettings();
@@ -2510,6 +2740,23 @@
         townsByCoord: new Map(),
         townsByPlayer: new Map(),
         islandIdByCoord: new Map(),
+        islandCapacityByCoord: new Map(),
+    };
+
+    /*
+     * Conquest history (/data/conquers.txt), loaded separately and
+     * only when opted in via Settings (see CONQUEST HISTORY section
+     * further below): unlike the four arrays above, it is multi-MB
+     * even on a few-year-old world and most users never need it.
+     * `eventsByTown` holds every {ts, newOwnerId, oldOwnerId,
+     * newAllianceId, oldAllianceId, points} row for a given town id,
+     * oldest first (the file itself is already chronological).
+     */
+    const CONQUEST = {
+        loaded: false,
+        loading: false,
+        eventsByTown: new Map(),
+        totalEvents: 0,
     };
 
     /*
@@ -3010,8 +3257,18 @@
      */
     function indexIslands(islands) {
         DATA.islandIdByCoord = new Map();
+        // island.capacity is islands.txt's "phase" field: the max
+        // number of towns the game allows on this specific islet.
+        // Confirmed empirically against a live world: it matches the
+        // current town count on ~78% of islands and is >= it almost
+        // everywhere else (an island not yet fully colonized), so it
+        // is safe to use as "slots available", not as a fixed island
+        // "growth stage" as the field name in the raw dump implies.
+        DATA.islandCapacityByCoord = new Map();
         for (const island of islands) {
-            DATA.islandIdByCoord.set(`${island.x}:${island.y}`, island.id);
+            const key = `${island.x}:${island.y}`;
+            DATA.islandIdByCoord.set(key, island.id);
+            DATA.islandCapacityByCoord.set(key, island.capacity);
         }
     }
 
@@ -3102,8 +3359,9 @@
     }
 
     /*
-     * islands.txt rows: id,x,y,type,phase,resource1,resource2. Only
-     * id/x/y are needed here (see indexIslands above for why).
+     * islands.txt rows: id,x,y,type,phase,resource1,resource2. "type"
+     * is the islet's shape layout (unused here); "phase" is its town
+     * capacity (see indexIslands for how that was confirmed).
      */
     function parseIslands(text) {
         const islands = [];
@@ -3121,10 +3379,57 @@
                 id,
                 x: Number(parts[1]),
                 y: Number(parts[2]),
+                capacity: Number(parts[4]) || 0,
             });
         }
 
         return islands;
+    }
+
+    /*
+     * conquers.txt rows: town_id,timestamp(unix seconds),new_owner_id,
+     * old_owner_id,new_alliance_id,old_alliance_id,points_at_conquest.
+     * old_owner_id is empty for a colonization (a brand-new town, not
+     * a conquest). Confirmed against a live world: the file is
+     * already chronological (oldest first) and covers the entire
+     * world's history, so no client-side snapshotting is needed to
+     * get a real "who owned this town and when" timeline. NOTE: a
+     * town becoming a ghost (abandoned) is NOT its own event here —
+     * only actual conquests/colonizations are logged, so the last
+     * event for a currently-ghost town is when it was last taken,
+     * not when it was abandoned.
+     */
+    function parseConquers(text) {
+        const eventsByTown = new Map();
+        let total = 0;
+
+        for (const line of text.split(/\r?\n/)) {
+            if (!line) continue;
+
+            const parts = line.split(',');
+            if (parts.length < 7) continue;
+
+            const townId = Number(parts[0]);
+            const ts = Number(parts[1]);
+            if (!townId || !Number.isFinite(ts)) continue;
+
+            const event = {
+                ts: ts * 1000,
+                newOwnerId: parts[2] ? Number(parts[2]) : 0,
+                oldOwnerId: parts[3] ? Number(parts[3]) : 0,
+                newAllianceId: parts[4] ? Number(parts[4]) : 0,
+                oldAllianceId: parts[5] ? Number(parts[5]) : 0,
+                points: Number(parts[6]) || 0,
+            };
+
+            if (!eventsByTown.has(townId)) {
+                eventsByTown.set(townId, []);
+            }
+            eventsByTown.get(townId).push(event);
+            total++;
+        }
+
+        return { eventsByTown, total };
     }
 
     /*
@@ -3146,6 +3451,14 @@
 
     const DB_NAME = 'qf-cache-v1';
     const DB_STORE = 'worlds';
+    // Added in v2.13.0 for conquers.txt (see CONQUEST HISTORY below).
+    // Bumping the shared DB's version here (not a separate database)
+    // so both stores are created/upgraded through the same onupgradeneeded
+    // handler — IndexedDB rejects opening the same DB_NAME at version 1
+    // once anything has opened it at version 2, so there can only be one
+    // "current" version number for this whole DB_NAME across the file.
+    const CONQUEST_STORE = 'conquests';
+    const DB_VERSION = 2;
 
     function cacheKey() {
         return `qfi:${WORLD}`;
@@ -3153,9 +3466,15 @@
 
     function idbOpen() {
         return new Promise((resolve, reject) => {
-            const request = indexedDB.open(DB_NAME, 1);
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
             request.onupgradeneeded = () => {
-                request.result.createObjectStore(DB_STORE, { keyPath: 'key' });
+                const db = request.result;
+                if (!db.objectStoreNames.contains(DB_STORE)) {
+                    db.createObjectStore(DB_STORE, { keyPath: 'key' });
+                }
+                if (!db.objectStoreNames.contains(CONQUEST_STORE)) {
+                    db.createObjectStore(CONQUEST_STORE, { keyPath: 'key' });
+                }
             };
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
@@ -3303,6 +3622,102 @@
 
     /*
      * ============================================================
+     * CONQUEST HISTORY (/data/conquers.txt) — opt-in
+     * ============================================================
+     *
+     * Powers >history. Kept fully separate from loadAll()/DATA above:
+     * conquers.txt is several MB even on a young world and grows
+     * without bound as a world ages, so it is only fetched once the
+     * user opts in via Settings (settings.conquestHistoryEnabled),
+     * never as part of the automatic startup load. Cached via the
+     * same idbOpen()/DB_NAME as the main cache, in its own object
+     * store (CONQUEST_STORE, declared above), with the same
+     * cache-key-per-world pattern.
+     */
+
+    function conquestCacheGet() {
+        return idbOpen()
+            .then((db) => new Promise((resolve, reject) => {
+                const tx = db.transaction(CONQUEST_STORE, 'readonly');
+                const request = tx.objectStore(CONQUEST_STORE).get(cacheKey());
+                request.onsuccess = () => resolve(request.result || null);
+                request.onerror = () => reject(request.error);
+            }))
+            .catch(() => null);
+    }
+
+    /*
+     * Stored as the raw eventsByTown Map converted to an array of
+     * [townId, events[]] pairs: IndexedDB can persist Maps directly in
+     * modern browsers, but round-tripping through a plain array is
+     * the same approach already used for players/alliances/towns
+     * above (structured-cloned either way; this keeps the shape
+     * consistent and trivially inspectable in DevTools).
+     */
+    function conquestCacheSet(eventsByTown, total) {
+        return idbOpen()
+            .then((db) => new Promise((resolve, reject) => {
+                const tx = db.transaction(CONQUEST_STORE, 'readwrite');
+                tx.objectStore(CONQUEST_STORE).put({
+                    key: cacheKey(),
+                    savedAt: Date.now(),
+                    total,
+                    events: [...eventsByTown.entries()],
+                });
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            }))
+            .catch(() => null);
+    }
+
+    function applyConquestData(eventsByTown, total) {
+        CONQUEST.eventsByTown = eventsByTown;
+        CONQUEST.totalEvents = total;
+        CONQUEST.loaded = true;
+        console.info(`[QF] Conquest history loaded: ${total} events across ${eventsByTown.size} towns.`);
+    }
+
+    /*
+     * Loads conquers.txt (cache-first, same TTL policy as the main
+     * loadAll), entirely independent of DATA/state.loaded: >history
+     * works as soon as this resolves, whether or not it happens
+     * before or after the main world data finishes loading. Silent
+     * on failure (mirrors loadAll's own network fetches) — a failed
+     * conquest-history load just means >history reports no data
+     * instead of breaking anything else.
+     */
+    async function loadConquestHistory(force) {
+        if (!WORLD || CONQUEST.loaded || CONQUEST.loading) {
+            return;
+        }
+
+        CONQUEST.loading = true;
+
+        try {
+            if (!force) {
+                const cached = await conquestCacheGet();
+                if (cached && cached.savedAt && Date.now() - cached.savedAt < CONFIG.CONQUEST_HISTORY_CACHE_TTL) {
+                    applyConquestData(new Map(cached.events || []), cached.total || 0);
+                    CONQUEST.loading = false;
+                    if (state.open) render();
+                    return;
+                }
+            }
+
+            const text = await fetchText('/data/conquers.txt');
+            const { eventsByTown, total } = parseConquers(text);
+            applyConquestData(eventsByTown, total);
+            conquestCacheSet(eventsByTown, total); // fire-and-forget
+            CONQUEST.loading = false;
+            if (state.open) render();
+        } catch (error) {
+            console.error('[QF] Error loading conquest history:', error);
+            CONQUEST.loading = false;
+        }
+    }
+
+    /*
+     * ============================================================
      * SEARCH (synchronous, over the index already loaded in memory)
      * ============================================================
      */
@@ -3388,6 +3803,18 @@
     }
 
     /*
+     * Most recent conquers.txt event for a town, or null when conquest
+     * history isn't loaded/enabled or the town has no recorded event
+     * (possible on very young worlds/towns). The file is already
+     * chronological, so the last array entry is the most recent one.
+     */
+    function lastConquestEvent(townId) {
+        if (!CONQUEST.loaded || !townId) return null;
+        const events = CONQUEST.eventsByTown.get(townId);
+        return events && events.length ? events[events.length - 1] : null;
+    }
+
+    /*
      * An island is not a row in the dump. It is every town that shares
      * the same island coordinate, which is the unit a player actually
      * looks at when scouting a spot.
@@ -3414,6 +3841,7 @@
             y,
             islandId: DATA.islandIdByCoord.get(`${x}:${y}`),
             townCount: towns.length,
+            capacity: DATA.islandCapacityByCoord.get(`${x}:${y}`) || 0,
             allianceCount: alliances.size,
             ghostCount: ghosts,
             towns,
@@ -3753,6 +4181,21 @@
         return bestScore >= 6000 ? best : null;
     }
 
+    function findPlayer(name) {
+        const query = normalize(name);
+        if (!query) return null;
+        let best = null;
+        let bestScore = 0;
+        for (const player of DATA.players) {
+            const score = scoreMatch(player.nameNorm, query);
+            if (score > bestScore) {
+                best = player;
+                bestScore = score;
+            }
+        }
+        return bestScore >= 6000 ? best : null;
+    }
+
     function oceanRows(rawArgs) {
         const match = String(rawArgs || '').trim().match(/^(M\d{2})(?:\s+(.+))?$/i);
         if (!match) {
@@ -3846,6 +4289,171 @@
     }
 
     /*
+     * ============================================================
+     * >history (conquers.txt) — single-entity lookup, no gating
+     * ============================================================
+     *
+     * Every branch below resolves to ONE town/player/alliance's own
+     * timeline (a list of past events about that one entity), not an
+     * aggregate multi-entity overview, so none of this needs
+     * isCuratorActive(): it mirrors clicking that entity's own public
+     * profile, same reasoning as the plain search paths.
+     */
+
+    function ownerLabelAt(playerId) {
+        if (!playerId) return translate('historyGhost');
+        const player = DATA.playerById.get(playerId);
+        return player ? player.name : `#${playerId}`;
+    }
+
+    function formatEventDate(ts) {
+        try {
+            return new Date(ts).toLocaleDateString();
+        } catch (_) {
+            return new Date(ts).toISOString().slice(0, 10);
+        }
+    }
+
+    /*
+     * `townId` is only used to look up and prefix the town's name when
+     * the row is shown outside that town's own history (e.g. inside
+     * playerHistoryRows, where several different towns are listed
+     * together and the reader needs to know which one each line is
+     * about); townHistoryRows omits it since its header row already
+     * names the town.
+     */
+    function conquestEventRow(event, townId) {
+        const dateLabel = formatEventDate(event.ts);
+        const fromLabel = ownerLabelAt(event.oldOwnerId);
+        const toLabel = ownerLabelAt(event.newOwnerId);
+        const key = event.oldOwnerId
+            ? translate('historyEventConquest', { from: fromLabel, to: toLabel })
+            : translate('historyEventColonized', { to: toLabel });
+        // Not escaped here: 'info' rows are escaped once as a whole by
+        // renderResult (see case 'info'), same pattern as oceanRows'
+        // alliance.name interpolation above.
+        const town = townId ? DATA.townById.get(townId) : null;
+        const townLabel = town ? `${town.name} \u00b7 ` : '';
+        return {
+            type: 'info',
+            name: `${dateLabel} \u00b7 ${townLabel}${key} \u00b7 ${event.points.toLocaleString()} ${translate('ptsSuffix')}`,
+        };
+    }
+
+    /*
+     * A town's own timeline: every recorded conquest/colonization,
+     * oldest first (so reading top-to-bottom tells the town's story
+     * in order), capped to HISTORY_MAX_EVENTS most recent entries.
+     */
+    function townHistoryRows(town) {
+        const header = townResult(town);
+        const events = CONQUEST.eventsByTown.get(town.id) || [];
+        if (!events.length) {
+            return [header, { type: 'info', name: translate('historyEmpty') }];
+        }
+        const recent = events.slice(-CONFIG.HISTORY_MAX_EVENTS);
+        return [
+            header,
+            { type: 'info', name: `${translate('historyEventCount', { n: events.length })}` },
+            ...recent.map((event) => conquestEventRow(event)),
+        ];
+    }
+
+    /*
+     * A player's own conquest/loss tally: how many towns they've
+     * taken (as new_owner) and lost (as old_owner) across the whole
+     * world history, plus their most recent events of each kind.
+     * This is the player's own activity record, not a listing of
+     * other players' towns, so it stays ungated like the rest of
+     * >history.
+     */
+    function playerHistoryRows(player) {
+        const header = { type: 'player', id: player.id, name: player.name, data: player, score: 30000 };
+        if (!CONQUEST.loaded) {
+            return [header, { type: 'info', name: translate('historyNotLoaded') }];
+        }
+
+        const conquered = [];
+        const lost = [];
+        for (const [townId, events] of CONQUEST.eventsByTown) {
+            for (const event of events) {
+                if (event.newOwnerId === player.id) conquered.push({ event, townId });
+                if (event.oldOwnerId === player.id) lost.push({ event, townId });
+            }
+        }
+        conquered.sort((a, b) => b.event.ts - a.event.ts);
+        lost.sort((a, b) => b.event.ts - a.event.ts);
+
+        if (!conquered.length && !lost.length) {
+            return [header, { type: 'info', name: translate('historyEmpty') }];
+        }
+
+        const rows = [
+            header,
+            { type: 'info', name: translate('historyPlayerSummary', { conquered: conquered.length, lost: lost.length }) },
+        ];
+        const half = Math.max(1, Math.floor((CONFIG.HISTORY_MAX_EVENTS) / 2));
+        for (const { event, townId } of conquered.slice(0, half)) {
+            rows.push(conquestEventRow(event, townId));
+        }
+        for (const { event, townId } of lost.slice(0, half)) {
+            rows.push(conquestEventRow(event, townId));
+        }
+        return rows;
+    }
+
+    function historyRows(rawArgs) {
+        const query = String(rawArgs || '').trim();
+        if (!query) {
+            return [{ type: 'info', name: translate('commandHistoryHelp') }];
+        }
+        if (!settings.conquestHistoryEnabled) {
+            return [{ type: 'info', name: translate('historyDisabled') }];
+        }
+        if (!CONQUEST.loaded) {
+            loadConquestHistory(); // fire-and-forget, in case the setting was on but the load hasn't run yet
+            return [{ type: 'info', name: translate('historyNotLoaded') }];
+        }
+
+        const coords = parseCoordinates(query);
+        if (coords) {
+            const towns = townsOnIsland(coords.x, coords.y);
+            if (!towns.length) {
+                return [{ type: 'info', name: translate('noResults') }];
+            }
+            if (towns.length === 1) {
+                return townHistoryRows(towns[0]);
+            }
+            // Multiple towns share this island coordinate. Listing all
+            // of them to disambiguate is the same multi-town island
+            // view gated everywhere else (searchCoordinates/islandRows),
+            // so it needs the same Curator check; without it, just ask
+            // for an exact town name instead of a coordinate.
+            if (!isCuratorActive()) return premiumRequiredRows();
+            return towns.map((town) => townResult(town));
+        }
+
+        // Town names and player names share the same namespace here,
+        // so an exact match on either wins outright; otherwise fall
+        // back to whichever fuzzy match scored higher. searchTowns()
+        // returns matches unsorted (score order is only applied by the
+        // free-text search path), so the best match must be picked
+        // explicitly here instead of assuming index 0.
+        const player = findPlayer(query);
+        const townMatches = searchTowns(normalize(query));
+        const bestTown = townMatches.reduce(
+            (best, town) => (!best || town.score > best.score ? town : best),
+            null,
+        );
+
+        if (bestTown && bestTown.score === 10000) return townHistoryRows(bestTown.data);
+        if (player && player.nameNorm === normalize(query)) return playerHistoryRows(player);
+        if (bestTown && (!player || bestTown.score >= 6000)) return townHistoryRows(bestTown.data);
+        if (player) return playerHistoryRows(player);
+        return [{ type: 'info', name: translate('noResults') }];
+    }
+
+    /*
      * Runs a ">command". Returns the result rows (type 'info' for
      * messages, 'town' for ghost listings), or null when the command
      * already navigated (a >goto that matched) or rendered its own
@@ -3856,7 +4464,7 @@
         const [nameRaw, ...tokens] = rest.split(/\s+/);
         const name = (nameRaw || '').toLowerCase();
         const args = tokens.join(' ');
-        const knownCommands = ['goto', 'ghost', 'dist', 'island', 'near', 'ocean', 'settings', 'help'];
+        const knownCommands = ['goto', 'ghost', 'dist', 'island', 'near', 'ocean', 'history', 'settings', 'help'];
 
         if (!name || (tokens.length === 0 && !knownCommands.includes(name))) {
             const suggestions = [
@@ -3866,6 +4474,7 @@
                 { type: 'command-suggestion', name: '>island X:Y', command: '>island', helpText: translate('commandIslandHelp') },
                 { type: 'command-suggestion', name: '>near [X:Y] [radius]', command: '>near', helpText: translate('commandNearHelp') },
                 { type: 'command-suggestion', name: '>ocean M34 [alliance]', command: '>ocean', helpText: translate('commandOceanHelp') },
+                { type: 'command-suggestion', name: '>history <name|x:y>', command: '>history', helpText: translate('commandHistoryHelp') },
                 { type: 'command-suggestion', name: '>settings', command: '>settings', helpText: translate('commandSettingsHelp') },
                 { type: 'command-suggestion', name: '>help', command: '>help', helpText: translate('commandHelpHint') },
             ];
@@ -3914,6 +4523,9 @@
             case 'ocean':
                 if (!isCuratorActive()) return premiumRequiredRows();
                 return oceanRows(args);
+
+            case 'history':
+                return historyRows(args);
 
             default:
                 return [{ type: 'info', name: translate('commandUnknown', { cmd: nameRaw || '' }) }];
@@ -5137,6 +5749,7 @@
             ['>island X:Y', translate('commandIslandHelp')],
             ['>near [X:Y] [radius]', translate('commandNearHelp')],
             ['>ocean M34 [alliance]', translate('commandOceanHelp')],
+            ['>history <name|x:y>', translate('commandHistoryHelp')],
             ['>settings', translate('commandSettingsHelp')],
             ['>help', translate('commandHelpHint')],
         ];
@@ -5294,6 +5907,19 @@
                 ${numberField('qf-set-cache-ttl', 'cacheTtlHours', 'settingsCacheTtl')}
                 ${numberField('qf-set-near-radius', 'nearMaxRadius', 'settingsNearRadius')}
                 ${numberField('qf-set-ghost-min', 'ghostMinPoints', 'settingsGhostMin')}
+                <div class="qf-settings-row">
+                    <label class="qf-settings-label" for="qf-set-conquest-history">
+                        ${escapeHTML(translate('settingsConquestHistory'))}
+                        <span class="qf-settings-hint">${escapeHTML(translate('settingsConquestHistoryHint'))}</span>
+                    </label>
+                    <input
+                        id="qf-set-conquest-history"
+                        class="qf-settings-checkbox"
+                        type="checkbox"
+                        data-setting="conquestHistoryEnabled"
+                        ${settings.conquestHistoryEnabled ? 'checked' : ''}
+                    >
+                </div>
                 <div class="qf-settings-actions">
                     <button type="button" id="qf-settings-check-updates" class="qf-settings-btn qf-settings-btn-secondary">${escapeHTML(translate('settingsCheckUpdates'))}</button>
                     <button type="button" id="qf-settings-reset" class="qf-settings-btn qf-settings-btn-secondary">${escapeHTML(translate('settingsReset'))}</button>
@@ -5315,6 +5941,14 @@
         } else if (key === 'hotkey') {
             const letter = String(rawValue || '').trim().toLowerCase().slice(-1);
             settings.hotkey = /^[a-z0-9]$/.test(letter) ? letter : SETTINGS_DEFAULTS.hotkey;
+        } else if (key === 'conquestHistoryEnabled') {
+            settings.conquestHistoryEnabled = Boolean(rawValue);
+            // Enabling the toggle loads conquers.txt in the background
+            // (fire-and-forget); disabling it just stops future >history
+            // lookups from finding data, the cached copy is left alone.
+            if (settings.conquestHistoryEnabled) {
+                loadConquestHistory();
+            }
         } else if (key in SETTINGS_BOUNDS) {
             const parsed = Number(rawValue);
             settings[key] = Number.isFinite(parsed) ? clampSetting(key, parsed) : SETTINGS_DEFAULTS[key];
@@ -5343,8 +5977,9 @@
     function bindSettingsEvents(container) {
         container.querySelectorAll('[data-setting]').forEach((el) => {
             const key = el.dataset.setting;
-            const eventName = el.tagName === 'SELECT' ? 'change' : 'input';
-            el.addEventListener(eventName, () => applySettingField(key, el.value));
+            const isCheckbox = el.type === 'checkbox';
+            const eventName = isCheckbox ? 'change' : (el.tagName === 'SELECT' ? 'change' : 'input');
+            el.addEventListener(eventName, () => applySettingField(key, isCheckbox ? el.checked : el.value));
             // Re-render the whole panel on blur so values normalized by
             // applySettingField (e.g. an out-of-range number clamped
             // back, or an invalid hotkey falling back to the default)
@@ -5477,6 +6112,11 @@
         // homogeneous list of children (all players, or all towns), so
         // this never applies there even if state.detail also happens to
         // be true for the unrelated left-hand list at the same time.
+        // NOTE: townHistoryRows also builds a "header + list" shape with
+        // a type:'town' header, but 'town' is intentionally excluded
+        // here: >ghost/>near/>ocean also set state.detail=true over a
+        // FLAT list of towns with no header row, so including 'town'
+        // would wrongly bold their first (non-header) result too.
         return pane !== 'detail' && index === 0 && state.detail && (item.type === 'player' || item.type === 'alliance' || item.type === 'island');
     }
 
@@ -5521,10 +6161,12 @@
                 const player = item.data;
                 if (player) {
                     const alliance = player.allianceId ? DATA.allianceById.get(player.allianceId) : null;
-                    const parts = [
+                    const parts = [];
+                    if (player.rank) parts.push(`#${player.rank.toLocaleString()}`);
+                    parts.push(
                         `${player.towns.toLocaleString()} ${translate('townsSuffix')}`,
                         `${player.points.toLocaleString()} ${translate('ptsSuffix')}`,
-                    ];
+                    );
                     if (alliance) parts.push(escapeHTML(alliance.name));
                     meta = parts.join(' &middot; ');
                 }
@@ -5537,11 +6179,13 @@
                 badgeClass = 'qf-badge-alliance';
                 const alliance = item.data;
                 if (alliance) {
-                    const parts = [
+                    const parts = [];
+                    if (alliance.rank) parts.push(`#${alliance.rank.toLocaleString()}`);
+                    parts.push(
                         `${alliance.members.toLocaleString()} ${translate('membersSuffix')}`,
                         `${alliance.towns.toLocaleString()} ${translate('townsSuffix')}`,
                         `${alliance.points.toLocaleString()} ${translate('ptsSuffix')}`,
-                    ];
+                    );
                     meta = parts.join(' &middot; ');
                 }
                 break;
@@ -5559,7 +6203,25 @@
                 const pts = points ? ` &middot; ${points.toLocaleString()} ${translate('ptsSuffix')}` : '';
                 const sea = getSea(item.x, item.y);
                 const distance = Number.isFinite(item.distance) ? ` &middot; ${item.distance}` : '';
-                meta = `${item.x}:${item.y} &middot; ${sea}${pts}${owner}${alliance}${distance}`;
+                // Single-town lookup against conquers.txt (already
+                // loaded, opt-in data): not an aggregate view, so no
+                // Curator gating needed, same as the plain town/coord
+                // search this row already comes from.
+                const lastConquest = lastConquestEvent(item.id);
+                let history = '';
+                if (lastConquest) {
+                    const days = Math.max(0, Math.floor((Date.now() - lastConquest.ts) / (24 * 60 * 60 * 1000)));
+                    if (isGhost) {
+                        // Ghost towns don't log an "abandoned" event (see
+                        // parseConquers), only the last real conquest, so
+                        // this is "last known activity", not "ghost for
+                        // N days" — worded accordingly in the string.
+                        history = ` &middot; <span class="qf-recent-conquest">${escapeHTML(translate('lastActivity', { n: days }))}</span>`;
+                    } else if (lastConquest.ts >= Date.now() - CONFIG.RECENT_CONQUEST_WINDOW_MS) {
+                        history = ` &middot; <span class="qf-recent-conquest">${escapeHTML(translate('recentlyConquered', { n: days }))}</span>`;
+                    }
+                }
+                meta = `${item.x}:${item.y} &middot; ${sea}${pts}${owner}${alliance}${distance}${history}`;
 
                 if (isCuratorActive()) {
                     const islandTowns = DATA.townsByCoord ? DATA.townsByCoord.get(`${item.x}:${item.y}`) : null;
@@ -5575,8 +6237,11 @@
                 badge = translate('badgeIsland');
                 badgeClass = 'qf-badge-coordinate';
                 const distance = Number.isFinite(item.distance) ? `${item.distance} &middot; ` : '';
+                const townsLabel = item.capacity > 0
+                    ? translate('islandTownsWithCapacity', { n: item.townCount, cap: item.capacity })
+                    : translate('islandTowns', { n: item.townCount });
                 const parts = [
-                    translate('islandTowns', { n: item.townCount }),
+                    townsLabel,
                     translate('islandAlliances', { n: item.allianceCount }),
                 ];
                 if (item.ghostCount) parts.push(translate('islandGhosts', { n: item.ghostCount }));
@@ -6784,6 +7449,10 @@
             color: rgba(255, 255, 255, .55);
         }
 
+        .qf-recent-conquest {
+            color: #e08a8a;
+        }
+
         .qf-badge {
             flex: 0 0 auto;
             margin-left: auto;
@@ -7246,6 +7915,22 @@
             font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
         }
 
+        .qf-settings-checkbox {
+            flex: 0 0 auto;
+            width: 17px;
+            height: 17px;
+            accent-color: #d7a33f;
+            cursor: pointer;
+        }
+
+        .qf-settings-hint {
+            display: block;
+            margin-top: 3px;
+            color: rgba(255, 255, 255, .38);
+            font-size: 10.5px;
+            font-weight: 400;
+        }
+
         .qf-settings-actions {
             display: flex;
             justify-content: flex-end;
@@ -7335,6 +8020,9 @@
         injectMainMenuItem();
         setInterval(injectMainMenuItem, 1000);
         loadAll();
+        if (CONFIG.CONQUEST_HISTORY_ENABLED) {
+            loadConquestHistory();
+        }
         runStartupUpdateCheck();
 
         console.info(`%c[Grepolis Quick Finder ${VERSION}] loaded`, 'color:#d6a342;font-weight:bold');
