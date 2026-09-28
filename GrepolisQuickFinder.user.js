@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.8.0
+// @version      2.9.0
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market.
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
@@ -11,6 +11,7 @@
 // @homepageURL  https://github.com/adrian-cancio/GrepolisQuickFinder
 // @supportURL   https://github.com/adrian-cancio/GrepolisQuickFinder/issues
 // @icon         https://www.grepolis.com/favicon.ico
+// Privacy policy: https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md
 // @grant        unsafeWindow
 // @run-at       document-idle
 // ==/UserScript==
@@ -18,7 +19,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.8.0';
+    const VERSION = '2.9.0';
 
     /*
      * ============================================================
@@ -182,6 +183,7 @@
             commandOceanHelp: '>ocean M34 [alliance] \u2014 ocean snapshot',
             commandHelpHint: '>help \u2014 show this list',
             commandUnknown: 'Unknown command: {cmd}',
+            premiumRequired: 'Requires the Administrator advisor (Premium) to be active.',
             ghostEmpty: 'No ghost towns found.',
             distResult: 'Island distance: {n}',
             distFromActive: 'from your active city',
@@ -283,6 +285,7 @@
             commandOceanHelp: '>ocean M34 [alianza] \u2014 resumen del oc\u00e9ano',
             commandHelpHint: '>help \u2014 mostrar esta lista',
             commandUnknown: 'Comando desconocido: {cmd}',
+            premiumRequired: 'Requiere tener activo el asesor Administrador (Premium).',
             ghostEmpty: 'No se encontraron ciudades fantasma.',
             distResult: 'Distancia de islas: {n}',
             distFromActive: 'desde tu ciudad activa',
@@ -381,6 +384,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 Inselentfernung',
             commandHelpHint: '>help \u2014 diese Liste zeigen',
             commandUnknown: 'Unbekannter Befehl: {cmd}',
+            premiumRequired: 'Erfordert den aktiven Berater Verwalter (Premium).',
             ghostEmpty: 'Keine Geisterst\u00e4dte gefunden.',
             distResult: 'Inselentfernung: {n}',
             distFromActive: 'von deiner aktiven Stadt',
@@ -482,6 +486,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 distance d\u2019\u00eeles',
             commandHelpHint: '>help \u2014 afficher cette liste',
             commandUnknown: 'Commande inconnue : {cmd}',
+            premiumRequired: 'Nécessite que le conseiller Administrateur (Premium) soit actif.',
             ghostEmpty: 'Aucune ville fant\u00f4me trouv\u00e9e.',
             distResult: 'Distance d\u2019\u00eeles : {n}',
             distFromActive: 'depuis votre ville active',
@@ -583,6 +588,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 distanza di isole',
             commandHelpHint: '>help \u2014 mostra questo elenco',
             commandUnknown: 'Comando sconosciuto: {cmd}',
+            premiumRequired: 'Richiede il consigliere Amministratore (Premium) attivo.',
             ghostEmpty: 'Nessuna citt\u00e0 fantasma trovata.',
             distResult: 'Distanza di isole: {n}',
             distFromActive: 'dalla tua citt\u00e0 attiva',
@@ -684,6 +690,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 eilandafstand',
             commandHelpHint: '>help \u2014 deze lijst tonen',
             commandUnknown: 'Onbekende opdracht: {cmd}',
+            premiumRequired: 'Vereist dat de adviseur Beheerder (Premium) actief is.',
             ghostEmpty: 'Geen spooksteden gevonden.',
             distResult: 'Eilandafstand: {n}',
             distFromActive: 'vanaf je actieve stad',
@@ -785,6 +792,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 odleg\u0142o\u015b\u0107 wysp',
             commandHelpHint: '>help \u2014 poka\u017c t\u0119 list\u0119',
             commandUnknown: 'Nieznane polecenie: {cmd}',
+            premiumRequired: 'Wymaga aktywnego doradcy Administrator (Premium).',
             ghostEmpty: 'Nie znaleziono miast-widm.',
             distResult: 'Odleg\u0142o\u015b\u0107 wysp: {n}',
             distFromActive: 'od aktywnego miasta',
@@ -886,6 +894,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 dist\u00e2ncia de ilhas',
             commandHelpHint: '>help \u2014 mostrar esta lista',
             commandUnknown: 'Comando desconhecido: {cmd}',
+            premiumRequired: 'Requer o conselheiro Administrador (Premium) ativo.',
             ghostEmpty: 'Nenhuma cidade fantasma encontrada.',
             distResult: 'Dist\u00e2ncia de ilhas: {n}',
             distFromActive: 'da sua cidade ativa',
@@ -987,6 +996,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 dist\u00e2ncia de ilhas',
             commandHelpHint: '>help \u2014 mostrar esta lista',
             commandUnknown: 'Comando desconhecido: {cmd}',
+            premiumRequired: 'Requer o conselheiro Administrador (Premium) ativo.',
             ghostEmpty: 'Nenhuma cidade fantasma encontrada.',
             distResult: 'Dist\u00e2ncia de ilhas: {n}',
             distFromActive: 'da sua cidade ativa',
@@ -1088,6 +1098,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 ada mesafesi',
             commandHelpHint: '>help \u2014 bu listeyi g\u00f6ster',
             commandUnknown: 'Bilinmeyen komut: {cmd}',
+            premiumRequired: 'Yönetici danışmanının (Premium) aktif olmasını gerektirir.',
             ghostEmpty: 'Hayalet \u015fehir bulunamad\u0131.',
             distResult: 'Ada mesafesi: {n}',
             distFromActive: 'aktif \u015fehrinden',
@@ -1189,6 +1200,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 \u0440\u0430\u0441\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u043c\u0435\u0436\u0434\u0443 \u043e\u0441\u0442\u0440\u043e\u0432\u0430\u043c\u0438',
             commandHelpHint: '>help \u2014 \u043f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u044d\u0442\u043e\u0442 \u0441\u043f\u0438\u0441\u043e\u043a',
             commandUnknown: '\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u0430\u044f \u043a\u043e\u043c\u0430\u043d\u0434\u0430: {cmd}',
+            premiumRequired: '\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044f \u0430\u043a\u0442\u0438\u0432\u043d\u044b\u0439 \u0441\u043e\u0432\u0435\u0442\u043d\u0438\u043a \u0410\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440 (\u041f\u0440\u0435\u043c\u0438\u0443\u043c).',
             ghostEmpty: '\u0413\u043e\u0440\u043e\u0434\u0430-\u043f\u0440\u0438\u0437\u0440\u0430\u043a\u0438 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b.',
             distResult: '\u0420\u0430\u0441\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u043c\u0435\u0436\u0434\u0443 \u043e\u0441\u0442\u0440\u043e\u0432\u0430\u043c\u0438: {n}',
             distFromActive: '\u043e\u0442 \u0432\u0430\u0448\u0435\u0433\u043e \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0433\u043e \u0433\u043e\u0440\u043e\u0434\u0430',
@@ -1290,6 +1302,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 \u03b1\u03c0\u03cc\u03c3\u03c4\u03b1\u03c3\u03b7 \u03bd\u03b7\u03c3\u03b9\u03ce\u03bd',
             commandHelpHint: '>help \u2014 \u03b5\u03bc\u03c6\u03ac\u03bd\u03b9\u03c3\u03b7 \u03b1\u03c5\u03c4\u03ae\u03c2 \u03c4\u03b7\u03c2 \u03bb\u03af\u03c3\u03c4\u03b1\u03c2',
             commandUnknown: '\u0386\u03b3\u03bd\u03c9\u03c3\u03c4\u03b7 \u03b5\u03bd\u03c4\u03bf\u03bb\u03ae: {cmd}',
+            premiumRequired: '\u0391\u03c0\u03b1\u03b9\u03c4\u03b5\u03af \u03b5\u03bd\u03b5\u03c1\u03b3\u03cc \u03c3\u03cd\u03bc\u03b2\u03bf\u03c5\u03bb\u03bf \u0394\u03b9\u03bf\u03b9\u03ba\u03b7\u03c4\u03ae (Premium).',
             ghostEmpty: '\u0394\u03b5\u03bd \u03b2\u03c1\u03ad\u03b8\u03b7\u03ba\u03b1\u03bd \u03c0\u03cc\u03bb\u03b5\u03b9\u03c2-\u03c6\u03b1\u03bd\u03c4\u03ac\u03c3\u03bc\u03b1\u03c4\u03b1.',
             distResult: '\u0391\u03c0\u03cc\u03c3\u03c4\u03b1\u03c3\u03b7 \u03bd\u03b7\u03c3\u03b9\u03ce\u03bd: {n}',
             distFromActive: '\u03b1\u03c0\u03cc \u03c4\u03b7\u03bd \u03b5\u03bd\u03b5\u03c1\u03b3\u03ae \u03c0\u03cc\u03bb\u03b7 \u03c3\u03bf\u03c5',
@@ -1391,6 +1404,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 szigett\u00e1vols\u00e1g',
             commandHelpHint: '>help \u2014 lista megjelen\u00edt\u00e9se',
             commandUnknown: 'Ismeretlen parancs: {cmd}',
+            premiumRequired: 'Az Adminisztrátor tanácsadó (Premium) aktív állapotát igényli.',
             ghostEmpty: 'Nincs szellemv\u00e1ros.',
             distResult: 'Szigett\u00e1vols\u00e1g: {n}',
             distFromActive: 'az akt\u00edv v\u00e1rosodb\u00f3l',
@@ -1492,6 +1506,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 distan\u021b\u0103 de insule',
             commandHelpHint: '>help \u2014 arat\u0103 aceast\u0103 list\u0103',
             commandUnknown: 'Comand\u0103 necunoscut\u0103: {cmd}',
+            premiumRequired: 'Necesit\u0103 consilierul Administrator (Premium) activ.',
             ghostEmpty: 'Nu s-au g\u0103sit ora\u0219e fantom\u0103.',
             distResult: 'Distan\u021b\u0103 de insule: {n}',
             distFromActive: 'din ora\u0219ul t\u0103u activ',
@@ -1593,6 +1608,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 vzd\u00e1lenost ostrov\u016f',
             commandHelpHint: '>help \u2014 zobrazit tento seznam',
             commandUnknown: 'Nezn\u00e1m\u00fd p\u0159\u00edkaz: {cmd}',
+            premiumRequired: 'Vy\u017eaduje aktivn\u00edho poradce Spr\u00e1vce (Premium).',
             ghostEmpty: 'Nebyla nalezena \u017e\u00e1dn\u00e1 m\u011bsta duch\u016f.',
             distResult: 'Vzd\u00e1lenost ostrov\u016f: {n}',
             distFromActive: 'z va\u0161eho aktivn\u00edho m\u011bsta',
@@ -1694,6 +1710,7 @@
             commandDistHelp: '>dist X:Y [X:Y] \u2014 vzdialenos\u0165 ostrovov',
             commandHelpHint: '>help \u2014 zobrazi\u0165 tento zoznam',
             commandUnknown: 'Nezn\u00e1my pr\u00edkaz: {cmd}',
+            premiumRequired: 'Vy\u017eaduje aktívneho poradcu Správca (Premium).',
             ghostEmpty: 'Nena\u0161li sa \u017eiadne mest\u00e1 duchov.',
             distResult: 'Vzdialenos\u0165 ostrovov: {n}',
             distFromActive: 'z va\u0161eho akt\u00edvneho mesta',
@@ -2739,6 +2756,17 @@
         };
     }
 
+    /*
+     * Plain single-coordinate row with no cross-town aggregation
+     * (no townCount/allianceCount/ghostCount). Used both for empty
+     * coordinates and as the non-Curator fallback for coordinates
+     * that resolve to a multi-town island, since the island summary
+     * itself is aggregate data gated behind isCuratorActive().
+     */
+    function plainCoordinateResult(x, y, score) {
+        return { type: 'coordinate', name: `${x}:${y}`, x, y, score };
+    }
+
     function searchCoordinates(rawQuery) {
         const coords = parseCoordinates(rawQuery);
         if (!coords) {
@@ -2750,10 +2778,13 @@
             return townResult(matching[0], { score: 20000 });
         }
         if (matching.length > 1) {
+            if (!isCuratorActive()) {
+                return plainCoordinateResult(coords.x, coords.y, 15000);
+            }
             return islandRow(coords.x, coords.y);
         }
 
-        return { type: 'coordinate', name: `${coords.x}:${coords.y}`, x: coords.x, y: coords.y, score: 15000 };
+        return plainCoordinateResult(coords.x, coords.y, 15000);
     }
 
     /*
@@ -2836,6 +2867,36 @@
         } catch (_) {
             return null;
         }
+    }
+
+    /*
+     * ============================================================
+     * PREMIUM GATING (Administrator/Curator advisor)
+     * ============================================================
+     *
+     * Multi-city aggregation/listing views (>ghost, >island, >near,
+     * >ocean, and the player/alliance town drill-down) mirror the
+     * in-game Administrator advisor's overviews, so they are gated
+     * behind GameDataPremium.isAdvisorActivated('curator') the same
+     * way the real advisor gates its own overviews. Plain single-item
+     * search (player/alliance/town by name, single coordinate) is
+     * unaffected: that data is already public via the same-origin
+     * /data/*.txt dumps regardless of premium status.
+     */
+    function isCuratorActive() {
+        try {
+            return !!(
+                GP.GameDataPremium &&
+                typeof GP.GameDataPremium.isAdvisorActivated === 'function' &&
+                GP.GameDataPremium.isAdvisorActivated('curator')
+            );
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function premiumRequiredRows() {
+        return [{ type: 'info', name: translate('premiumRequired') }];
     }
 
     function distanceBand(distance) {
@@ -3167,6 +3228,7 @@
             }
 
             case 'ghost': {
+                if (!isCuratorActive()) return premiumRequiredRows();
                 const near = tokens.some((token) => token.toLowerCase() === 'near');
                 const numeric = tokens.find((token) => token.toLowerCase() !== 'near' && Number.isFinite(Number(token)));
                 return ghostRows(numeric !== undefined ? Number(numeric) : NaN, near);
@@ -3176,12 +3238,15 @@
                 return distRows(args);
 
             case 'island':
+                if (!isCuratorActive()) return premiumRequiredRows();
                 return islandRows(args);
 
             case 'near':
+                if (!isCuratorActive()) return premiumRequiredRows();
                 return nearRows(args);
 
             case 'ocean':
+                if (!isCuratorActive()) return premiumRequiredRows();
                 return oceanRows(args);
 
             default:
@@ -3409,16 +3474,26 @@
         let results;
         let detail = false;
 
+        const curatorActive = isCuratorActive();
+
         if (segment === 'island') {
             if (coordinate && coordinate.type === 'island') {
-                results = [coordinate, ...coordinate.towns.map((town) => townResult(town))];
-                detail = true;
+                if (curatorActive) {
+                    results = [coordinate, ...coordinate.towns.map((town) => townResult(town))];
+                    detail = true;
+                } else {
+                    results = [coordinate];
+                }
             } else {
                 results = [];
             }
         } else if (coordinate && coordinate.type === 'island') {
-            results = [coordinate, ...coordinate.towns.map((town) => townResult(town))];
-            detail = true;
+            if (curatorActive) {
+                results = [coordinate, ...coordinate.towns.map((town) => townResult(town))];
+                detail = true;
+            } else {
+                results = [coordinate];
+            }
         } else if (coordinate && coordinate.type === 'town') {
             results = [coordinate];
         } else {
@@ -3426,8 +3501,10 @@
                 const matches = searchPlayers(queryNorm);
                 // An exact match reached through the explicit @p scope
                 // drills straight into that player's own towns instead
-                // of showing every fuzzy near-miss.
-                if (matches.length && matches[0].score === 10000) {
+                // of showing every fuzzy near-miss. Requires the
+                // Administrator/Curator advisor, same as the in-game
+                // overviews this mirrors.
+                if (matches.length && matches[0].score === 10000 && curatorActive) {
                     results = playerDetailRows(matches[0].data);
                     detail = true;
                 } else {
@@ -3435,7 +3512,7 @@
                 }
             } else if (segment === 'alliance') {
                 const matches = searchAlliances(queryNorm);
-                if (matches.length && matches[0].score === 10000) {
+                if (matches.length && matches[0].score === 10000 && curatorActive) {
                     results = allianceDetailRows(matches[0].data);
                     detail = true;
                 } else {
@@ -4426,9 +4503,11 @@
                 const distance = Number.isFinite(item.distance) ? ` &middot; ${item.distance}` : '';
                 meta = `${item.x}:${item.y} &middot; ${sea}${pts}${owner}${alliance}${distance}`;
 
-                const islandTowns = DATA.townsByCoord ? DATA.townsByCoord.get(`${item.x}:${item.y}`) : null;
-                if (islandTowns && islandTowns.length > 1) {
-                    title = ` title="${escapeHTML(translate('onIslandInfo', { n: islandTowns.length }))}"`;
+                if (isCuratorActive()) {
+                    const islandTowns = DATA.townsByCoord ? DATA.townsByCoord.get(`${item.x}:${item.y}`) : null;
+                    if (islandTowns && islandTowns.length > 1) {
+                        title = ` title="${escapeHTML(translate('onIslandInfo', { n: islandTowns.length }))}"`;
+                    }
                 }
                 break;
             }
@@ -5714,152 +5793,6 @@
 
     /*
      * ============================================================
-     * DEBUG API
-     * ============================================================
-     *
-     * QF.debug() dumps the integration state to the console.
-     * There is no per-keystroke logging in production; only initial
-     * load messages, errors, and whatever is explicitly requested
-     * here.
-     */
-
-    window.QF = {
-        version: VERSION,
-        world: WORLD,
-        market: MARKET,
-        state,
-        data: DATA,
-        gp: GP,
-        get settings() {
-            return settings;
-        },
-
-        search(query) {
-            const queryNorm = normalize(query);
-            return {
-                players: searchPlayers(queryNorm),
-                alliances: searchAlliances(queryNorm),
-                towns: searchTowns(queryNorm),
-                coordinate: searchCoordinates(query),
-            };
-        },
-
-        /*
-         * ========================================================
-         * PROGRAMMATIC CONTROL (only for testing/automation from
-         * the DevTools console). The UI doesn't use this under
-         * normal conditions: the user interacts with keyboard/mouse
-         * as usual. These methods simply call the same internal
-         * functions already used by the keyboard/click handlers, so
-         * behavior is identical to a real interaction.
-         * ========================================================
-         */
-
-        openPalette() {
-            open();
-        },
-
-        closePalette() {
-            close();
-        },
-
-        openSettings() {
-            openSettings();
-        },
-
-        setQuery(query) {
-            open();
-            const input = document.getElementById('qf-input');
-            input.value = query;
-            performSearch(query, ++searchToken);
-            return state.results;
-        },
-
-        setSegment(name) {
-            if (!state.query) return;
-            setSegment(name);
-            return state.results;
-        },
-
-        /*
-         * Forces a network reload, dropping the IndexedDB cache.
-         * Resolves when the fresh index is in place.
-         */
-        async refresh() {
-            await refreshData();
-        },
-
-        async clearCache() {
-            await cacheDelete();
-        },
-
-        selectIndex(index) {
-            if (index < 0 || index >= state.results.length) {
-                throw new Error(`Index out of range (0..${state.results.length - 1})`);
-            }
-            state.selected = index;
-            render();
-            return state.results[index];
-        },
-
-        openSelected() {
-            return openResult(state.results[state.selected]);
-        },
-
-        openIndex(index) {
-            this.selectIndex(index);
-            return this.openSelected();
-        },
-
-        debug() {
-            console.group(`[QF ${VERSION}]`);
-
-            console.log('World:', WORLD);
-            console.log('Market:', MARKET);
-            console.log('GP context:', GP === window ? 'window (unsafeWindow not available)' : 'unsafeWindow');
-            console.log('Settings:', settings);
-
-            console.log('Index:', {
-                loaded: state.loaded,
-                loading: state.loading,
-                error: state.loadError,
-                players: DATA.players.length,
-                alliances: DATA.alliances.length,
-                towns: DATA.towns.length,
-            });
-
-            console.log('Game:', typeof GP.Game, GP.Game);
-            console.log('Layout:', typeof GP.Layout, GP.Layout);
-            console.log(
-                'Layout.playerProfile.open:',
-                GP.Layout && GP.Layout.playerProfile ? typeof GP.Layout.playerProfile.open : 'Layout.playerProfile not available'
-            );
-            console.log(
-                'Layout.allianceProfile.open:',
-                GP.Layout && GP.Layout.allianceProfile ? typeof GP.Layout.allianceProfile.open : 'Layout.allianceProfile not available'
-            );
-            console.log('WMap:', typeof GP.WMap, GP.WMap);
-            console.log('WMap.mapJump:', GP.WMap ? typeof GP.WMap.mapJump : 'WMap not available');
-            console.log('WMap.mapGotoPosition:', GP.WMap ? typeof GP.WMap.mapGotoPosition : 'WMap not available');
-            console.log('ITowns.getTown:', GP.ITowns ? typeof GP.ITowns.getTown : 'ITowns not available');
-            console.log('MM.getModels:', GP.MM ? typeof GP.MM.getModels : 'MM not available');
-
-            if (GP.Layout) {
-                const townKeys = Object.keys(GP.Layout).filter((k) => /town|info/i.test(k));
-                console.log('Layout keys related to town/info:', townKeys);
-            }
-
-            const factories = Object.keys(GP).filter((k) => /WindowFactory$/i.test(k));
-            console.log('WindowFactories found on GP:', factories);
-
-            console.log('Last results:', state.results);
-
-            console.groupEnd();
-        },
-    };
-
-    /*
-     * ============================================================
      * INIT
      * ============================================================
      */
@@ -5874,7 +5807,6 @@
         console.info(`%c[Grepolis Quick Finder ${VERSION}] loaded`, 'color:#d6a342;font-weight:bold');
         console.info(`[QF] Detected world: ${WORLD} (market: ${MARKET})`);
         console.info(`[QF] ${hotkeyLabel()} to open.`);
-        console.info('[QF] QF.debug() to inspect the integration.');
     }
 
     init();

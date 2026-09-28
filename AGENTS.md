@@ -35,7 +35,10 @@ a soft failure, not a crash — but should still be filled in when known.
 ## Manual testing
 
 There is no automated test suite (this is a live-page userscript that reads
-real game data over HTTP). To verify changes:
+real game data over HTTP), and **the script exposes no debugging API on
+`window`** (see Premium gating & policy compliance below for why) — testing
+must drive the actual UI (keyboard/mouse/DOM), not a `window.QF`-style
+backdoor. To verify changes:
 
 1. Load the script via a userscript manager on a real Grepolis world.
    `zz2.grepolis.com` is a convenient international test world for manual
@@ -44,16 +47,74 @@ real game data over HTTP). To verify changes:
    `==UserScript==` block, patch `unsafeWindow` if needed, evaluate the body
    directly on the live page with `playwright`/`chrome-devtools`) instead of
    installing a real userscript manager extension.
-3. Check via `QF.debug()` in the console that `world`/`market` are detected
-   correctly and that the index loaded (`players`/`alliances`/`towns` counts
-   > 0).
-4. Open the palette (`Ctrl+Shift+F` or `QF.openPalette()`), confirm the
-   placeholder/footer text matches the expected language for that market.
-5. Run a few searches (`QF.search('...')` or typing in the UI) covering a
-   player, an alliance, a town, and a coordinate pair; confirm opening each
-   result triggers the expected in-game window. Also try `>island`, `>near`,
-   `>ocean`, and `>ghost near`, plus an exact `@p`/`@a` match, and confirm
-   they list the expected island/town/member breakdown.
+3. Check the browser console for the `[Grepolis Quick Finder x.y.z] loaded`
+   / `Detected world: ... (market: ...)` log lines to confirm `world`/`market`
+   detection and that init ran.
+4. Open the palette with `Ctrl+Shift+F` (or click **QuickFinder** in the main
+   menu / use `chrome-devtools`/`playwright` to dispatch the keydown), confirm
+   the placeholder/footer text matches the expected language for that market.
+5. Run a few searches by typing into `#qf-input` (via `chrome-devtools`
+   `fill`/`type` or `playwright` `browser_type`) covering a player, an
+   alliance, a town, and a coordinate pair; confirm opening each result
+   (click or `Enter`) triggers the expected in-game window.
+6. To test the Premium-gated commands (`>ghost`, `>island`, `>near`,
+   `>ocean`, and the player/alliance drill-down), you need
+   `GameDataPremium.isAdvisorActivated('curator')` to return `true` on the
+   test account, or temporarily stub it for the session: evaluate
+   `unsafeWindow.GameDataPremium.isAdvisorActivated = (t) => t === 'curator' ? true : false;`
+   in the page context (`chrome-devtools` `evaluate_script` /
+   `playwright` `browser_evaluate`, run **once after page load, before**
+   opening the palette) to simulate an active Administrator advisor. Verify
+   both states: with the stub returning `true` the commands list
+   islands/towns/members as expected; with it returning `false` (or removed)
+   the same commands show the `premiumRequired` message instead, and a
+   multi-town coordinate falls back to a plain "open on map" row instead of
+   an island breakdown.
+
+## Premium gating & policy compliance (Grepolis marketplace rules)
+
+Grepolis' script review process (`forum.grepolis.com`) rejects userscripts
+that reproduce **Premium advisor functionality** for free, expose a
+**programmatic control API** reachable from the page/console, or omit a
+**privacy policy** when the script makes external network requests. Keep
+these three constraints in mind for every change:
+
+1. **Multi-city/multi-town aggregation mirrors the Administrator (Curator)
+   advisor and must stay gated.** The real advisor
+   (`GameDataPremium.isAdvisorActivated('curator')`) grants in-game overviews
+   that aggregate data across a player's own cities. Any QuickFinder feature
+   that aggregates or lists **multiple towns/cities at once** — regardless of
+   whose towns they are — must call `isCuratorActive()`
+   (`GrepolisQuickFinder.user.js`, search `PREMIUM GATING`) and fall back to
+   `premiumRequiredRows()` (command output) or a plain single-item result
+   (search/coordinate paths) when it returns `false`. This currently covers:
+   `>ghost`, `>island`, `>near`, `>ocean`, the player/alliance town
+   drill-down (`playerDetailRows`/`allianceDetailRows`), and the multi-town
+   island row for a coordinate search. **Features that resolve to exactly
+   one item are exempt** (single player/alliance/town lookup by name, a
+   single-town coordinate, `>goto`, `>dist` between two given coordinates) —
+   those aren't overviews, they're direct lookups of public per-entity data
+   from `/data/*.txt`, same as clicking a name in-game.
+   When adding a new command or drill-down, ask: *"does this list/aggregate
+   more than one town/city in a single result?"* — if yes, gate it the same
+   way; if no (a single exact match, a single coordinate, a distance between
+   two explicit points), it does not need gating.
+2. **No programmatic control API on `window`.** Do not add a `window.QF` (or
+   similarly named) object exposing methods that open the palette, run a
+   search, or trigger navigation from outside the UI — this was previously
+   present and removed for policy compliance (v2.9.0). Debugging aids are
+   fine as long as they are read-only console `console.log`/`console.info`
+   output during `init()`, never a mutable/callable object attached to
+   `window`/`unsafeWindow`. See "Manual testing" above for how to test
+   without such an API.
+3. **External requests need a documented privacy policy.** The only external
+   (non-`*.grepolis.com`) network request this script causes is the
+   userscript manager's own `@updateURL`/`@downloadURL` check against
+   `raw.githubusercontent.com`, declared in the header and documented in
+   `PRIVACY.md`. If you ever add a *new* external request (a new host, not
+   just another same-origin Grepolis endpoint), you must update
+   `PRIVACY.md` to describe it and what metadata it exposes, in the same
+   change.
 
 ## Conventions
 

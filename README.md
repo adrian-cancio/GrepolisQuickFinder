@@ -9,23 +9,45 @@ and coordinates, with real in-game navigation (no new tabs).
 - **Quick Access**: Press `Ctrl+Shift+F` or click the **QuickFinder** button integrated into the Grepolis main navigation menu.
 - **Fast Search**: Fuzzy search across players, alliances, and towns built from game data dumps (`/data/players.txt`, `/data/alliances.txt`, `/data/towns.txt`, `/data/islands.txt`), cached locally in **IndexedDB** with automatic 6-hour TTL and instant startup.
 - **Segments & Tab cycling**: Filter results by type (*All*, *Players*, *Alliances*, *Towns*, *Islands*, *Coordinates*) with live match counters, or cycle through them with `Tab` / `Shift+Tab`.
-- **Scope prefixes**: Target specific categories directly using `@p` (players), `@a` (alliances), `@t` (towns), `@i` (islands), or `@c` (coordinates). An exact `@p`/`@a` match drills into that player's towns or that alliance's member/ocean spread instead of a flat list.
-- **Island awareness**: Searching a coordinate that has more than one town (an island can host up to 20) resolves to an island row listing every town on it.
+- **Scope prefixes**: Target specific categories directly using `@p` (players), `@a` (alliances), `@t` (towns), `@i` (islands), or `@c` (coordinates). An exact `@p`/`@a` match drills into that player's towns or that alliance's member/ocean spread instead of a flat list. **Drill-down requires the Administrator advisor (Premium)**; without it, an exact match still opens that player/alliance profile directly, just without the town breakdown.
+- **Island awareness**: Searching a coordinate that has more than one town (an island can host up to 20) resolves to an island row listing every town on it. **Requires the Administrator advisor (Premium)**; without it, the coordinate opens the island on the map instead.
 - **BBCode Export**: Press `Ctrl+B`, or click the per-row BBCode icon, to instantly copy its BBCode (`[player]`, `[alliance]`, `[town]`, `[island]`) to your clipboard.
 - **History & Favorites**: Press `Ctrl+F` on any result to pin it as a favorite. Opening the palette with an empty search displays your pinned favorites and recent searches. Remove a single recent entry with `Delete` or its per-row trash icon, or wipe the whole Recent list with `Ctrl+Shift+Delete` or the "Clear" button on the Recent section header (favorites are unaffected either way).
 - **Command mode**: Type `>` to access utility commands:
   - `>goto <x>:<y>` — Jump directly to coordinates on the world map.
-  - `>ghost [minPts] [near]` — List ghost towns sorted by points, or by distance from your active city with `near`.
   - `>dist [from] [to]` — Calculate island distance between two coordinates or from your active city, with origin/destination oceans and range classification.
-  - `>island <x>:<y>` — List every town on an island.
-  - `>near [x:y] [radius]` — List islands (and their towns) within a radius of a coordinate or your active city.
-  - `>ocean <M##> [alliance]` — Snapshot of an ocean, optionally filtered to one alliance's towns in it.
+  - `>ghost [minPts] [near]` — List ghost towns sorted by points, or by distance from your active city with `near`. **Requires the Administrator advisor (Premium).**
+  - `>island <x>:<y>` — List every town on an island. **Requires the Administrator advisor (Premium).**
+  - `>near [x:y] [radius]` — List islands (and their towns) within a radius of a coordinate or your active city. **Requires the Administrator advisor (Premium).**
+  - `>ocean <M##> [alliance]` — Snapshot of an ocean, optionally filtered to one alliance's towns in it. **Requires the Administrator advisor (Premium).**
   - `>settings` — Open the settings panel.
   - `>help` — Display command and shortcut documentation.
 - **Help overlay**: Type `?` anytime in the search input, or click the "help" footer button, to toggle the shortcut and command cheat sheet (also lists the palette's own open/close shortcut).
 - **Settings panel**: Click the gear icon in the search bar, or type `>settings`, to customize the language override, keyboard shortcut, results-per-page/command result caps, world data cache duration, and the default radius/points used by `>near` and `>ghost`. Settings are stored globally (shared across every world) and apply instantly, no reload required.
 - **Manual refresh**: Press `Ctrl+R`, or click the "refresh" footer button, to force-refresh world data from game servers.
 - **Automatic localization**: Fully localized across 16 supported languages based on the Grepolis market detected from the world subdomain (e.g. `en37`, `es12`, `de44`, `zz2`), with an optional manual override in Settings.
+
+## Premium features (Administrator advisor)
+
+Grepolis's in-game Administrator advisor (a Premium purchase) grants access
+to aggregate, multi-city overviews you don't otherwise have. To mirror that
+distinction instead of reproducing it for free, QuickFinder gates the
+equivalent multi-town/multi-city views behind the same advisor check
+(`GameDataPremium.isAdvisorActivated('curator')`):
+
+| Feature                                    | Requires Administrator? |
+| ------------------------------------------- | :----------------------: |
+| Search a single player/alliance/town by name | No                        |
+| Open an exact player/alliance profile        | No                        |
+| Open a single-town coordinate                | No                        |
+| `>goto`, `>dist`                             | No                        |
+| Player/alliance town **drill-down** list      | Yes                       |
+| Island **town listing** for a multi-town coordinate | Yes                 |
+| `>ghost`, `>island`, `>near`, `>ocean`         | Yes                       |
+
+Without the advisor active, gated actions show a short message instead of
+the listing (and multi-town coordinates still resolve — you just get "open
+on map" instead of the per-town breakdown).
 
 ## Installation
 
@@ -83,18 +105,16 @@ Grepolis worlds are hosted on subdomains shaped like `<market><number>.grepolis.
 
 This is a single-file userscript with no build step and no external dependencies. Edit `GrepolisQuickFinder.user.js` directly.
 
-### Debugging
+There is no debugging API exposed on `window` in production (no `window.QF`
+or similar): the production build only reacts to user input (keyboard/mouse)
+inside the palette itself. See `AGENTS.md` for the manual testing workflow
+used during development instead.
 
-The script exposes a `window.QF` object in the page for inspection and manual testing from the DevTools console:
+## Privacy
 
-```js
-QF.debug();                  // dumps world/market/index/game-API status
-QF.search('some name');      // runs a search without opening the UI
-QF.setQuery('55:123');       // opens the palette and searches programmatically
-QF.setSegment('town');       // filters active query to towns
-QF.refresh();                // forces a network data refresh
-QF.clearCache();             // clears local IndexedDB cache
-```
+See [PRIVACY.md](PRIVACY.md) for details on what data this script reads
+locally and the only external network request involved (userscript
+update checks against GitHub's raw content CDN).
 
 ## License
 
