@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.9.0
+// @version      2.10.0
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market. (Privacy policy: https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md)
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.9.0';
+    const VERSION = '2.10.0';
 
     /*
      * ============================================================
@@ -35,14 +35,19 @@
         FAV_KEY: 'f',             // Ctrl+<FAV_KEY> inside the palette: toggle favorite
         REFRESH_KEY: 'r',         // Ctrl+<REFRESH_KEY> inside the palette: reload data
         BBCODE_KEY: 'b',          // Ctrl+<BBCODE_KEY> inside the palette: copy BBCode and close
+        SAVE_SEARCH_KEY: 'd',     // Ctrl+<SAVE_SEARCH_KEY> inside the palette: save current query
+        RENAME_KEY: 'e',          // Ctrl+<RENAME_KEY> inside the palette: rename selected saved search
         HELP_CHAR: '?',           // typing this alone shows the shortcuts/commands panel
         COMMAND_PREFIX: '>',      // commands: >goto, >ghost, >dist, >island, >near, >ocean, >help
         SEGMENTS: ['all', 'player', 'alliance', 'town', 'island', 'coordinate'],
         DEFAULT_SEGMENT: 'all',
+        HISTORY_SEGMENTS: ['all', 'saved', 'favorite', 'recent'],
+        DEFAULT_HISTORY_SEGMENT: 'all',
         SCOPE_ALIASES: { t: 'town', p: 'player', a: 'alliance', c: 'coordinate', i: 'island' },
         NEAR_MAX_RADIUS: 15,
         HISTORY_MAX: 12,
         FAVORITES_MAX: 30,
+        SAVED_SEARCHES_MAX: 20,
         CACHE_TTL: 6 * 60 * 60 * 1000, // reuse world data for at most this long
         GHOST_MIN_POINTS: 0,
     };
@@ -227,6 +232,24 @@
             settingsReset: 'Reset to defaults',
             settingsSaved: 'Settings saved',
             settingsResetDone: 'Settings reset to defaults',
+            segmentSaved: 'Saved',
+            segmentFavorites: 'Favorites',
+            segmentRecent: 'Recent',
+            savedSearchesTitle: 'Saved searches',
+            savedSearchesCleared: 'Saved searches cleared',
+            saveSearchTooltip: 'Ctrl+D save search',
+            saveSearchPanelTitle: 'Save search',
+            saveSearchEditTitle: 'Rename saved search',
+            saveSearchEditTooltip: 'Rename (Ctrl+E)',
+            saveSearchNameLabel: 'Name',
+            saveSearchSave: 'Save',
+            saveSearchCancel: 'Cancel',
+            saveSearchSaved: 'Search saved',
+            saveSearchRenamed: 'Saved search renamed',
+            saveSearchRemove: 'Remove saved search',
+            badgeSavedSearch: 'Saved',
+            shortcutsSaveSearch: 'Save current search',
+            shortcutsRenameSaved: 'Rename selected saved search',
         },
         es: {
             searchPlaceholder: 'Buscar jugadores, alianzas o ciudades...',
@@ -329,6 +352,24 @@
             settingsReset: 'Restablecer valores',
             settingsSaved: 'Ajustes guardados',
             settingsResetDone: 'Ajustes restablecidos',
+            segmentSaved: 'Guardadas',
+            segmentFavorites: 'Favoritos',
+            segmentRecent: 'Recientes',
+            savedSearchesTitle: 'Búsquedas guardadas',
+            savedSearchesCleared: 'Búsquedas guardadas vaciadas',
+            saveSearchTooltip: 'Ctrl+D guardar búsqueda',
+            saveSearchPanelTitle: 'Guardar búsqueda',
+            saveSearchEditTitle: 'Renombrar búsqueda guardada',
+            saveSearchEditTooltip: 'Renombrar (Ctrl+E)',
+            saveSearchNameLabel: 'Nombre',
+            saveSearchSave: 'Guardar',
+            saveSearchCancel: 'Cancelar',
+            saveSearchSaved: 'Búsqueda guardada',
+            saveSearchRenamed: 'Búsqueda guardada renombrada',
+            saveSearchRemove: 'Eliminar búsqueda guardada',
+            badgeSavedSearch: 'Guardada',
+            shortcutsSaveSearch: 'Guardar búsqueda actual',
+            shortcutsRenameSaved: 'Renombrar la búsqueda guardada seleccionada',
         },
         de: {
             searchPlaceholder: 'Spieler, Allianzen oder St\u00e4dte suchen...',
@@ -431,6 +472,24 @@
             settingsReset: 'Auf Standard zurücksetzen',
             settingsSaved: 'Einstellungen gespeichert',
             settingsResetDone: 'Einstellungen zurückgesetzt',
+            segmentSaved: 'Gespeichert',
+            segmentFavorites: 'Favoriten',
+            segmentRecent: 'Zuletzt',
+            savedSearchesTitle: 'Gespeicherte Suchen',
+            savedSearchesCleared: 'Gespeicherte Suchen geleert',
+            saveSearchTooltip: 'Strg+D Suche speichern',
+            saveSearchPanelTitle: 'Suche speichern',
+            saveSearchEditTitle: 'Gespeicherte Suche umbenennen',
+            saveSearchEditTooltip: 'Umbenennen (Strg+E)',
+            saveSearchNameLabel: 'Name',
+            saveSearchSave: 'Speichern',
+            saveSearchCancel: 'Abbrechen',
+            saveSearchSaved: 'Suche gespeichert',
+            saveSearchRenamed: 'Gespeicherte Suche umbenannt',
+            saveSearchRemove: 'Gespeicherte Suche entfernen',
+            badgeSavedSearch: 'Gespeichert',
+            shortcutsSaveSearch: 'Aktuelle Suche speichern',
+            shortcutsRenameSaved: 'Ausgewählte gespeicherte Suche umbenennen',
         },
         fr: {
             searchPlaceholder: 'Rechercher des joueurs, alliances ou villes...',
@@ -533,6 +592,24 @@
             settingsReset: 'Réinitialiser',
             settingsSaved: 'Paramètres enregistrés',
             settingsResetDone: 'Paramètres réinitialisés',
+            segmentSaved: 'Enregistrées',
+            segmentFavorites: 'Favoris',
+            segmentRecent: 'Récents',
+            savedSearchesTitle: 'Recherches enregistrées',
+            savedSearchesCleared: 'Recherches enregistrées effacées',
+            saveSearchTooltip: 'Ctrl+D enregistrer la recherche',
+            saveSearchPanelTitle: 'Enregistrer la recherche',
+            saveSearchEditTitle: 'Renommer la recherche enregistrée',
+            saveSearchEditTooltip: 'Renommer (Ctrl+E)',
+            saveSearchNameLabel: 'Nom',
+            saveSearchSave: 'Enregistrer',
+            saveSearchCancel: 'Annuler',
+            saveSearchSaved: 'Recherche enregistrée',
+            saveSearchRenamed: 'Recherche enregistrée renommée',
+            saveSearchRemove: 'Supprimer la recherche enregistrée',
+            badgeSavedSearch: 'Enregistrée',
+            shortcutsSaveSearch: 'Enregistrer la recherche actuelle',
+            shortcutsRenameSaved: 'Renommer la recherche enregistrée sélectionnée',
         },
         it: {
             searchPlaceholder: 'Cerca giocatori, alleanze o citt\u00e0...',
@@ -635,6 +712,24 @@
             settingsReset: 'Ripristina predefiniti',
             settingsSaved: 'Impostazioni salvate',
             settingsResetDone: 'Impostazioni ripristinate',
+            segmentSaved: 'Salvate',
+            segmentFavorites: 'Preferiti',
+            segmentRecent: 'Recenti',
+            savedSearchesTitle: 'Ricerche salvate',
+            savedSearchesCleared: 'Ricerche salvate cancellate',
+            saveSearchTooltip: 'Ctrl+D salva ricerca',
+            saveSearchPanelTitle: 'Salva ricerca',
+            saveSearchEditTitle: 'Rinomina ricerca salvata',
+            saveSearchEditTooltip: 'Rinomina (Ctrl+E)',
+            saveSearchNameLabel: 'Nome',
+            saveSearchSave: 'Salva',
+            saveSearchCancel: 'Annulla',
+            saveSearchSaved: 'Ricerca salvata',
+            saveSearchRenamed: 'Ricerca salvata rinominata',
+            saveSearchRemove: 'Rimuovi ricerca salvata',
+            badgeSavedSearch: 'Salvata',
+            shortcutsSaveSearch: 'Salva la ricerca attuale',
+            shortcutsRenameSaved: 'Rinomina la ricerca salvata selezionata',
         },
         nl: {
             searchPlaceholder: 'Zoek spelers, allianties of steden...',
@@ -737,6 +832,24 @@
             settingsReset: 'Standaardwaarden herstellen',
             settingsSaved: 'Instellingen opgeslagen',
             settingsResetDone: 'Instellingen hersteld',
+            segmentSaved: 'Opgeslagen',
+            segmentFavorites: 'Favorieten',
+            segmentRecent: 'Recent',
+            savedSearchesTitle: 'Opgeslagen zoekopdrachten',
+            savedSearchesCleared: 'Opgeslagen zoekopdrachten gewist',
+            saveSearchTooltip: 'Ctrl+D zoekopdracht opslaan',
+            saveSearchPanelTitle: 'Zoekopdracht opslaan',
+            saveSearchEditTitle: 'Opgeslagen zoekopdracht hernoemen',
+            saveSearchEditTooltip: 'Hernoemen (Ctrl+E)',
+            saveSearchNameLabel: 'Naam',
+            saveSearchSave: 'Opslaan',
+            saveSearchCancel: 'Annuleren',
+            saveSearchSaved: 'Zoekopdracht opgeslagen',
+            saveSearchRenamed: 'Opgeslagen zoekopdracht hernoemd',
+            saveSearchRemove: 'Opgeslagen zoekopdracht verwijderen',
+            badgeSavedSearch: 'Opgeslagen',
+            shortcutsSaveSearch: 'Huidige zoekopdracht opslaan',
+            shortcutsRenameSaved: 'Geselecteerde opgeslagen zoekopdracht hernoemen',
         },
         pl: {
             searchPlaceholder: 'Szukaj graczy, sojuszy lub miast...',
@@ -839,6 +952,24 @@
             settingsReset: 'Przywróć domyślne',
             settingsSaved: 'Ustawienia zapisane',
             settingsResetDone: 'Ustawienia przywrócone',
+            segmentSaved: 'Zapisane',
+            segmentFavorites: 'Ulubione',
+            segmentRecent: 'Ostatnie',
+            savedSearchesTitle: 'Zapisane wyszukiwania',
+            savedSearchesCleared: 'Zapisane wyszukiwania wyczyszczone',
+            saveSearchTooltip: 'Ctrl+D zapisz wyszukiwanie',
+            saveSearchPanelTitle: 'Zapisz wyszukiwanie',
+            saveSearchEditTitle: 'Zmień nazwę zapisanego wyszukiwania',
+            saveSearchEditTooltip: 'Zmień nazwę (Ctrl+E)',
+            saveSearchNameLabel: 'Nazwa',
+            saveSearchSave: 'Zapisz',
+            saveSearchCancel: 'Anuluj',
+            saveSearchSaved: 'Wyszukiwanie zapisane',
+            saveSearchRenamed: 'Zmieniono nazwę zapisanego wyszukiwania',
+            saveSearchRemove: 'Usuń zapisane wyszukiwanie',
+            badgeSavedSearch: 'Zapisane',
+            shortcutsSaveSearch: 'Zapisz bieżące wyszukiwanie',
+            shortcutsRenameSaved: 'Zmień nazwę wybranego zapisanego wyszukiwania',
         },
         pt: {
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
@@ -941,6 +1072,24 @@
             settingsReset: 'Repor predefinições',
             settingsSaved: 'Definições guardadas',
             settingsResetDone: 'Definições repostas',
+            segmentSaved: 'Guardadas',
+            segmentFavorites: 'Favoritos',
+            segmentRecent: 'Recentes',
+            savedSearchesTitle: 'Pesquisas guardadas',
+            savedSearchesCleared: 'Pesquisas guardadas limpas',
+            saveSearchTooltip: 'Ctrl+D guardar pesquisa',
+            saveSearchPanelTitle: 'Guardar pesquisa',
+            saveSearchEditTitle: 'Renomear pesquisa guardada',
+            saveSearchEditTooltip: 'Renomear (Ctrl+E)',
+            saveSearchNameLabel: 'Nome',
+            saveSearchSave: 'Guardar',
+            saveSearchCancel: 'Cancelar',
+            saveSearchSaved: 'Pesquisa guardada',
+            saveSearchRenamed: 'Pesquisa guardada renomeada',
+            saveSearchRemove: 'Remover pesquisa guardada',
+            badgeSavedSearch: 'Guardada',
+            shortcutsSaveSearch: 'Guardar pesquisa atual',
+            shortcutsRenameSaved: 'Renomear a pesquisa guardada selecionada',
         },
         br: {
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
@@ -1043,6 +1192,24 @@
             settingsReset: 'Restaurar padrões',
             settingsSaved: 'Configurações salvas',
             settingsResetDone: 'Configurações restauradas',
+            segmentSaved: 'Salvas',
+            segmentFavorites: 'Favoritos',
+            segmentRecent: 'Recentes',
+            savedSearchesTitle: 'Pesquisas salvas',
+            savedSearchesCleared: 'Pesquisas salvas limpas',
+            saveSearchTooltip: 'Ctrl+D salvar pesquisa',
+            saveSearchPanelTitle: 'Salvar pesquisa',
+            saveSearchEditTitle: 'Renomear pesquisa salva',
+            saveSearchEditTooltip: 'Renomear (Ctrl+E)',
+            saveSearchNameLabel: 'Nome',
+            saveSearchSave: 'Salvar',
+            saveSearchCancel: 'Cancelar',
+            saveSearchSaved: 'Pesquisa salva',
+            saveSearchRenamed: 'Pesquisa salva renomeada',
+            saveSearchRemove: 'Remover pesquisa salva',
+            badgeSavedSearch: 'Salva',
+            shortcutsSaveSearch: 'Salvar pesquisa atual',
+            shortcutsRenameSaved: 'Renomear a pesquisa salva selecionada',
         },
         tr: {
             searchPlaceholder: 'Oyuncu, ittifak veya \u015fehir ara...',
@@ -1145,6 +1312,24 @@
             settingsReset: 'Varsayılanlara sıfırla',
             settingsSaved: 'Ayarlar kaydedildi',
             settingsResetDone: 'Ayarlar sıfırlandı',
+            segmentSaved: 'Kayıtlı',
+            segmentFavorites: 'Favoriler',
+            segmentRecent: 'Son',
+            savedSearchesTitle: 'Kayıtlı aramalar',
+            savedSearchesCleared: 'Kayıtlı aramalar temizlendi',
+            saveSearchTooltip: 'Ctrl+D aramayı kaydet',
+            saveSearchPanelTitle: 'Aramayı kaydet',
+            saveSearchEditTitle: 'Kayıtlı aramayı yeniden adlandır',
+            saveSearchEditTooltip: 'Yeniden adlandır (Ctrl+E)',
+            saveSearchNameLabel: 'Ad',
+            saveSearchSave: 'Kaydet',
+            saveSearchCancel: 'İptal',
+            saveSearchSaved: 'Arama kaydedildi',
+            saveSearchRenamed: 'Kayıtlı arama yeniden adlandırıldı',
+            saveSearchRemove: 'Kayıtlı aramayı kaldır',
+            badgeSavedSearch: 'Kayıtlı',
+            shortcutsSaveSearch: 'Geçerli aramayı kaydet',
+            shortcutsRenameSaved: 'Seçili kayıtlı aramayı yeniden adlandır',
         },
         ru: {
             searchPlaceholder: '\u041f\u043e\u0438\u0441\u043a \u0438\u0433\u0440\u043e\u043a\u043e\u0432, \u0430\u043b\u044c\u044f\u043d\u0441\u043e\u0432 \u0438\u043b\u0438 \u0433\u043e\u0440\u043e\u0434\u043e\u0432...',
@@ -1247,6 +1432,24 @@
             settingsReset: 'Сбросить настройки',
             settingsSaved: 'Настройки сохранены',
             settingsResetDone: 'Настройки сброшены',
+            segmentSaved: 'Сохранённые',
+            segmentFavorites: 'Избранное',
+            segmentRecent: 'Недавние',
+            savedSearchesTitle: 'Сохранённые поиски',
+            savedSearchesCleared: 'Сохранённые поиски очищены',
+            saveSearchTooltip: 'Ctrl+D сохранить поиск',
+            saveSearchPanelTitle: 'Сохранить поиск',
+            saveSearchEditTitle: 'Переименовать сохранённый поиск',
+            saveSearchEditTooltip: 'Переименовать (Ctrl+E)',
+            saveSearchNameLabel: 'Название',
+            saveSearchSave: 'Сохранить',
+            saveSearchCancel: 'Отмена',
+            saveSearchSaved: 'Поиск сохранён',
+            saveSearchRenamed: 'Сохранённый поиск переименован',
+            saveSearchRemove: 'Удалить сохранённый поиск',
+            badgeSavedSearch: 'Сохранён',
+            shortcutsSaveSearch: 'Сохранить текущий поиск',
+            shortcutsRenameSaved: 'Переименовать выбранный сохранённый поиск',
         },
         el: {
             searchPlaceholder: '\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03c0\u03b1\u03b9\u03ba\u03c4\u03ce\u03bd, \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03b9\u03ce\u03bd \u03ae \u03c0\u03cc\u03bb\u03b5\u03c9\u03bd...',
@@ -1349,6 +1552,24 @@
             settingsReset: 'Επαναφορά προεπιλογών',
             settingsSaved: 'Οι ρυθμίσεις αποθηκεύτηκαν',
             settingsResetDone: 'Οι ρυθμίσεις επαναφέρθηκαν',
+            segmentSaved: 'Αποθηκευμένες',
+            segmentFavorites: 'Αγαπημένα',
+            segmentRecent: 'Πρόσφατα',
+            savedSearchesTitle: 'Αποθηκευμένες αναζητήσεις',
+            savedSearchesCleared: 'Οι αποθηκευμένες αναζητήσεις διαγράφηκαν',
+            saveSearchTooltip: 'Ctrl+D αποθήκευση αναζήτησης',
+            saveSearchPanelTitle: 'Αποθήκευση αναζήτησης',
+            saveSearchEditTitle: 'Μετονομασία αποθηκευμένης αναζήτησης',
+            saveSearchEditTooltip: 'Μετονομασία (Ctrl+E)',
+            saveSearchNameLabel: 'Όνομα',
+            saveSearchSave: 'Αποθήκευση',
+            saveSearchCancel: 'Ακύρωση',
+            saveSearchSaved: 'Η αναζήτηση αποθηκεύτηκε',
+            saveSearchRenamed: 'Η αποθηκευμένη αναζήτηση μετονομάστηκε',
+            saveSearchRemove: 'Αφαίρεση αποθηκευμένης αναζήτησης',
+            badgeSavedSearch: 'Αποθηκευμένη',
+            shortcutsSaveSearch: 'Αποθήκευση τρέχουσας αναζήτησης',
+            shortcutsRenameSaved: 'Μετονομασία επιλεγμένης αποθηκευμένης αναζήτησης',
         },
         hu: {
             searchPlaceholder: 'J\u00e1t\u00e9kosok, sz\u00f6vets\u00e9gek vagy v\u00e1rosok keres\u00e9se...',
@@ -1451,6 +1672,24 @@
             settingsReset: 'Alapértelmezés visszaállítása',
             settingsSaved: 'Beállítások mentve',
             settingsResetDone: 'Beállítások visszaállítva',
+            segmentSaved: 'Mentett',
+            segmentFavorites: 'Kedvencek',
+            segmentRecent: 'Legutóbbi',
+            savedSearchesTitle: 'Mentett keresések',
+            savedSearchesCleared: 'Mentett keresések törölve',
+            saveSearchTooltip: 'Ctrl+D keresés mentése',
+            saveSearchPanelTitle: 'Keresés mentése',
+            saveSearchEditTitle: 'Mentett keresés átnevezése',
+            saveSearchEditTooltip: 'Átnevezés (Ctrl+E)',
+            saveSearchNameLabel: 'Név',
+            saveSearchSave: 'Mentés',
+            saveSearchCancel: 'Mégse',
+            saveSearchSaved: 'Keresés mentve',
+            saveSearchRenamed: 'Mentett keresés átnevezve',
+            saveSearchRemove: 'Mentett keresés eltávolítása',
+            badgeSavedSearch: 'Mentett',
+            shortcutsSaveSearch: 'Jelenlegi keresés mentése',
+            shortcutsRenameSaved: 'Kijelölt mentett keresés átnevezése',
         },
         ro: {
             searchPlaceholder: 'Caut\u0103 juc\u0103tori, alian\u021be sau ora\u0219e...',
@@ -1553,6 +1792,24 @@
             settingsReset: 'Resetează la valori implicite',
             settingsSaved: 'Setări salvate',
             settingsResetDone: 'Setări resetate',
+            segmentSaved: 'Salvate',
+            segmentFavorites: 'Favorite',
+            segmentRecent: 'Recente',
+            savedSearchesTitle: 'Căutări salvate',
+            savedSearchesCleared: 'Căutările salvate au fost șterse',
+            saveSearchTooltip: 'Ctrl+D salvează căutarea',
+            saveSearchPanelTitle: 'Salvează căutarea',
+            saveSearchEditTitle: 'Redenumește căutarea salvată',
+            saveSearchEditTooltip: 'Redenumește (Ctrl+E)',
+            saveSearchNameLabel: 'Nume',
+            saveSearchSave: 'Salvează',
+            saveSearchCancel: 'Anulează',
+            saveSearchSaved: 'Căutare salvată',
+            saveSearchRenamed: 'Căutarea salvată a fost redenumită',
+            saveSearchRemove: 'Elimină căutarea salvată',
+            badgeSavedSearch: 'Salvată',
+            shortcutsSaveSearch: 'Salvează căutarea curentă',
+            shortcutsRenameSaved: 'Redenumește căutarea salvată selectată',
         },
         cs: {
             searchPlaceholder: 'Hledat hr\u00e1\u010de, aliance nebo m\u011bsta...',
@@ -1655,6 +1912,24 @@
             settingsReset: 'Obnovit výchozí',
             settingsSaved: 'Nastavení uloženo',
             settingsResetDone: 'Nastavení obnoveno',
+            segmentSaved: 'Uložené',
+            segmentFavorites: 'Oblíbené',
+            segmentRecent: 'Nedávné',
+            savedSearchesTitle: 'Uložená hledání',
+            savedSearchesCleared: 'Uložená hledání vymazána',
+            saveSearchTooltip: 'Ctrl+D uložit hledání',
+            saveSearchPanelTitle: 'Uložit hledání',
+            saveSearchEditTitle: 'Přejmenovat uložené hledání',
+            saveSearchEditTooltip: 'Přejmenovat (Ctrl+E)',
+            saveSearchNameLabel: 'Název',
+            saveSearchSave: 'Uložit',
+            saveSearchCancel: 'Zrušit',
+            saveSearchSaved: 'Hledání uloženo',
+            saveSearchRenamed: 'Uložené hledání přejmenováno',
+            saveSearchRemove: 'Odebrat uložené hledání',
+            badgeSavedSearch: 'Uložené',
+            shortcutsSaveSearch: 'Uložit aktuální hledání',
+            shortcutsRenameSaved: 'Přejmenovat vybrané uložené hledání',
         },
         sk: {
             searchPlaceholder: 'H\u013ead\u0165 hr\u00e1\u010dov, alianciu alebo mest\u00e1...',
@@ -1757,6 +2032,24 @@
             settingsReset: 'Obnoviť predvolené',
             settingsSaved: 'Nastavenia uložené',
             settingsResetDone: 'Nastavenia obnovené',
+            segmentSaved: 'Uložené',
+            segmentFavorites: 'Obľúbené',
+            segmentRecent: 'Nedávne',
+            savedSearchesTitle: 'Uložené vyhľadávania',
+            savedSearchesCleared: 'Uložené vyhľadávania vymazané',
+            saveSearchTooltip: 'Ctrl+D uložiť vyhľadávanie',
+            saveSearchPanelTitle: 'Uložiť vyhľadávanie',
+            saveSearchEditTitle: 'Premenovať uložené vyhľadávanie',
+            saveSearchEditTooltip: 'Premenovať (Ctrl+E)',
+            saveSearchNameLabel: 'Názov',
+            saveSearchSave: 'Uložiť',
+            saveSearchCancel: 'Zrušiť',
+            saveSearchSaved: 'Vyhľadávanie uložené',
+            saveSearchRenamed: 'Uložené vyhľadávanie premenované',
+            saveSearchRemove: 'Odstrániť uložené vyhľadávanie',
+            badgeSavedSearch: 'Uložené',
+            shortcutsSaveSearch: 'Uložiť aktuálne vyhľadávanie',
+            shortcutsRenameSaved: 'Premenovať vybrané uložené vyhľadávanie',
         },
     };
 
@@ -1929,6 +2222,16 @@
         detail: false,
         showHelp: false,
         showSettings: false,
+        // 'all' | 'saved' | 'favorite' | 'recent': Tab-cycled filter for the
+        // empty-query history view, independent from `segment` above (which
+        // only applies while actively searching).
+        historySegment: CONFIG.DEFAULT_HISTORY_SEGMENT,
+        historyCounts: null,
+        // Inline "Save search" / "Rename saved search" panel, same pattern
+        // as showHelp/showSettings: mutually exclusive, own render branch.
+        showSaveSearch: false,
+        saveSearchMode: 'create', // 'create' (new saved search) | 'edit' (rename existing)
+        saveSearchEditId: null,
         savedAt: 0,
         dataSource: null,
         // How many of state.results are currently rendered; grows as the
@@ -2123,6 +2426,56 @@
     }
 
     /*
+     * Saved searches persist the raw query text (free-text, "@scope
+     * query", or ">command args") so it can be re-run verbatim later,
+     * unlike favorites/history which store a resolved player/alliance/
+     * town/coordinate target.
+     */
+    function loadSavedSearches() {
+        const list = storageGet(worldKey('savedSearches'));
+        return Array.isArray(list) ? list : [];
+    }
+
+    function saveSavedSearches(list) {
+        storageSet(worldKey('savedSearches'), list);
+    }
+
+    function addSavedSearch(query, name) {
+        const list = loadSavedSearches();
+        const trimmedName = String(name || '').trim();
+        const entry = {
+            id: Date.now(),
+            query,
+            name: trimmedName || query,
+            createdAt: Date.now(),
+        };
+        list.unshift(entry);
+        if (list.length > CONFIG.SAVED_SEARCHES_MAX) {
+            list.length = CONFIG.SAVED_SEARCHES_MAX;
+        }
+        saveSavedSearches(list);
+        return entry;
+    }
+
+    function removeSavedSearch(id) {
+        const list = loadSavedSearches().filter((entry) => entry.id !== id);
+        saveSavedSearches(list);
+    }
+
+    function clearSavedSearches() {
+        saveSavedSearches([]);
+    }
+
+    function renameSavedSearch(id, name) {
+        const list = loadSavedSearches();
+        const entry = list.find((item) => item.id === id);
+        if (!entry) return;
+        const trimmedName = String(name || '').trim();
+        entry.name = trimmedName || entry.query;
+        saveSavedSearches(list);
+    }
+
+    /*
      * Rebuilds a {type,id,name,x,y} storage entry into a searchable
      * row, resolving the name/coordinates from the live index when
      * possible and falling back to the stored snapshot otherwise (so
@@ -2180,13 +2533,27 @@
     }
 
     /*
-     * Favorites first, then recent entries, deduplicated by type+id.
-     * Each row gets a `section` marker ('favorite' | 'recent') that
-     * the history renderer turns into group headers.
+     * Saved searches first, then favorites, then recent entries
+     * (favorites/recent deduplicated by type+id; saved searches have
+     * no such target to dedupe against, they're independent query
+     * snapshots). Each row gets a `section` marker ('saved' |
+     * 'favorite' | 'recent') that the history renderer turns into
+     * group headers, and that the Tab-cycled history segment filter
+     * (state.historySegment) filters by.
      */
     function buildHistoryResults() {
         const rows = [];
         const keys = new Set();
+
+        for (const entry of loadSavedSearches()) {
+            rows.push({
+                type: 'saved-search',
+                id: entry.id,
+                name: entry.name,
+                query: entry.query,
+                section: 'saved',
+            });
+        }
 
         for (const entry of loadFavorites()) {
             const item = hydrateHistoryItem(entry);
@@ -2209,6 +2576,55 @@
         }
 
         return rows;
+    }
+
+    const HISTORY_SEGMENT_LABEL_KEYS = {
+        all: 'segmentAll',
+        saved: 'segmentSaved',
+        favorite: 'segmentFavorites',
+        recent: 'segmentRecent',
+    };
+
+    function computeHistoryCounts(rows) {
+        const counts = { all: rows.length, saved: 0, favorite: 0, recent: 0 };
+        for (const item of rows) {
+            if (item.section in counts) {
+                counts[item.section]++;
+            }
+        }
+        return counts;
+    }
+
+    function applyHistorySegment() {
+        if (state.historySegment === CONFIG.DEFAULT_HISTORY_SEGMENT) {
+            state.results = state.fullResults;
+        } else {
+            state.results = state.fullResults.filter((item) => item.section === state.historySegment);
+        }
+        state.selected = 0;
+        state.visibleCount = CONFIG.RESULTS_PAGE_SIZE;
+    }
+
+    function setHistorySegment(name) {
+        state.historySegment = CONFIG.HISTORY_SEGMENTS.includes(name) ? name : CONFIG.DEFAULT_HISTORY_SEGMENT;
+        applyHistorySegment();
+        render();
+    }
+
+    function cycleHistorySegment(direction) {
+        if (!state.historyCounts) {
+            return;
+        }
+        const available = CONFIG.HISTORY_SEGMENTS.filter(
+            (name) => name === CONFIG.DEFAULT_HISTORY_SEGMENT || state.historyCounts[name] > 0
+        );
+        if (available.length < 2) {
+            return;
+        }
+        const index = available.indexOf(state.historySegment);
+        state.historySegment = available[(index + direction + available.length) % available.length];
+        applyHistorySegment();
+        render();
     }
 
     /*
@@ -3257,6 +3673,20 @@
         return query.startsWith(CONFIG.COMMAND_PREFIX);
     }
 
+    /*
+     * A query is worth offering to save when it's non-empty and isn't
+     * one of the meta-shortcuts that only open a panel instead of
+     * producing results (help/settings), since re-running those via a
+     * saved search would be meaningless.
+     */
+    function isSavableQuery(query) {
+        if (!query) return false;
+        if (query === CONFIG.HELP_CHAR) return false;
+        const trimmedCommand = query.slice(CONFIG.COMMAND_PREFIX.length).trim().toLowerCase();
+        if (isCommand(query) && (trimmedCommand === 'settings' || trimmedCommand === 'help')) return false;
+        return true;
+    }
+
     function toggleFavoriteSelected() {
         const item = state.results[state.selected];
         if (!item || item.type === 'info') {
@@ -3274,17 +3704,41 @@
 
     /*
      * Keyboard equivalent of clicking the per-row trash icon: removes
-     * the selected row from Recent history. Only meaningful in the
-     * history view, and only for 'recent' rows — favorites are
-     * managed via Ctrl+F/the star instead, matching the mouse path
-     * in handleResultClick.
+     * the selected row from Recent history or from Saved searches.
+     * Only meaningful in the history view, and only for 'recent'/
+     * 'saved' rows — favorites are managed via Ctrl+F/the star
+     * instead, matching the mouse path in handleResultClick.
      */
     function removeSelectedHistoryItem() {
         const item = state.results[state.selected];
-        if (!item || item.section !== 'recent') {
+        if (!item) return;
+        if (item.section === 'recent') {
+            removeHistoryItem(item);
+            performSearch('', ++searchToken);
+        } else if (item.section === 'saved') {
+            removeSavedSearch(item.id);
+            performSearch('', ++searchToken);
+        }
+    }
+
+    /*
+     * Ctrl+Shift+Delete equivalent for the currently selected row:
+     * wipes the whole section (Recent or Saved searches) that row
+     * belongs to, instead of always targeting Recent. No-ops when the
+     * selected row isn't part of either clearable section.
+     */
+    function clearSelectedHistorySection() {
+        const item = state.results[state.selected];
+        if (!item || (item.section !== 'recent' && item.section !== 'saved')) {
             return;
         }
-        removeHistoryItem(item);
+        if (item.section === 'recent') {
+            clearHistory();
+            showToast(translate('recentCleared'));
+        } else {
+            clearSavedSearches();
+            showToast(translate('savedSearchesCleared'));
+        }
         performSearch('', ++searchToken);
     }
 
@@ -3434,15 +3888,17 @@
         }
 
         if (!query) {
-            // History/favorites view: skip heuristics and segmentation.
+            // History/favorites/saved-searches view: skip the search
+            // segment filter (players/alliances/towns...), use the
+            // history segment filter (saved/favorites/recent) instead.
             state.query = '';
             state.segment = CONFIG.DEFAULT_SEGMENT;
             state.detail = false;
             state.fullResults = buildHistoryResults();
             state.segmentCounts = null;
-            state.results = state.fullResults;
-            state.selected = 0;
-            state.visibleCount = CONFIG.RESULTS_PAGE_SIZE;
+            state.historyCounts = computeHistoryCounts(state.fullResults);
+            state.historySegment = CONFIG.DEFAULT_HISTORY_SEGMENT;
+            applyHistorySegment();
             render();
             return;
         }
@@ -3804,6 +4260,16 @@
             return true;
         }
 
+        if (item.type === 'saved-search') {
+            const input = document.getElementById('qf-input');
+            if (input) {
+                input.value = item.query;
+                performSearch(item.query, ++searchToken);
+                input.focus();
+            }
+            return true;
+        }
+
         let ok;
         switch (item.type) {
             case 'player':
@@ -3860,6 +4326,7 @@
                         spellcheck="false"
                         placeholder="${escapeHTML(translate('searchPlaceholder'))}"
                     >
+                    <button type="button" id="qf-save-search-btn" title="${escapeHTML(translate('saveSearchTooltip'))}" hidden>${ICONS.bookmark}</button>
                     <button type="button" id="qf-settings-btn" title="${escapeHTML(translate('settingsTitle'))}">${ICONS.gear}</button>
                     <kbd id="qf-esc-key">ESC</kbd>
                 </div>
@@ -3901,7 +4368,16 @@
             const chip = event.target.closest('.qf-chip');
             if (!chip) return;
             event.preventDefault();
-            setSegment(chip.dataset.segment);
+            if (chip.dataset.historySegment) {
+                setHistorySegment(chip.dataset.historySegment);
+            } else {
+                setSegment(chip.dataset.segment);
+            }
+        });
+
+        overlay.querySelector('#qf-save-search-btn').addEventListener('click', (event) => {
+            event.preventDefault();
+            openSaveSearchPanel();
         });
 
         overlay.querySelector('#qf-settings-btn').addEventListener('click', (event) => {
@@ -3947,12 +4423,20 @@
             requestAnimationFrame(() => input.focus());
         }
 
-        // Segment chips only make sense while actively searching:
-        // without a query the results are the history/favorites view,
-        // and command output (ghost/dist/settings) is not segmentable.
-        const showSegments = Boolean(state.query) && !state.showHelp && !state.showSettings && !isCommand(state.query) && state.segmentCounts && !state.loading;
-        segmentsEl.hidden = !showSegments;
-        if (showSegments) {
+        const saveSearchBtn = document.getElementById('qf-save-search-btn');
+        if (saveSearchBtn) {
+            saveSearchBtn.hidden = !isSavableQuery(state.query);
+        }
+
+        // Segment chips only make sense while actively searching or
+        // while browsing the empty-query history view; command output
+        // (ghost/dist) and the help/settings/save-search panels are not
+        // segmentable.
+        const inPanel = state.showHelp || state.showSettings || state.showSaveSearch;
+        const showSearchSegments = Boolean(state.query) && !inPanel && !isCommand(state.query) && state.segmentCounts && !state.loading;
+        const showHistorySegments = !state.query && !inPanel && state.historyCounts;
+        segmentsEl.hidden = !showSearchSegments && !showHistorySegments;
+        if (showSearchSegments) {
             segmentsEl.innerHTML = CONFIG.SEGMENTS
                 .filter((name) => name === CONFIG.DEFAULT_SEGMENT || state.segmentCounts[name] > 0)
                 .map((name) => {
@@ -3966,9 +4450,29 @@
                     );
                 })
                 .join('');
+        } else if (showHistorySegments) {
+            segmentsEl.innerHTML = CONFIG.HISTORY_SEGMENTS
+                .filter((name) => name === CONFIG.DEFAULT_HISTORY_SEGMENT || state.historyCounts[name] > 0)
+                .map((name) => {
+                    const active = name === state.historySegment ? ' qf-chip-active' : '';
+                    const count = state.historyCounts[name];
+                    return (
+                        `<span class="qf-chip${active}" data-history-segment="${name}">` +
+                        `${escapeHTML(translate(HISTORY_SEGMENT_LABEL_KEYS[name]))}` +
+                        `<span class="qf-chip-count">${count}</span>` +
+                        `</span>`
+                    );
+                })
+                .join('');
         }
 
         renderFooter();
+
+        if (state.showSaveSearch) {
+            results.innerHTML = renderSaveSearchPanel();
+            bindSaveSearchEvents(results);
+            return;
+        }
 
         if (state.showSettings) {
             results.innerHTML = renderSettings();
@@ -4124,8 +4628,14 @@
         status.classList.toggle('qf-status-error', Boolean(state.loadError));
     }
 
+    const HISTORY_SECTION_TITLE_KEYS = {
+        saved: 'savedSearchesTitle',
+        favorite: 'favoritesTitle',
+        recent: 'recentTitle',
+    };
+
     function renderHistory(container) {
-        const rows = state.fullResults;
+        const rows = state.results;
         if (!rows.length) {
             container.innerHTML = `
                 <div class="qf-empty">
@@ -4145,9 +4655,9 @@
             const item = rows[index];
             if (item.section && item.section !== currentSection) {
                 currentSection = item.section;
-                const title = escapeHTML(translate(currentSection === 'favorite' ? 'favoritesTitle' : 'recentTitle'));
-                const clearBtn = currentSection === 'recent'
-                    ? `<button type="button" class="qf-section-clear" title="${escapeHTML(translate('recentClearAll'))}">${escapeHTML(translate('recentClearAll'))}</button>`
+                const title = escapeHTML(translate(HISTORY_SECTION_TITLE_KEYS[currentSection]));
+                const clearBtn = currentSection === 'recent' || currentSection === 'saved'
+                    ? `<button type="button" class="qf-section-clear" data-clear-section="${currentSection}" title="${escapeHTML(translate('recentClearAll'))}">${escapeHTML(translate('recentClearAll'))}</button>`
                     : '';
                 html += `<div class="qf-section">${title}${clearBtn}</div>`;
             }
@@ -4182,6 +4692,8 @@
             ['Ctrl+F', translate('footerFav')],
             ['Ctrl+B', translate('footerBBCode')],
             ['Ctrl+R', translate('footerRefresh')],
+            ['Ctrl+D', translate('shortcutsSaveSearch')],
+            ['Ctrl+E', translate('shortcutsRenameSaved')],
             ['Delete', translate('shortcutsRemoveRecent')],
             ['Ctrl+Shift+Delete', translate('shortcutsClearRecent')],
             ['Esc', translate('footerClose')],
@@ -4216,6 +4728,76 @@
                 <div class="qf-help-text">${translate('scopeHelpDesc')}</div>
             </div>
         `;
+    }
+
+    /*
+     * ============================================================
+     * SAVE SEARCH PANEL
+     * ============================================================
+     *
+     * Rendered by the bookmark icon / Ctrl+D (create mode, for the
+     * current query) or by a saved-search row's pencil icon / Ctrl+E
+     * (edit mode, rename only). Reuses the qf-settings-* classes so it
+     * matches the settings panel's look without introducing new CSS.
+     */
+
+    function renderSaveSearchPanel() {
+        const editing = state.saveSearchMode === 'edit';
+        let query = state.query;
+        let defaultName = state.query;
+
+        if (editing) {
+            const entry = loadSavedSearches().find((item) => item.id === state.saveSearchEditId);
+            query = entry ? entry.query : '';
+            defaultName = entry ? entry.name : '';
+        }
+
+        return `
+            <div class="qf-settings">
+                <div class="qf-help-title">${escapeHTML(translate(editing ? 'saveSearchEditTitle' : 'saveSearchPanelTitle'))}</div>
+                <div class="qf-settings-row">
+                    <label class="qf-settings-label" for="qf-save-search-name">${escapeHTML(translate('saveSearchNameLabel'))}</label>
+                    <input
+                        id="qf-save-search-name"
+                        class="qf-settings-input"
+                        type="text"
+                        autocomplete="off"
+                        spellcheck="false"
+                        value="${escapeHTML(defaultName)}"
+                    >
+                </div>
+                <div class="qf-help-text">${escapeHTML(query)}</div>
+                <div class="qf-settings-actions">
+                    <button type="button" id="qf-save-search-cancel" class="qf-settings-btn qf-settings-btn-secondary">${escapeHTML(translate('saveSearchCancel'))}</button>
+                    <button type="button" id="qf-save-search-confirm" class="qf-settings-btn qf-settings-btn-primary">${escapeHTML(translate('saveSearchSave'))}</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function bindSaveSearchEvents(container) {
+        const nameInput = container.querySelector('#qf-save-search-name');
+        if (nameInput) {
+            nameInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    submitSaveSearchPanel(container);
+                } else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    closeSaveSearchPanel();
+                }
+            });
+        }
+
+        const cancelBtn = container.querySelector('#qf-save-search-cancel');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => closeSaveSearchPanel());
+        }
+
+        const confirmBtn = container.querySelector('#qf-save-search-confirm');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => submitSaveSearchPanel(container));
+        }
     }
 
     /*
@@ -4423,6 +5005,8 @@
         starFilled: svgIcon('<path d="M12 3.3l2.6 5.4 5.9.7-4.3 4.1 1.1 5.9L12 16.6l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.7L12 3.3z" fill="currentColor" stroke="none"></path>'),
         gear: svgIcon('<circle cx="12" cy="12" r="3.2"></circle><path d="M12 3.2v2.1M12 18.7v2.1M20.8 12h-2.1M5.3 12H3.2M17.9 6.1l-1.5 1.5M7.6 16.4l-1.5 1.5M17.9 17.9l-1.5-1.5M7.6 7.6L6.1 6.1"></path>'),
         trash: svgIcon('<polyline points="4 7 20 7"></polyline><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"></path><path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>'),
+        bookmark: svgIcon('<path d="M6 3.8a1.5 1.5 0 0 1 1.5-1.5h9A1.5 1.5 0 0 1 18 3.8v16.4l-6-3.6-6 3.6V3.8z"></path>'),
+        pencil: svgIcon('<path d="M4 20l.9-4.2L15.4 5.3a1.8 1.8 0 0 1 2.5 0l1.8 1.8a1.8 1.8 0 0 1 0 2.5L9.2 19.1 4 20z"></path><line x1="14" y1="6.7" x2="17.3" y2="10"></line>'),
     };
 
     /*
@@ -4444,7 +5028,7 @@
 
     function renderResult(item, index) {
         const selected = index === state.selected ? ' qf-selected' : '';
-        const favorite = item.type !== 'info' && isFavorite(item) ? ' qf-favorite' : '';
+        const favorite = item.type !== 'info' && item.type !== 'saved-search' && isFavorite(item) ? ' qf-favorite' : '';
         const header = isDetailHeader(item, index) ? ' qf-result-header' : '';
 
         let icon = ICONS.coordinate;
@@ -4542,6 +5126,14 @@
                 break;
             }
 
+            case 'saved-search': {
+                icon = ICONS.bookmark;
+                badge = translate('badgeSavedSearch');
+                badgeClass = 'qf-badge-coordinate';
+                meta = item.name !== item.query ? escapeHTML(item.query) : '';
+                break;
+            }
+
             case 'info':
                 icon = ICONS.info;
                 info = true;
@@ -4553,6 +5145,29 @@
                 <div class="qf-result-info" data-index="${index}">
                     <span class="qf-result-info-icon">${icon}</span>
                     <span class="qf-result-info-text">${escapeHTML(item.name)}</span>
+                </div>
+            `;
+        }
+
+        // Saved searches have no favorite/BBCode concept (they're a
+        // saved query, not a resolved player/alliance/town/coordinate
+        // target); they get their own edit (rename) + remove icons
+        // instead of the star/BBCode/recent-trash combo below.
+        if (item.type === 'saved-search') {
+            const editBtn = `<span class="qf-saved-edit" title="${escapeHTML(translate('saveSearchEditTooltip'))}">${ICONS.pencil}</span>`;
+            const removeBtn = `<span class="qf-saved-remove" title="${escapeHTML(translate('saveSearchRemove'))}">${ICONS.trash}</span>`;
+            return `
+                <div class="qf-result${selected}${header}" data-index="${index}">
+                    <span class="qf-result-icon">${icon}</span>
+                    <div class="qf-result-body">
+                        <div class="qf-result-line1">
+                            <span class="qf-result-name">${escapeHTML(item.name)}</span>
+                            ${editBtn}
+                            ${removeBtn}
+                            ${badge ? `<span class="qf-badge ${badgeClass}">${escapeHTML(badge)}</span>` : ''}
+                        </div>
+                        ${meta ? `<div class="qf-result-meta">${meta}</div>` : ''}
+                    </div>
                 </div>
             `;
         }
@@ -4618,20 +5233,32 @@
                 copySelectedBBCode();
                 return;
             }
+
+            if (key === CONFIG.SAVE_SEARCH_KEY) {
+                event.preventDefault();
+                openSaveSearchPanel();
+                return;
+            }
+
+            if (key === CONFIG.RENAME_KEY) {
+                event.preventDefault();
+                const item = state.results[state.selected];
+                if (item && item.type === 'saved-search') {
+                    openRenameSavedSearchPanel(item);
+                }
+                return;
+            }
         }
 
-        // Keyboard equivalents of the Recent history mouse controls:
-        // Delete removes the selected recent row (same guard as the
-        // trash icon click), Ctrl+Shift+Delete wipes the whole
-        // Recent list (same guard as the "Clear" button click).
+        // Keyboard equivalents of the Recent/Saved-searches history
+        // mouse controls: Delete removes the selected row (same guard
+        // as the per-row trash icon click), Ctrl+Shift+Delete wipes
+        // the whole section the selected row belongs to (same guard as
+        // that section's "Clear" button click).
         if (event.key === 'Delete') {
             if (event.ctrlKey && event.shiftKey) {
                 event.preventDefault();
-                if (!state.query && state.fullResults.some((item) => item.section === 'recent')) {
-                    clearHistory();
-                    showToast(translate('recentCleared'));
-                    performSearch('', ++searchToken);
-                }
+                clearSelectedHistorySection();
                 return;
             }
             if (!event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
@@ -4660,7 +5287,11 @@
 
             case 'Tab':
                 event.preventDefault();
-                cycleSegment(event.shiftKey ? -1 : 1);
+                if (state.query) {
+                    cycleSegment(event.shiftKey ? -1 : 1);
+                } else {
+                    cycleHistorySegment(event.shiftKey ? -1 : 1);
+                }
                 break;
 
             case 'Home':
@@ -4731,6 +5362,24 @@
             return;
         }
 
+        if (event.target.closest('.qf-saved-remove')) {
+            event.stopPropagation();
+            if (item && item.type === 'saved-search') {
+                removeSavedSearch(item.id);
+                performSearch('', ++searchToken);
+            }
+            return;
+        }
+
+        if (event.target.closest('.qf-saved-edit')) {
+            event.stopPropagation();
+            if (item && item.type === 'saved-search') {
+                state.selected = index;
+                openRenameSavedSearchPanel(item);
+            }
+            return;
+        }
+
         if (event.target.closest('.qf-bbcode-btn')) {
             event.stopPropagation();
             copyBBCode(item);
@@ -4742,16 +5391,22 @@
     }
 
     /*
-     * The "Clear" button on the Recent section header lives outside
-     * .qf-result rows, so it needs its own delegated handler instead
-     * of piggybacking on handleResultClick.
+     * The "Clear" button on a history section header (Recent or Saved
+     * searches) lives outside .qf-result rows, so it needs its own
+     * delegated handler instead of piggybacking on handleResultClick.
+     * data-clear-section on the button tells which list to wipe.
      */
     function handleResultsMousedown(event) {
         const clearBtn = event.target.closest('.qf-section-clear');
         if (clearBtn) {
             event.stopPropagation();
-            clearHistory();
-            showToast(translate('recentCleared'));
+            if (clearBtn.dataset.clearSection === 'saved') {
+                clearSavedSearches();
+                showToast(translate('savedSearchesCleared'));
+            } else {
+                clearHistory();
+                showToast(translate('recentCleared'));
+            }
             performSearch('', ++searchToken);
             return;
         }
@@ -4781,13 +5436,14 @@
         } else {
             state.query = '';
             state.fullResults = buildHistoryResults();
-            state.results = state.fullResults;
-            state.selected = 0;
-            state.visibleCount = CONFIG.RESULTS_PAGE_SIZE;
+            state.historyCounts = computeHistoryCounts(state.fullResults);
+            state.historySegment = CONFIG.DEFAULT_HISTORY_SEGMENT;
+            applyHistorySegment();
             state.segment = CONFIG.DEFAULT_SEGMENT;
             state.segmentCounts = null;
             state.showHelp = false;
             state.showSettings = false;
+            state.showSaveSearch = false;
 
             input.value = '';
             render();
@@ -4827,11 +5483,86 @@
         state.open = true;
         state.showHelp = false;
         state.showSettings = true;
+        state.showSaveSearch = false;
 
         const input = document.getElementById('qf-input');
         input.value = state.query || '';
 
         render();
+    }
+
+    /*
+     * Opens the inline "Save search" panel for the current query
+     * (Ctrl+D / the bookmark icon), used to save state.query verbatim
+     * under a name that defaults to the query itself.
+     */
+    function openSaveSearchPanel() {
+        if (!isSavableQuery(state.query)) return;
+        state.showHelp = false;
+        state.showSettings = false;
+        state.showSaveSearch = true;
+        state.saveSearchMode = 'create';
+        state.saveSearchEditId = null;
+        render();
+        const nameInput = document.getElementById('qf-save-search-name');
+        if (nameInput) {
+            requestAnimationFrame(() => {
+                nameInput.focus();
+                nameInput.select();
+            });
+        }
+    }
+
+    /*
+     * Opens the same inline panel in "edit" mode to rename an existing
+     * saved search (Ctrl+E / the pencil icon on a saved-search row),
+     * without touching its stored query.
+     */
+    function openRenameSavedSearchPanel(item) {
+        if (!item || item.type !== 'saved-search') return;
+        state.showHelp = false;
+        state.showSettings = false;
+        state.showSaveSearch = true;
+        state.saveSearchMode = 'edit';
+        state.saveSearchEditId = item.id;
+        render();
+        const nameInput = document.getElementById('qf-save-search-name');
+        if (nameInput) {
+            requestAnimationFrame(() => {
+                nameInput.focus();
+                nameInput.select();
+            });
+        }
+    }
+
+    /*
+     * Closes the save-search panel without saving/renaming, restoring
+     * whatever view was active before it (the history view, since it's
+     * only reachable from there or from an active query).
+     */
+    function closeSaveSearchPanel() {
+        state.showSaveSearch = false;
+        render();
+        const input = document.getElementById('qf-input');
+        if (input) input.focus();
+    }
+
+    function submitSaveSearchPanel(container) {
+        const nameInput = container.querySelector('#qf-save-search-name');
+        const name = nameInput ? nameInput.value : '';
+
+        if (state.saveSearchMode === 'edit') {
+            renameSavedSearch(state.saveSearchEditId, name);
+            showToast(translate('saveSearchRenamed'));
+        } else {
+            addSavedSearch(state.query, name);
+            showToast(translate('saveSearchSaved'));
+        }
+
+        state.showSaveSearch = false;
+        const input = document.getElementById('qf-input');
+        if (input) input.value = '';
+        performSearch('', ++searchToken);
     }
 
     /*
@@ -5130,6 +5861,7 @@
             font-weight: 400;
         }
 
+        #qf-save-search-btn,
         #qf-settings-btn {
             flex: 0 0 auto;
             display: flex;
@@ -5147,6 +5879,7 @@
             transition: background-color .08s ease, color .08s ease;
         }
 
+        #qf-save-search-btn:hover,
         #qf-settings-btn:hover {
             color: rgba(255, 255, 255, .85);
             background: rgba(255, 255, 255, .07);
@@ -5422,6 +6155,38 @@
         }
 
         .qf-remove:hover {
+            color: #e08a8a !important;
+            background: rgba(255, 255, 255, .08);
+        }
+
+        .qf-saved-edit,
+        .qf-saved-remove {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            padding: 3px;
+            margin: -2px -2px -2px 0;
+            border-radius: 4px;
+            color: rgba(255, 255, 255, 0);
+            opacity: 0;
+            transition: color .06s ease, background-color .06s ease, opacity .06s ease;
+        }
+
+        .qf-result:hover .qf-saved-edit,
+        .qf-result:hover .qf-saved-remove {
+            color: rgba(255, 255, 255, .45);
+            opacity: 1;
+        }
+
+        .qf-saved-edit:hover {
+            color: #d7a33f !important;
+            background: rgba(255, 255, 255, .08);
+        }
+
+        .qf-saved-remove:hover {
             color: #e08a8a !important;
             background: rgba(255, 255, 255, .08);
         }

@@ -70,6 +70,20 @@ backdoor. To verify changes:
    the same commands show the `premiumRequired` message instead, and a
    multi-town coordinate falls back to a plain "open on map" row instead of
    an island breakdown.
+7. To test saved searches: type any query, save it with `Ctrl+D` or the
+   bookmark icon, confirm the inline panel precharges the name field with
+   the query text and `Enter` saves it (toast + returns to the empty-query
+   view with the input cleared); confirm `Esc` inside that panel cancels it
+   without closing the whole palette. Open the palette with an empty query,
+   confirm the "Saved searches" section appears above Favorites/Recent, and
+   that `Tab`/`Shift+Tab` cycle the *All/Saved/Favorites/Recent* chips.
+   Selecting a saved-search row and pressing `Enter` (or clicking it) must
+   re-run the stored query verbatim without closing the palette. Test
+   rename (`Ctrl+E` or the pencil icon), single removal (`Delete` or the
+   trash icon), and clearing the whole list (`Ctrl+Shift+Delete` or the
+   section's "Clear" button) — with both a saved search and a recent entry
+   present, confirm `Ctrl+Shift+Delete` only clears the section the
+   currently selected row belongs to.
 
 ## Premium gating & policy compliance (Grepolis marketplace rules)
 
@@ -139,8 +153,11 @@ When adding a new action inside the overlay:
 
 - **Mouse-first features need a keyboard shortcut.** e.g. the per-row
   favorite star has `Ctrl+F`, the per-row BBCode icon has `Ctrl+B`, the
-  per-row Recent trash icon has `Delete`, the "Clear" button on the Recent
-  section header has `Ctrl+Shift+Delete`.
+  per-row Recent/Saved-searches trash icon has `Delete`, the "Clear" button
+  on a history section header has `Ctrl+Shift+Delete` (scoped to whichever
+  section — Recent or Saved searches — the currently selected row belongs
+  to), the bookmark icon (save current query) has `Ctrl+D`, and a saved
+  search's pencil icon (rename) has `Ctrl+E`.
 - **Keyboard-first features need a clickable control.** e.g. the footer
   "refresh" and "help" entries are `<button>` elements (not plain `<span>`)
   so `Ctrl+R` and `?` both have a mouse equivalent; the settings gear icon
