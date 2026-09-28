@@ -28,6 +28,7 @@ and coordinates, with real in-game navigation (no new tabs).
 - **Settings panel**: Click the gear icon in the search bar, or type `>settings`, to customize the language override, keyboard shortcut, results-per-page/command result caps, world data cache duration, and the default radius/points used by `>near` and `>ghost`. Settings are stored globally (shared across every world) and apply instantly, no reload required.
 - **Manual refresh**: Press `Ctrl+R`, or click the "refresh" footer button, to force-refresh world data from game servers.
 - **Automatic localization**: Fully localized across 16 supported languages based on the Grepolis market detected from the world subdomain (e.g. `en37`, `es12`, `de44`, `zz2`), with an optional manual override in Settings.
+- **Update checker**: Checks for a newer version on your installed channel (Stable or Beta, see below) roughly every 12 hours, and on demand via the "Check for updates" button in Settings. A new version shows a one-time toast and highlights the version number in the footer — click it to open the download page.
 
 ## Premium features (Administrator advisor)
 
@@ -57,8 +58,25 @@ on map" instead of the per-town breakdown).
    - [Tampermonkey](https://www.tampermonkey.net/) (recommended)
    - [Violentmonkey](https://violentmonkey.github.io/)
 2. Install the userscript directly from raw URL:
-   👉 **[Click here to Install Grepolis Quick Finder](https://raw.githubusercontent.com/adrian-cancio/GrepolisQuickFinder/master/GrepolisQuickFinder.user.js)**
+   👉 **[Click here to Install Grepolis Quick Finder](https://raw.githubusercontent.com/adrian-cancio/GrepolisQuickFinder/release/stable/GrepolisQuickFinder.user.js)**
 3. Visit any Grepolis world (`https://*.grepolis.com/game/*`) and press `Ctrl+Shift+F` or click **QuickFinder** in the main side menu.
+
+### Channels
+
+Two independently installable builds are published:
+
+| Channel    | Install link                                                                                                                          | What it is                                            |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **Stable** | [Install Stable](https://raw.githubusercontent.com/adrian-cancio/GrepolisQuickFinder/release/stable/GrepolisQuickFinder.user.js) | Released, tested builds. Recommended for most players. |
+| **Beta**   | [Install Beta](https://raw.githubusercontent.com/adrian-cancio/GrepolisQuickFinder/release/beta/GrepolisQuickFinder.user.js)     | Newer features ahead of Stable, may be less polished.  |
+
+Each channel installs as a separate userscript (`Grepolis Quick Finder` vs
+`Grepolis Quick Finder (Beta)`), and both auto-update independently once
+installed. They share the same browser storage (favorites, settings, saved
+searches, cache) since they operate on the same game data — **do not enable
+both at the same time**: with both active, they'd both react to the same
+hotkey and fight over the same overlay. Disable one before enabling the
+other if you want to switch channels.
 
 ## Supported markets and languages
 

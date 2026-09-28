@@ -111,6 +111,85 @@ backdoor. To verify changes:
    The palette must reopen with the exact same query, split window, and
    breadcrumb/rows still showing, instead of resetting to the empty-query
    history view.
+10. To test the update checker without waiting for the ~12h throttle or
+    installing via a real userscript manager (which `GM_info` needs to
+    report a channel URL — see "Release process" below), evaluate
+    `unsafeWindow.GM_info = { script: { downloadURL: 'https://raw.githubusercontent.com/adrian-cancio/GrepolisQuickFinder/release/beta/GrepolisQuickFinder.user.js' } };`
+    in the page context **before** the script loads, then reload/re-inject.
+    Open Settings and click "Check for updates": since that URL currently
+    serves an older `@version` than whatever you're testing, you should
+    see the "already up to date" toast. To simulate an actual update being
+    available, temporarily edit the `remoteVersion` comparison locally
+    (or point the stub at a URL serving a real file with a higher
+    `@version`) and confirm: a toast appears once, the footer's version
+    button gains the gold pulse/badge and becomes clickable (opens the
+    URL in a new tab), and re-running `>settings` → "Check for updates"
+    reports the new version again without re-showing the toast a second
+    time in the same tab session. Clear `qf:updateCheck` from
+    `localStorage` between runs to bypass the throttle.
+
+## Release process
+
+This project publishes two installable channels from two source branches,
+plus two lightweight `release/*` branches that only `scripts/publish.mjs`
+ever writes to. See `scripts/publish.mjs` for the full mechanics; this is
+the human-readable summary of which branch to use for what.
+
+| Branch           | Purpose                                              | Edited by                          | Directly installable? |
+| ---------------- | ----------------------------------------------------- | ------------------------------------ | :--------------------: |
+| `master`         | Stable channel source, in active development          | Normal commits/PRs                   | No                      |
+| `develop`        | Beta channel source, one step ahead of `master`        | Normal commits/PRs                   | No                      |
+| `release/stable` | Published Stable build (`.user.js` only)               | **Only** `scripts/publish.mjs stable` | Yes — Stable install URL |
+| `release/beta`   | Published Beta build (`.user.js` only)                 | **Only** `scripts/publish.mjs beta`   | Yes — Beta install URL   |
+
+Mental model: **`master`/`develop` are where you code. `release/*` are what
+people install.** Never edit or `git push` to `release/*` by hand.
+
+### Day-to-day development
+
+- New features keep going into `develop`, exactly as before this system
+  existed.
+- Bump `@version` (script header) and `const VERSION` together on any
+  `develop` commit you want the Beta update checker to eventually notice,
+  using a `-beta.N` suffix: `2.12.0-beta.1`, then `-beta.2` on the next
+  commit worth publishing, etc. You don't need to bump on every commit —
+  only when you're about to publish a new Beta build (see below).
+- `GrepolisQuickFinder.user.js`'s header (`@name`/`@updateURL`/
+  `@downloadURL`) stays identical on both `master` and `develop` at all
+  times — always the generic Stable identity shown in the file. Only
+  `scripts/publish.mjs` ever rewrites it, on a throwaway copy, when
+  publishing to a `release/*` branch. This means merging `develop` →
+  `master` only ever conflicts on the `@version`/`VERSION` line (resolved
+  by dropping the `-beta.N` suffix), never on identity/URLs.
+
+### Publishing a build (separate step from merging/pushing)
+
+Publishing is a deliberate, manual action — pushing to `develop`/`master`
+never publishes anything by itself.
+
+```sh
+git checkout develop && node scripts/publish.mjs beta    # ship current develop to Beta testers
+git checkout master  && node scripts/publish.mjs stable  # ship current master to everyone
+```
+
+The script: verifies you're on the matching branch with a clean working
+tree, rewrites only the 3 header lines for the target channel, runs
+`node --check` as a sanity check, refuses to republish an unchanged
+`@version` unless you pass `--force`, and pushes the result to
+`release/<channel>` via a temporary `git worktree` (your `master`/`develop`
+checkout is never touched). `release/<channel>` intentionally contains
+nothing but `GrepolisQuickFinder.user.js` and a short generated README —
+it is bootstrapped as an orphan branch on first publish.
+
+### Merging `develop` → `master`
+
+1. Make sure `develop`'s `@version`/`VERSION` no longer carries a
+   `-beta.N` suffix (drop it in the last relevant commit before merging —
+   that's the version `master` will ship as).
+2. Merge normally. The only expected conflict is the single
+   `@version`/`VERSION` line if `master` had also moved since the branches
+   diverged; header/identity never conflicts (see above).
+3. Optionally publish immediately after: `node scripts/publish.mjs stable`.
 
 ## Premium gating & policy compliance (Grepolis marketplace rules)
 

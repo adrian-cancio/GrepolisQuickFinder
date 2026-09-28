@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.11.0
+// @version      2.12.0-beta.1
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market. (Privacy policy: https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md)
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
 // @match        http://*.grepolis.com/game/*
-// @updateURL    https://raw.githubusercontent.com/adrian-cancio/GrepolisQuickFinder/master/GrepolisQuickFinder.user.js
-// @downloadURL  https://raw.githubusercontent.com/adrian-cancio/GrepolisQuickFinder/master/GrepolisQuickFinder.user.js
+// @updateURL    https://raw.githubusercontent.com/adrian-cancio/GrepolisQuickFinder/release/stable/GrepolisQuickFinder.user.js
+// @downloadURL  https://raw.githubusercontent.com/adrian-cancio/GrepolisQuickFinder/release/stable/GrepolisQuickFinder.user.js
 // @homepageURL  https://github.com/adrian-cancio/GrepolisQuickFinder
 // @supportURL   https://github.com/adrian-cancio/GrepolisQuickFinder/issues
 // @icon         https://www.grepolis.com/favicon.ico
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.11.0';
+    const VERSION = '2.12.0-beta.1';
 
     /*
      * ============================================================
@@ -51,6 +51,7 @@
         CACHE_TTL: 6 * 60 * 60 * 1000, // reuse world data for at most this long
         GHOST_MIN_POINTS: 0,
         HIERARCHY_MAX_DEPTH: 2, // alliance->player->town or island->town: at most 2 pushes
+        UPDATE_CHECK_INTERVAL_MS: 12 * 60 * 60 * 1000, // throttle the background update check
     };
 
     /*
@@ -84,6 +85,144 @@
     };
 
     let settings = { ...SETTINGS_DEFAULTS };
+
+    /*
+     * ============================================================
+     * UPDATE CHECK
+     * ============================================================
+     *
+     * Compares VERSION against the @version header of whatever file
+     * GM_info.script.downloadURL points to (the channel this install
+     * actually came from — Stable or Beta, whichever @updateURL the
+     * user installed), so the checker never has to hardcode which
+     * branch/channel is running. Throttled to run at most once per
+     * UPDATE_CHECK_INTERVAL_MS via localStorage, and entirely silent
+     * on failure: a network hiccup here must never affect the rest
+     * of the script. See PRIVACY.md for what this request exposes.
+     */
+
+    const UPDATE_CHECK_KEY = 'qf:updateCheck';
+
+    /*
+     * Compares two "MAJOR.MINOR.PATCH[-beta.N]" version strings.
+     * Returns >0 if a > b, <0 if a < b, 0 if equal. A clean release
+     * always outranks any prerelease of the same MAJOR.MINOR.PATCH
+     * (e.g. 2.12.0 > 2.12.0-beta.3); between two prereleases, the
+     * -beta.N suffix is compared numerically.
+     */
+    function compareVersions(a, b) {
+        const parse = (v) => {
+            const match = String(v || '').trim().match(/^(\d+)\.(\d+)\.(\d+)(?:-beta\.(\d+))?/);
+            if (!match) return null;
+            return {
+                major: Number(match[1]),
+                minor: Number(match[2]),
+                patch: Number(match[3]),
+                beta: match[4] === undefined ? null : Number(match[4]),
+            };
+        };
+        const pa = parse(a);
+        const pb = parse(b);
+        if (!pa || !pb) return 0;
+
+        if (pa.major !== pb.major) return pa.major - pb.major;
+        if (pa.minor !== pb.minor) return pa.minor - pb.minor;
+        if (pa.patch !== pb.patch) return pa.patch - pb.patch;
+        if (pa.beta === pb.beta) return 0;
+        if (pa.beta === null) return 1; // clean release beats any prerelease
+        if (pb.beta === null) return -1;
+        return pa.beta - pb.beta;
+    }
+
+    /*
+     * Returns the URL this install should be checked against, derived
+     * from GM_info (never hardcoded): whichever @downloadURL/@updateURL
+     * the user's userscript manager installed this script from. Falls
+     * back to null (checker disabled) when GM_info isn't available,
+     * e.g. a manual dev injection without a real userscript manager.
+     */
+    function getUpdateCheckUrl() {
+        try {
+            const info = typeof GM_info !== 'undefined' ? GM_info : (typeof unsafeWindow !== 'undefined' ? unsafeWindow.GM_info : null);
+            const script = info && info.script;
+            return (script && (script.downloadURL || script.updateURL)) || null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function loadUpdateCheckState() {
+        try {
+            const raw = localStorage.getItem(UPDATE_CHECK_KEY);
+            if (!raw) return { lastCheckedAt: 0, remoteVersion: null };
+            const parsed = JSON.parse(raw);
+            return {
+                lastCheckedAt: Number(parsed && parsed.lastCheckedAt) || 0,
+                remoteVersion: (parsed && parsed.remoteVersion) || null,
+            };
+        } catch (_) {
+            return { lastCheckedAt: 0, remoteVersion: null };
+        }
+    }
+
+    function saveUpdateCheckState(update) {
+        try {
+            const current = loadUpdateCheckState();
+            localStorage.setItem(UPDATE_CHECK_KEY, JSON.stringify({ ...current, ...update }));
+        } catch (_) {
+            // Best-effort: a failed write here just means we re-check sooner.
+        }
+    }
+
+    /*
+     * Fetches the raw .user.js text from `url` and extracts its
+     * @version header value. Returns null on any failure (network
+     * error, timeout, missing header) — callers treat that as "no
+     * update info available" rather than an error to surface.
+     */
+    function fetchRemoteVersion(url) {
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timeoutId = controller ? setTimeout(() => controller.abort(), 8000) : null;
+
+        return fetch(url, { cache: 'no-store', signal: controller ? controller.signal : undefined })
+            .then((response) => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.text();
+            })
+            .then((text) => {
+                const match = text.match(/@version\s+([^\s]+)/);
+                return match ? match[1] : null;
+            })
+            .catch(() => null)
+            .finally(() => {
+                if (timeoutId) clearTimeout(timeoutId);
+            });
+    }
+
+    /*
+     * Runs the update check (throttled unless force=true) and updates
+     * state.updateAvailable with the remote version string, or null
+     * if the current install is already up to date / the check could
+     * not run. Never throws; safe to call fire-and-forget.
+     */
+    function checkForUpdates(options) {
+        const force = Boolean(options && options.force);
+        const url = getUpdateCheckUrl();
+        if (!url) return Promise.resolve(null);
+
+        const saved = loadUpdateCheckState();
+        const age = Date.now() - saved.lastCheckedAt;
+        if (!force && age < CONFIG.UPDATE_CHECK_INTERVAL_MS) {
+            state.updateAvailable = compareVersions(saved.remoteVersion, VERSION) > 0 ? saved.remoteVersion : null;
+            return Promise.resolve(state.updateAvailable);
+        }
+
+        return fetchRemoteVersion(url).then((remoteVersion) => {
+            saveUpdateCheckState({ lastCheckedAt: Date.now(), remoteVersion });
+            state.updateAvailable = remoteVersion && compareVersions(remoteVersion, VERSION) > 0 ? remoteVersion : null;
+            return state.updateAvailable;
+        });
+    }
 
     /*
      * ============================================================
@@ -253,6 +392,10 @@
             shortcutsRenameSaved: 'Rename selected saved search',
             hierarchyDrillTooltip: 'View details (→)',
             shortcutsHierarchyNav: '← → drill in/out',
+            updateAvailableToast: 'A new version ({version}) is available.',
+            updateAvailableTooltip: 'New version {version} available — click to download',
+            settingsCheckUpdates: 'Check for updates',
+            updateUpToDate: 'You already have the latest version',
         },
         es: {
             searchPlaceholder: 'Buscar jugadores, alianzas o ciudades...',
@@ -375,6 +518,10 @@
             shortcutsRenameSaved: 'Renombrar la búsqueda guardada seleccionada',
             hierarchyDrillTooltip: 'Ver detalles (→)',
             shortcutsHierarchyNav: '← → entrar/salir',
+            updateAvailableToast: 'Hay una nueva versión disponible ({version}).',
+            updateAvailableTooltip: 'Nueva versión {version} disponible — haz clic para descargar',
+            settingsCheckUpdates: 'Buscar actualizaciones',
+            updateUpToDate: 'Ya tienes la última versión',
         },
         de: {
             searchPlaceholder: 'Spieler, Allianzen oder St\u00e4dte suchen...',
@@ -497,6 +644,10 @@
             shortcutsRenameSaved: 'Ausgewählte gespeicherte Suche umbenennen',
             hierarchyDrillTooltip: 'Details anzeigen (→)',
             shortcutsHierarchyNav: '← → rein/raus',
+            updateAvailableToast: 'Eine neue Version ({version}) ist verfügbar.',
+            updateAvailableTooltip: 'Neue Version {version} verfügbar — klicken zum Herunterladen',
+            settingsCheckUpdates: 'Nach Updates suchen',
+            updateUpToDate: 'Du hast bereits die neueste Version',
         },
         fr: {
             searchPlaceholder: 'Rechercher des joueurs, alliances ou villes...',
@@ -619,6 +770,10 @@
             shortcutsRenameSaved: 'Renommer la recherche enregistrée sélectionnée',
             hierarchyDrillTooltip: 'Voir les détails (→)',
             shortcutsHierarchyNav: '← → entrer/sortir',
+            updateAvailableToast: 'Une nouvelle version ({version}) est disponible.',
+            updateAvailableTooltip: 'Nouvelle version {version} disponible — cliquez pour télécharger',
+            settingsCheckUpdates: 'Vérifier les mises à jour',
+            updateUpToDate: 'Vous avez déjà la dernière version',
         },
         it: {
             searchPlaceholder: 'Cerca giocatori, alleanze o citt\u00e0...',
@@ -741,6 +896,10 @@
             shortcutsRenameSaved: 'Rinomina la ricerca salvata selezionata',
             hierarchyDrillTooltip: 'Vedi dettagli (→)',
             shortcutsHierarchyNav: '← → entra/esci',
+            updateAvailableToast: 'È disponibile una nuova versione ({version}).',
+            updateAvailableTooltip: 'Nuova versione {version} disponibile — clicca per scaricare',
+            settingsCheckUpdates: 'Controlla aggiornamenti',
+            updateUpToDate: 'Hai già l’ultima versione',
         },
         nl: {
             searchPlaceholder: 'Zoek spelers, allianties of steden...',
@@ -863,6 +1022,10 @@
             shortcutsRenameSaved: 'Geselecteerde opgeslagen zoekopdracht hernoemen',
             hierarchyDrillTooltip: 'Details bekijken (→)',
             shortcutsHierarchyNav: '← → in/uit',
+            updateAvailableToast: 'Er is een nieuwe versie ({version}) beschikbaar.',
+            updateAvailableTooltip: 'Nieuwe versie {version} beschikbaar — klik om te downloaden',
+            settingsCheckUpdates: 'Controleren op updates',
+            updateUpToDate: 'Je hebt al de laatste versie',
         },
         pl: {
             searchPlaceholder: 'Szukaj graczy, sojuszy lub miast...',
@@ -985,6 +1148,10 @@
             shortcutsRenameSaved: 'Zmień nazwę wybranego zapisanego wyszukiwania',
             hierarchyDrillTooltip: 'Zobacz szczegóły (→)',
             shortcutsHierarchyNav: '← → wejdź/wyjdź',
+            updateAvailableToast: 'Dostępna jest nowa wersja ({version}).',
+            updateAvailableTooltip: 'Dostępna nowa wersja {version} — kliknij, aby pobrać',
+            settingsCheckUpdates: 'Sprawdź aktualizacje',
+            updateUpToDate: 'Masz już najnowszą wersję',
         },
         pt: {
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
@@ -1107,6 +1274,10 @@
             shortcutsRenameSaved: 'Renomear a pesquisa guardada selecionada',
             hierarchyDrillTooltip: 'Ver detalhes (→)',
             shortcutsHierarchyNav: '← → entrar/sair',
+            updateAvailableToast: 'Está disponível uma nova versão ({version}).',
+            updateAvailableTooltip: 'Nova versão {version} disponível — clique para descarregar',
+            settingsCheckUpdates: 'Procurar atualizações',
+            updateUpToDate: 'Já tem a versão mais recente',
         },
         br: {
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
@@ -1229,6 +1400,10 @@
             shortcutsRenameSaved: 'Renomear a pesquisa salva selecionada',
             hierarchyDrillTooltip: 'Ver detalhes (→)',
             shortcutsHierarchyNav: '← → entrar/sair',
+            updateAvailableToast: 'Uma nova versão ({version}) está disponível.',
+            updateAvailableTooltip: 'Nova versão {version} disponível — clique para baixar',
+            settingsCheckUpdates: 'Verificar atualizações',
+            updateUpToDate: 'Você já tem a versão mais recente',
         },
         tr: {
             searchPlaceholder: 'Oyuncu, ittifak veya \u015fehir ara...',
@@ -1351,6 +1526,10 @@
             shortcutsRenameSaved: 'Seçili kayıtlı aramayı yeniden adlandır',
             hierarchyDrillTooltip: 'Ayrıntıları görüntüle (→)',
             shortcutsHierarchyNav: '← → gir/çık',
+            updateAvailableToast: 'Yeni bir sürüm ({version}) mevcut.',
+            updateAvailableTooltip: 'Yeni sürüm {version} mevcut — indirmek için tıklayın',
+            settingsCheckUpdates: 'Güncellemeleri denetle',
+            updateUpToDate: 'Zaten en son sürüme sahipsiniz',
         },
         ru: {
             searchPlaceholder: '\u041f\u043e\u0438\u0441\u043a \u0438\u0433\u0440\u043e\u043a\u043e\u0432, \u0430\u043b\u044c\u044f\u043d\u0441\u043e\u0432 \u0438\u043b\u0438 \u0433\u043e\u0440\u043e\u0434\u043e\u0432...',
@@ -1473,6 +1652,10 @@
             shortcutsRenameSaved: 'Переименовать выбранный сохранённый поиск',
             hierarchyDrillTooltip: 'Подробнее (→)',
             shortcutsHierarchyNav: '← → войти/выйти',
+            updateAvailableToast: 'Доступна новая версия ({version}).',
+            updateAvailableTooltip: 'Доступна новая версия {version} — нажмите, чтобы скачать',
+            settingsCheckUpdates: 'Проверить обновления',
+            updateUpToDate: 'У вас уже установлена последняя версия',
         },
         el: {
             searchPlaceholder: '\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03c0\u03b1\u03b9\u03ba\u03c4\u03ce\u03bd, \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03b9\u03ce\u03bd \u03ae \u03c0\u03cc\u03bb\u03b5\u03c9\u03bd...',
@@ -1595,6 +1778,10 @@
             shortcutsRenameSaved: 'Μετονομασία επιλεγμένης αποθηκευμένης αναζήτησης',
             hierarchyDrillTooltip: 'Προβολή λεπτομερειών (→)',
             shortcutsHierarchyNav: '← → είσοδος/έξοδος',
+            updateAvailableToast: 'Διατίθεται νέα έκδοση ({version}).',
+            updateAvailableTooltip: 'Διαθέσιμη νέα έκδοση {version} — κάντε κλικ για λήψη',
+            settingsCheckUpdates: 'Έλεγχος για ενημερώσεις',
+            updateUpToDate: 'Έχετε ήδη την πιο πρόσφατη έκδοση',
         },
         hu: {
             searchPlaceholder: 'J\u00e1t\u00e9kosok, sz\u00f6vets\u00e9gek vagy v\u00e1rosok keres\u00e9se...',
@@ -1717,6 +1904,10 @@
             shortcutsRenameSaved: 'Kijelölt mentett keresés átnevezése',
             hierarchyDrillTooltip: 'Részletek megtekintése (→)',
             shortcutsHierarchyNav: '← → be/ki',
+            updateAvailableToast: 'Elérhető egy új verzió ({version}).',
+            updateAvailableTooltip: 'Új verzió elérhető: {version} — kattints a letöltéshez',
+            settingsCheckUpdates: 'Frissítések keresése',
+            updateUpToDate: 'Már a legújabb verziót használod',
         },
         ro: {
             searchPlaceholder: 'Caut\u0103 juc\u0103tori, alian\u021be sau ora\u0219e...',
@@ -1839,6 +2030,10 @@
             shortcutsRenameSaved: 'Redenumește căutarea salvată selectată',
             hierarchyDrillTooltip: 'Vezi detalii (→)',
             shortcutsHierarchyNav: '← → intră/ieși',
+            updateAvailableToast: 'Este disponibilă o versiune nouă ({version}).',
+            updateAvailableTooltip: 'Versiune nouă {version} disponibilă — clic pentru descărcare',
+            settingsCheckUpdates: 'Caută actualizări',
+            updateUpToDate: 'Ai deja cea mai recentă versiune',
         },
         cs: {
             searchPlaceholder: 'Hledat hr\u00e1\u010de, aliance nebo m\u011bsta...',
@@ -1961,6 +2156,10 @@
             shortcutsRenameSaved: 'Přejmenovat vybrané uložené hledání',
             hierarchyDrillTooltip: 'Zobrazit podrobnosti (→)',
             shortcutsHierarchyNav: '← → vstoupit/opustit',
+            updateAvailableToast: 'Je k dispozici nová verze ({version}).',
+            updateAvailableTooltip: 'K dispozici je nová verze {version} — klikněte pro stažení',
+            settingsCheckUpdates: 'Zkontrolovat aktualizace',
+            updateUpToDate: 'Již máte nejnovější verzi',
         },
         sk: {
             searchPlaceholder: 'H\u013ead\u0165 hr\u00e1\u010dov, alianciu alebo mest\u00e1...',
@@ -2083,6 +2282,10 @@
             shortcutsRenameSaved: 'Premenovať vybrané uložené vyhľadávanie',
             hierarchyDrillTooltip: 'Zobraziť podrobnosti (→)',
             shortcutsHierarchyNav: '← → vstúpiť/opustiť',
+            updateAvailableToast: 'Je k dispozícii nová verzia ({version}).',
+            updateAvailableTooltip: 'K dispozícii je nová verzia {version} — kliknite pre stiahnutie',
+            settingsCheckUpdates: 'Skontrolovať aktualizácie',
+            updateUpToDate: 'Už máte najnovšiu verziu',
         },
     };
 
@@ -2279,6 +2482,10 @@
         // 'list' | 'detail': which column currently owns ArrowUp/ArrowDown/
         // Enter. Reset to 'list' whenever the stack empties.
         focusPane: 'list',
+        // Remote @version string when checkForUpdates() finds a newer
+        // build available for this install's channel, else null. Drives
+        // the footer version badge and the one-time-per-version toast.
+        updateAvailable: null,
     };
 
     /*
@@ -4527,7 +4734,7 @@
                     </div>
                     <div id="qf-footer-meta">
                         <span id="qf-status"></span>
-                        <span id="qf-version">v${VERSION}</span>
+                        <button type="button" id="qf-version">v${VERSION}</button>
                     </div>
                 </div>
             </div>
@@ -4583,6 +4790,14 @@
         overlay.querySelector('#qf-footer-help').addEventListener('click', (event) => {
             event.preventDefault();
             toggleHelp();
+        });
+
+        overlay.querySelector('#qf-version').addEventListener('click', (event) => {
+            event.preventDefault();
+            if (state.updateAvailable) {
+                const url = getUpdateCheckUrl();
+                if (url) window.open(url, '_blank', 'noopener');
+            }
         });
     }
 
@@ -4831,6 +5046,15 @@
         }
         status.textContent = text;
         status.classList.toggle('qf-status-error', Boolean(state.loadError));
+
+        const versionBtn = document.getElementById('qf-version');
+        if (versionBtn) {
+            const hasUpdate = Boolean(state.updateAvailable);
+            versionBtn.classList.toggle('qf-version-update-available', hasUpdate);
+            versionBtn.title = hasUpdate
+                ? translate('updateAvailableTooltip', { version: state.updateAvailable })
+                : '';
+        }
     }
 
     const HISTORY_SECTION_TITLE_KEYS = {
@@ -5071,6 +5295,7 @@
                 ${numberField('qf-set-near-radius', 'nearMaxRadius', 'settingsNearRadius')}
                 ${numberField('qf-set-ghost-min', 'ghostMinPoints', 'settingsGhostMin')}
                 <div class="qf-settings-actions">
+                    <button type="button" id="qf-settings-check-updates" class="qf-settings-btn qf-settings-btn-secondary">${escapeHTML(translate('settingsCheckUpdates'))}</button>
                     <button type="button" id="qf-settings-reset" class="qf-settings-btn qf-settings-btn-secondary">${escapeHTML(translate('settingsReset'))}</button>
                     <button type="button" id="qf-settings-save" class="qf-settings-btn qf-settings-btn-primary">${escapeHTML(translate('settingsSave'))}</button>
                 </div>
@@ -5127,6 +5352,20 @@
             // input the user typed.
             el.addEventListener('blur', () => render());
         });
+
+        const checkUpdatesBtn = container.querySelector('#qf-settings-check-updates');
+        if (checkUpdatesBtn) {
+            checkUpdatesBtn.addEventListener('click', () => {
+                checkUpdatesBtn.disabled = true;
+                checkForUpdates({ force: true }).then((remoteVersion) => {
+                    checkUpdatesBtn.disabled = false;
+                    renderFooter();
+                    showToast(remoteVersion
+                        ? translate('updateAvailableToast', { version: remoteVersion })
+                        : translate('updateUpToDate'));
+                });
+            });
+        }
 
         const resetBtn = container.querySelector('#qf-settings-reset');
         if (resetBtn) {
@@ -6866,8 +7105,29 @@
         }
 
         #qf-version {
+            padding: 0;
+            border: 0;
+            background: transparent;
             color: rgba(255, 255, 255, .14);
+            font: inherit;
             font-size: 9px;
+            cursor: default;
+        }
+
+        #qf-version.qf-version-update-available {
+            color: #e6bd6c;
+            font-weight: 700;
+            cursor: pointer;
+            animation: qf-version-pulse .6s ease 2;
+        }
+
+        #qf-version.qf-version-update-available:hover {
+            color: #d7a33f;
+        }
+
+        @keyframes qf-version-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
         }
 
         .qf-help {
@@ -7046,12 +7306,36 @@
      * ============================================================
      */
 
+    /*
+     * Runs the background update check once on startup and, if a
+     * newer version is found, shows a one-time-per-version toast (a
+     * sessionStorage flag prevents repeating it on every page load
+     * within the same tab session) and refreshes the footer badge.
+     * Fire-and-forget: never delays or blocks the rest of init().
+     */
+    function runStartupUpdateCheck() {
+        checkForUpdates().then((remoteVersion) => {
+            renderFooter();
+            if (!remoteVersion) return;
+
+            const toastFlagKey = `qf:updateToastShown:${remoteVersion}`;
+            try {
+                if (sessionStorage.getItem(toastFlagKey)) return;
+                sessionStorage.setItem(toastFlagKey, '1');
+            } catch (_) {
+                // Storage unavailable: fall through and show the toast anyway.
+            }
+            showToast(translate('updateAvailableToast', { version: remoteVersion }));
+        });
+    }
+
     function init() {
         syncFavorites();
         createUI();
         injectMainMenuItem();
         setInterval(injectMainMenuItem, 1000);
         loadAll();
+        runStartupUpdateCheck();
 
         console.info(`%c[Grepolis Quick Finder ${VERSION}] loaded`, 'color:#d6a342;font-weight:bold');
         console.info(`[QF] Detected world: ${WORLD} (market: ${MARKET})`);
