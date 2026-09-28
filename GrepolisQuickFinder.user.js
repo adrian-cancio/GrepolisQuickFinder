@@ -11,7 +11,7 @@
 // @homepageURL  https://github.com/adrian-cancio/GrepolisQuickFinder
 // @supportURL   https://github.com/adrian-cancio/GrepolisQuickFinder/issues
 // @icon         https://www.grepolis.com/favicon.ico
-// Privacy policy: https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md
+// @privacyPolicy https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md
 // @grant        unsafeWindow
 // @run-at       document-idle
 // ==/UserScript==
