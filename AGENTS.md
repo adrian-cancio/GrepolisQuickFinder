@@ -104,6 +104,13 @@ backdoor. To verify changes:
    but pressing `→` should open the pane showing the `premiumRequired`
    message instead of the member/town list. Also test an `Island → Town`
    chain via a coordinate search that resolves to a multi-town island.
+9. To test that closing preserves state: with a detail pane open (from
+   step 8), close the palette both ways — pressing `Ctrl+Shift+F` again,
+   and pressing `Enter` on a row so it navigates away and closes on its
+   own — then reopen with `Ctrl+Shift+F` (or the menu button) each time.
+   The palette must reopen with the exact same query, split window, and
+   breadcrumb/rows still showing, instead of resetting to the empty-query
+   history view.
 
 ## Premium gating & policy compliance (Grepolis marketplace rules)
 

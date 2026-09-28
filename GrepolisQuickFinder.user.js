@@ -5780,7 +5780,13 @@
         createUI();
 
         state.open = true;
-        resetHierarchy();
+        // Deliberately NOT resetHierarchy() here: closing the palette
+        // (Enter on a result, Esc, Ctrl+Shift+F, or the menu button)
+        // never touches state.hierarchyStack/focusPane, so reopening
+        // restores whatever list/detail-pane view was showing before,
+        // instead of always snapping back to the flat list. A fresh
+        // search (performSearch) still resets it, since a new query
+        // invalidates the old pane's rows.
 
         const input = document.getElementById('qf-input');
 
@@ -5823,6 +5829,13 @@
         input.focus();
     }
 
+    /*
+     * Only hides the overlay: state.query/results/hierarchyStack/
+     * focusPane are deliberately left untouched, so the next open()
+     * (hotkey, menu button, or after Enter navigated away) restores
+     * the exact same list/detail-pane view instead of resetting to
+     * the empty-query history screen.
+     */
     function close() {
         state.open = false;
 
