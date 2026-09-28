@@ -2,7 +2,7 @@
 // @name         Grepolis Quick Finder
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
 // @version      2.9.0
-// @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market.
+// @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market. (Privacy policy: https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md)
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
 // @match        http://*.grepolis.com/game/*
@@ -11,7 +11,6 @@
 // @homepageURL  https://github.com/adrian-cancio/GrepolisQuickFinder
 // @supportURL   https://github.com/adrian-cancio/GrepolisQuickFinder/issues
 // @icon         https://www.grepolis.com/favicon.ico
-// @privacyPolicy https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md
 // @grant        unsafeWindow
 // @run-at       document-idle
 // ==/UserScript==
