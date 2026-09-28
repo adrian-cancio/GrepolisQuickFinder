@@ -127,6 +127,28 @@ backdoor. To verify changes:
     reports the new version again without re-showing the toast a second
     time in the same tab session. Clear `qf:updateCheck` from
     `localStorage` between runs to bypass the throttle.
+11. To test conquest history (`/data/conquers.txt`, opt-in): open
+    Settings, enable "conquest history", and confirm the console logs
+    `[QF] Conquest history loaded: N events across M towns.` once the
+    background fetch finishes (this file is several MB, give it a
+    moment on a busy world). Run `>history <a town or player name>`
+    and confirm it lists that single entity's own timeline (dates,
+    from → to, points) — this is ungated even without the Curator
+    stub, since it's a single-entity lookup, not an aggregate. Run
+    `>history` with no args (shows the usage hint) and with the
+    setting disabled (shows the "enable it in Settings" message
+    instead of silently failing). Search a town/coordinate that has
+    changed hands in the last 3 days and confirm its row shows a
+    "conquered Nd ago" hint in a muted red tone; search a long-held
+    ghost town and confirm it shows "last activity Nd ago" instead
+    (ghost towns have no "abandoned" event in conquers.txt, only the
+    last real conquest — the wording must reflect that, not claim the
+    town has been a ghost for that long). Also confirm player/alliance
+    rows now show a `#rank` prefix (from the existing players.txt/
+    alliances.txt data, always available regardless of this setting),
+    and that an `>island`/`>near`/coordinate island row shows
+    `current/capacity` towns (e.g. `14/20 towns`) instead of just the
+    current count.
 
 ## Release process
 
@@ -216,11 +238,15 @@ these three constraints in mind for every change:
    the `›` chevron itself is always shown (discoverability, same as
    `>ghost`/`>island` always appearing in `>help`), but drilling in without
    Curator active fills the pane with `premiumRequiredRows()` instead of
-   the actual children. **Features that resolve to exactly one item are
+   the actual children.    **Features that resolve to exactly one item are
    exempt** (single player/alliance/town lookup by name, a single-town
    coordinate, `>goto`, `>dist` between two given coordinates) — those
    aren't overviews, they're direct lookups of public per-entity data
-   from `/data/*.txt`, same as clicking a name in-game.
+   from `/data/*.txt`, same as clicking a name in-game. `>history` is
+   also exempt on the same grounds: it shows one town's or one
+   player's own conquest timeline (sourced from `/data/conquers.txt`,
+   itself a public same-origin dump), never a cross-entity listing of
+   *other* players'/towns' history.
    When adding a new command or drill-down, ask: *"does this list/aggregate
    more than one town/city in a single result?"* — if yes, gate it the same
    way; if no (a single exact match, a single coordinate, a distance between

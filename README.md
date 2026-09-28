@@ -22,11 +22,13 @@ and coordinates, with real in-game navigation (no new tabs).
   - `>island <x>:<y>` — List every town on an island. **Requires the Administrator advisor (Premium).**
   - `>near [x:y] [radius]` — List islands (and their towns) within a radius of a coordinate or your active city. **Requires the Administrator advisor (Premium).**
   - `>ocean <M##> [alliance]` — Snapshot of an ocean, optionally filtered to one alliance's towns in it. **Requires the Administrator advisor (Premium).**
+  - `>history <name|x:y>` — Conquest/colonization timeline for a single town, player, or coordinate, sourced from the game's own `/data/conquers.txt`. Requires enabling "conquest history" in Settings (opt-in, since the file is several MB). Not Premium-gated: it's a single entity's own public history, same as any other direct lookup.
   - `>settings` — Open the settings panel.
   - `>help` — Display command and shortcut documentation.
 - **Help overlay**: Type `?` anytime in the search input, or click the "help" footer button, to toggle the shortcut and command cheat sheet (also lists the palette's own open/close shortcut).
 - **Settings panel**: Click the gear icon in the search bar, or type `>settings`, to customize the language override, keyboard shortcut, results-per-page/command result caps, world data cache duration, and the default radius/points used by `>near` and `>ghost`. Settings are stored globally (shared across every world) and apply instantly, no reload required.
 - **Manual refresh**: Press `Ctrl+R`, or click the "refresh" footer button, to force-refresh world data from game servers.
+- **Conquest history (opt-in)**: Enable "conquest history" in Settings to download `/data/conquers.txt` (the game's own real conquest log, no client-side tracking needed) and unlock `>history`, a "last activity"/"conquered Nd ago" hint on town rows, and player/alliance rank numbers pulled from the existing data dumps.
 - **Automatic localization**: Fully localized across 16 supported languages based on the Grepolis market detected from the world subdomain (e.g. `en37`, `es12`, `de44`, `zz2`), with an optional manual override in Settings.
 - **Update checker**: Checks for a newer version on your installed channel (Stable or Beta, see below) roughly every 12 hours, and on demand via the "Check for updates" button in Settings. A new version shows a one-time toast and highlights the version number in the footer — click it to open the download page.
 
@@ -43,7 +45,7 @@ equivalent multi-town/multi-city views behind the same advisor check
 | Search a single player/alliance/town by name | No                        |
 | Open an exact player/alliance profile        | No                        |
 | Open a single-town coordinate                | No                        |
-| `>goto`, `>dist`                             | No                        |
+| `>goto`, `>dist`, `>history`                  | No                        |
 | Player/alliance town **drill-down** list      | Yes                       |
 | Island **town listing** for a multi-town coordinate | Yes                 |
 | `>ghost`, `>island`, `>near`, `>ocean`         | Yes                       |
@@ -119,7 +121,7 @@ Grepolis worlds are hosted on subdomains shaped like `<market><number>.grepolis.
 - `Home` / `End` — jump to first or last result.
 - `?` (or the "help" footer button) — toggle in-app help overlay (also shown via `>help`).
 - `@p`, `@a`, `@t`, `@i`, `@c` — scope query to players, alliances, towns, islands, or coordinates.
-- `>goto`, `>ghost`, `>dist`, `>island`, `>near`, `>ocean`, `>settings`, `>help` — execute commands.
+- `>goto`, `>ghost`, `>dist`, `>island`, `>near`, `>ocean`, `>history`, `>settings`, `>help` — execute commands.
 - `↑` / `↓` — navigate results.
 - `Enter` — open selected result.
 - `Esc` — close palette.
