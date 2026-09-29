@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder (Beta)
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.13.0-beta.2
+// @version      2.14.0-beta.1
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market. (Privacy policy: https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md)
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.13.0-beta.2';
+    const VERSION = '2.14.0-beta.1';
 
     /*
      * ============================================================
@@ -37,6 +37,9 @@
         BBCODE_KEY: 'b',          // Ctrl+<BBCODE_KEY> inside the palette: copy BBCode and close
         SAVE_SEARCH_KEY: 'd',     // Ctrl+<SAVE_SEARCH_KEY> inside the palette: save current query
         RENAME_KEY: 'e',          // Ctrl+<RENAME_KEY> inside the palette: rename selected saved search
+        ORIGIN_KEY: 'o',          // Ctrl+<ORIGIN_KEY> inside the palette: pin selected row as distance origin
+        NOTE_KEY: 'n',            // Ctrl+<NOTE_KEY> inside the palette: edit note on selected favorite
+        EXPORT_KEY: 'b',          // Ctrl+Shift+<EXPORT_KEY> inside the palette: bulk-export visible rows as BBCode
         HELP_CHAR: '?',           // typing this alone shows the shortcuts/commands panel
         COMMAND_PREFIX: '>',      // commands: >goto, >ghost, >dist, >island, >near, >ocean, >help
         SEGMENTS: ['all', 'player', 'alliance', 'town', 'island', 'coordinate'],
@@ -312,6 +315,9 @@
             footerTab: 'Tab filter',
             footerFav: 'Ctrl+F favorite',
             footerBBCode: 'Ctrl+B copy BBCode',
+            footerExport: 'Export list',
+            exportEmpty: 'Nothing to export in the current list.',
+            exportCopied: 'Copied {n} BBCode entries',
             bbcodeCopied: 'Copied',
             footerRefresh: 'Ctrl+R refresh',
             footerHelp: '? help',
@@ -329,7 +335,7 @@
             commandHelpTitle: 'Commands',
             commandGotoHelp: '>goto 123:456 \u2014 jump to an island',
             commandGhostHelp: '>ghost [minPts] [near] \u2014 ghost towns by points or distance',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 island distance',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 island distance',
             commandIslandHelp: '>island X:Y \u2014 every town on an island',
             commandNearHelp: '>near [X:Y] [radius] \u2014 islands around a point',
             commandOceanHelp: '>ocean M34 [alliance] \u2014 ocean snapshot',
@@ -339,7 +345,19 @@
             ghostEmpty: 'No ghost towns found.',
             distResult: 'Island distance: {n}',
             distFromActive: 'from your active city',
+            distFromOrigin: 'from the pinned origin',
             distNeedOrigin: 'Give two coordinates, or one if your active city can be detected.',
+            originSet: 'Origin set to {x}:{y}',
+            originSetTooltip: 'Set as distance origin (Ctrl+O)',
+            originCleared: 'Origin cleared',
+            originIndicator: 'Origin {x}:{y}',
+            originIndicatorTooltip: 'Click to clear the pinned origin',
+            shortcutsSetOrigin: 'Set as distance origin',
+            favoriteNoteTooltip: 'Edit note (Ctrl+N)',
+            favoriteNoteTitle: 'Note for {name}',
+            favoriteNoteLabel: 'Note',
+            favoriteNoteSaved: 'Note saved',
+            shortcutsEditNote: 'Edit note on selected favorite',
             distBandSame: 'same island',
             distBandAdjacent: 'adjacent islands',
             distBandRegional: 'regional',
@@ -410,6 +428,17 @@
             recentlyConquered: 'conquered {n}d ago',
             lastActivity: 'last activity {n}d ago',
             commandHistoryHelp: '>history <name|x:y> — conquest history for a town, player or coordinate',
+            commandTravelHelp: '>travel <unit,...> [X:Y] [X:Y] [sirens=N] — troop travel time',
+            commandTopHelp: '>top players|alliances [N] — points ranking',
+            commandVsHelp: '>vs <alliance1> vs <alliance2> — compare two alliances',
+            travelUnknownUnit: 'Unknown unit: {unit}',
+            travelCalcFailed: 'Could not calculate travel time (missing live game data).',
+            travelLimitedBy: 'Limited by: {unit}',
+            travelColonizeShipLimit: 'This exceeds the normal 48h colony ship limit.',
+            travelFlyingNote: 'Flying units can cross islands without a transport ship.',
+            travelNoBonusData: 'City research/building bonuses unavailable — showing base speed only.',
+            travelUsedActiveCity: 'Used your active city\u2019s bonuses (origin isn\u2019t one of your towns).',
+            travelScopeNote: 'Does not include the Olympus Great Temple of Ares bonus or hero effects.',
             historyEmpty: 'No conquest history recorded for this entity.',
             historyNotLoaded: 'Conquest history is still loading...',
             historyDisabled: 'Enable "conquest history" in Settings to use >history.',
@@ -455,6 +484,9 @@
             footerTab: 'Tab filtrar',
             footerFav: 'Ctrl+F favoritos',
             footerBBCode: 'Ctrl+B copiar BBCode',
+            footerExport: 'Exportar lista',
+            exportEmpty: 'Nada que exportar en la lista actual.',
+            exportCopied: 'Copiadas {n} entradas BBCode',
             bbcodeCopied: 'Copiado',
             footerRefresh: 'Ctrl+R recargar',
             footerHelp: '? ayuda',
@@ -472,7 +504,7 @@
             commandHelpTitle: 'Comandos',
             commandGotoHelp: '>goto 123:456 \u2014 saltar a una isla',
             commandGhostHelp: '>ghost [minPts] [near] \u2014 fantasmas por puntos o distancia',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 distancia de islas',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 distancia de islas',
             commandIslandHelp: '>island X:Y \u2014 todas las ciudades de una isla',
             commandNearHelp: '>near [X:Y] [radio] \u2014 islas alrededor de un punto',
             commandOceanHelp: '>ocean M34 [alianza] \u2014 resumen del oc\u00e9ano',
@@ -482,7 +514,19 @@
             ghostEmpty: 'No se encontraron ciudades fantasma.',
             distResult: 'Distancia de islas: {n}',
             distFromActive: 'desde tu ciudad activa',
+            distFromOrigin: 'desde el origen fijado',
             distNeedOrigin: 'Da dos coordenadas, o una si se puede detectar tu ciudad activa.',
+            originSet: 'Origen fijado en {x}:{y}',
+            originSetTooltip: 'Fijar como origen de distancia (Ctrl+O)',
+            originCleared: 'Origen eliminado',
+            originIndicator: 'Origen {x}:{y}',
+            originIndicatorTooltip: 'Haz clic para eliminar el origen fijado',
+            shortcutsSetOrigin: 'Fijar como origen de distancia',
+            favoriteNoteTooltip: 'Editar nota (Ctrl+N)',
+            favoriteNoteTitle: 'Nota para {name}',
+            favoriteNoteLabel: 'Nota',
+            favoriteNoteSaved: 'Nota guardada',
+            shortcutsEditNote: 'Editar nota del favorito seleccionado',
             distBandSame: 'misma isla',
             distBandAdjacent: 'islas adyacentes',
             distBandRegional: 'regional',
@@ -553,6 +597,17 @@
             recentlyConquered: 'conquistada hace {n}d',
             lastActivity: 'última actividad hace {n}d',
             commandHistoryHelp: '>history <nombre|x:y> — historial de conquistas de una ciudad, jugador o coordenada',
+            commandTravelHelp: '>travel <unidad,...> [X:Y] [X:Y] [sirens=N] — tiempo de viaje de tropas',
+            commandTopHelp: '>top players|alliances [N] — ranking por puntos',
+            commandVsHelp: '>vs <alianza1> vs <alianza2> — compara dos alianzas',
+            travelUnknownUnit: 'Unidad desconocida: {unit}',
+            travelCalcFailed: 'No se pudo calcular el tiempo de viaje (faltan datos en vivo del juego).',
+            travelLimitedBy: 'Limitado por: {unit}',
+            travelColonizeShipLimit: 'Esto supera el l\u00edmite normal de 48h del barco de colonizaci\u00f3n.',
+            travelFlyingNote: 'Las unidades voladoras pueden cruzar islas sin barco de transporte.',
+            travelNoBonusData: 'Bonificaciones de investigaci\u00f3n/edificios no disponibles: se muestra solo la velocidad base.',
+            travelUsedActiveCity: 'Se usaron las bonificaciones de tu ciudad activa (el origen no es una de tus ciudades).',
+            travelScopeNote: 'No incluye la bonificaci\u00f3n del Gran Templo de Ares de Olimpo ni efectos de h\u00e9roe.',
             historyEmpty: 'No hay historial de conquistas registrado para esto.',
             historyNotLoaded: 'Cargando historial de conquistas...',
             historyDisabled: 'Activa "historial de conquistas" en Ajustes para usar >history.',
@@ -598,6 +653,9 @@
             footerTab: 'Tab filter',
             footerFav: 'Strg+F Favorit',
             footerBBCode: 'Strg+B BBCode kopieren',
+            footerExport: 'Liste exportieren',
+            exportEmpty: 'Nichts zu exportieren in der aktuellen Liste.',
+            exportCopied: '{n} BBCode-Eintr\u00e4ge kopiert',
             bbcodeCopied: 'Kopiert',
             footerRefresh: 'Strg+R aktualisieren',
             footerHelp: '? Hilfe',
@@ -615,14 +673,26 @@
             commandHelpTitle: 'Befehle',
             commandGotoHelp: '>goto 123:456 \u2014 zu einer Insel springen',
             commandGhostHelp: '>ghost [minPkt] \u2014 Geisterst\u00e4dte auflisten',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 Inselentfernung',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 Inselentfernung',
             commandHelpHint: '>help \u2014 diese Liste zeigen',
             commandUnknown: 'Unbekannter Befehl: {cmd}',
             premiumRequired: 'Erfordert den aktiven Berater Verwalter (Premium).',
             ghostEmpty: 'Keine Geisterst\u00e4dte gefunden.',
             distResult: 'Inselentfernung: {n}',
             distFromActive: 'von deiner aktiven Stadt',
+            distFromOrigin: 'vom festgelegten Ursprung',
             distNeedOrigin: 'Gib zwei Koordinaten an, oder eine, wenn deine aktive Stadt erkannt werden kann.',
+            originSet: 'Ursprung auf {x}:{y} gesetzt',
+            originSetTooltip: 'Als Distanz-Ursprung festlegen (Strg+O)',
+            originCleared: 'Ursprung entfernt',
+            originIndicator: 'Ursprung {x}:{y}',
+            originIndicatorTooltip: 'Klicken, um den festgelegten Ursprung zu entfernen',
+            shortcutsSetOrigin: 'Als Distanz-Ursprung festlegen',
+            favoriteNoteTooltip: 'Notiz bearbeiten (Strg+N)',
+            favoriteNoteTitle: 'Notiz f\u00fcr {name}',
+            favoriteNoteLabel: 'Notiz',
+            favoriteNoteSaved: 'Notiz gespeichert',
+            shortcutsEditNote: 'Notiz des ausgew\u00e4hlten Favoriten bearbeiten',
             scopeHelpTitle: 'Bereiche',
             scopeHelpDesc: '@p Spieler \u00b7 @a Allianzen \u00b7 @t St\u00e4dte \u00b7 @c Koordinaten',
             commandIslandHelp: '>island X:Y \u2014 alle St\u00e4dte einer Insel',
@@ -696,6 +766,17 @@
             recentlyConquered: 'erobert vor {n}T',
             lastActivity: 'letzte Aktivität vor {n}T',
             commandHistoryHelp: '>history <Name|x:y> — Eroberungshistorie einer Stadt, eines Spielers oder einer Koordinate',
+            commandTravelHelp: '>travel <Einheit,...> [X:Y] [X:Y] [sirens=N] — Reisezeit der Truppen',
+            commandTopHelp: '>top players|alliances [N] — Punkte-Rangliste',
+            commandVsHelp: '>vs <Allianz1> vs <Allianz2> — vergleicht zwei Allianzen',
+            travelUnknownUnit: 'Unbekannte Einheit: {unit}',
+            travelCalcFailed: 'Reisezeit konnte nicht berechnet werden (Live-Spieldaten fehlen).',
+            travelLimitedBy: 'Begrenzt durch: {unit}',
+            travelColonizeShipLimit: 'Dies \u00fcberschreitet das normale 48h-Limit des Kolonisationsschiffs.',
+            travelFlyingNote: 'Fliegende Einheiten k\u00f6nnen Inseln ohne Transportschiff \u00fcberqueren.',
+            travelNoBonusData: 'Forschungs-/Geb\u00e4udeboni der Stadt nicht verf\u00fcgbar — es wird nur die Grundgeschwindigkeit angezeigt.',
+            travelUsedActiveCity: 'Boni deiner aktiven Stadt verwendet (Ursprung ist keine deiner St\u00e4dte).',
+            travelScopeNote: 'Enth\u00e4lt nicht den Bonus des Olymp-Gro\u00dftempels des Ares oder Heldeneffekte.',
             historyEmpty: 'Keine Eroberungshistorie für diese Einheit vorhanden.',
             historyNotLoaded: 'Eroberungshistorie wird noch geladen...',
             historyDisabled: 'Aktiviere "Eroberungshistorie" in den Einstellungen, um >history zu nutzen.',
@@ -741,6 +822,9 @@
             footerTab: 'Tab filtrer',
             footerFav: 'Ctrl+F favori',
             footerBBCode: 'Ctrl+B copier le BBCode',
+            footerExport: 'Exporter la liste',
+            exportEmpty: 'Rien \u00e0 exporter dans la liste actuelle.',
+            exportCopied: '{n} entr\u00e9es BBCode copi\u00e9es',
             bbcodeCopied: 'Copi\u00e9',
             footerRefresh: 'Ctrl+R actualiser',
             footerHelp: '? aide',
@@ -758,14 +842,26 @@
             commandHelpTitle: 'Commandes',
             commandGotoHelp: '>goto 123:456 \u2014 aller \u00e0 une \u00eele',
             commandGhostHelp: '>ghost [minPts] \u2014 lister les villes fant\u00f4mes',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 distance d\u2019\u00eeles',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 distance d\u2019\u00eeles',
             commandHelpHint: '>help \u2014 afficher cette liste',
             commandUnknown: 'Commande inconnue : {cmd}',
             premiumRequired: 'Nécessite que le conseiller Administrateur (Premium) soit actif.',
             ghostEmpty: 'Aucune ville fant\u00f4me trouv\u00e9e.',
             distResult: 'Distance d\u2019\u00eeles : {n}',
             distFromActive: 'depuis votre ville active',
+            distFromOrigin: 'depuis l\u2019origine \u00e9pingl\u00e9e',
             distNeedOrigin: 'Donnez deux coordonn\u00e9es, ou une si votre ville active peut \u00eatre d\u00e9tect\u00e9e.',
+            originSet: 'Origine d\u00e9finie sur {x}:{y}',
+            originSetTooltip: 'D\u00e9finir comme origine de distance (Ctrl+O)',
+            originCleared: 'Origine effac\u00e9e',
+            originIndicator: 'Origine {x}:{y}',
+            originIndicatorTooltip: 'Cliquez pour effacer l\u2019origine \u00e9pingl\u00e9e',
+            shortcutsSetOrigin: 'D\u00e9finir comme origine de distance',
+            favoriteNoteTooltip: 'Modifier la note (Ctrl+N)',
+            favoriteNoteTitle: 'Note pour {name}',
+            favoriteNoteLabel: 'Note',
+            favoriteNoteSaved: 'Note enregistr\u00e9e',
+            shortcutsEditNote: 'Modifier la note du favori s\u00e9lectionn\u00e9',
             scopeHelpTitle: 'Port\u00e9es',
             scopeHelpDesc: '@p joueurs \u00b7 @a alliances \u00b7 @t villes \u00b7 @c coordonn\u00e9es',
             commandIslandHelp: '>island X:Y \u2014 toutes les villes d\u2019une \u00eele',
@@ -839,6 +935,17 @@
             recentlyConquered: 'conquise il y a {n}j',
             lastActivity: 'dernière activité il y a {n}j',
             commandHistoryHelp: '>history <nom|x:y> — historique des conquêtes d’une ville, d’un joueur ou d’une coordonnée',
+            commandTravelHelp: '>travel <unit\u00e9,...> [X:Y] [X:Y] [sirens=N] — temps de trajet des troupes',
+            commandTopHelp: '>top players|alliances [N] — classement par points',
+            commandVsHelp: '>vs <alliance1> vs <alliance2> — comparer deux alliances',
+            travelUnknownUnit: 'Unit\u00e9 inconnue\u00a0: {unit}',
+            travelCalcFailed: 'Impossible de calculer le temps de trajet (donn\u00e9es de jeu en direct manquantes).',
+            travelLimitedBy: 'Limit\u00e9 par\u00a0: {unit}',
+            travelColonizeShipLimit: 'Cela d\u00e9passe la limite normale de 48h du bateau de colonisation.',
+            travelFlyingNote: 'Les unit\u00e9s volantes peuvent traverser les \u00eeles sans bateau de transport.',
+            travelNoBonusData: 'Bonus de recherche/b\u00e2timent de la ville indisponibles — affichage de la vitesse de base uniquement.',
+            travelUsedActiveCity: 'Bonus de votre ville active utilis\u00e9s (l\u2019origine n\u2019est pas l\u2019une de vos villes).',
+            travelScopeNote: 'N\u2019inclut pas le bonus du Grand Temple d\u2019Ar\u00e8s de l\u2019Olympe ni les effets de h\u00e9ros.',
             historyEmpty: 'Aucun historique de conquête enregistré pour cette entité.',
             historyNotLoaded: 'Chargement de l’historique des conquêtes...',
             historyDisabled: 'Activez « historique des conquêtes » dans les Paramètres pour utiliser >history.',
@@ -884,6 +991,9 @@
             footerTab: 'Tab filtra',
             footerFav: 'Ctrl+F preferito',
             footerBBCode: 'Ctrl+B copia BBCode',
+            footerExport: 'Esporta lista',
+            exportEmpty: 'Niente da esportare nella lista attuale.',
+            exportCopied: '{n} voci BBCode copiate',
             bbcodeCopied: 'Copiato',
             footerRefresh: 'Ctrl+R aggiorna',
             footerHelp: '? aiuto',
@@ -901,14 +1011,26 @@
             commandHelpTitle: 'Comandi',
             commandGotoHelp: '>goto 123:456 \u2014 vai a un\u2019isola',
             commandGhostHelp: '>ghost [minPts] \u2014 elenca citt\u00e0 fantasma',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 distanza di isole',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 distanza di isole',
             commandHelpHint: '>help \u2014 mostra questo elenco',
             commandUnknown: 'Comando sconosciuto: {cmd}',
             premiumRequired: 'Richiede il consigliere Amministratore (Premium) attivo.',
             ghostEmpty: 'Nessuna citt\u00e0 fantasma trovata.',
             distResult: 'Distanza di isole: {n}',
             distFromActive: 'dalla tua citt\u00e0 attiva',
+            distFromOrigin: 'dall\u2019origine impostata',
             distNeedOrigin: 'Indica due coordinate, o una se la tua citt\u00e0 attiva pu\u00f2 essere rilevata.',
+            originSet: 'Origine impostata su {x}:{y}',
+            originSetTooltip: 'Imposta come origine per la distanza (Ctrl+O)',
+            originCleared: 'Origine rimossa',
+            originIndicator: 'Origine {x}:{y}',
+            originIndicatorTooltip: 'Clicca per rimuovere l\u2019origine impostata',
+            shortcutsSetOrigin: 'Imposta come origine per la distanza',
+            favoriteNoteTooltip: 'Modifica nota (Ctrl+N)',
+            favoriteNoteTitle: 'Nota per {name}',
+            favoriteNoteLabel: 'Nota',
+            favoriteNoteSaved: 'Nota salvata',
+            shortcutsEditNote: 'Modifica la nota del preferito selezionato',
             scopeHelpTitle: 'Ambiti',
             scopeHelpDesc: '@p giocatori \u00b7 @a alleanze \u00b7 @t citt\u00e0 \u00b7 @c coordinate',
             commandIslandHelp: '>island X:Y \u2014 tutte le citt\u00e0 di un\u2019isola',
@@ -982,6 +1104,17 @@
             recentlyConquered: 'conquistata {n}g fa',
             lastActivity: 'ultima attività {n}g fa',
             commandHistoryHelp: '>history <nome|x:y> — cronologia conquiste di una città, giocatore o coordinata',
+            commandTravelHelp: '>travel <unit\u00e0,...> [X:Y] [X:Y] [sirens=N] — tempo di viaggio delle truppe',
+            commandTopHelp: '>top players|alliances [N] — classifica per punti',
+            commandVsHelp: '>vs <alleanza1> vs <alleanza2> — confronta due alleanze',
+            travelUnknownUnit: 'Unit\u00e0 sconosciuta: {unit}',
+            travelCalcFailed: 'Impossibile calcolare il tempo di viaggio (dati di gioco live mancanti).',
+            travelLimitedBy: 'Limitato da: {unit}',
+            travelColonizeShipLimit: 'Questo supera il normale limite di 48h della nave di colonizzazione.',
+            travelFlyingNote: 'Le unit\u00e0 volanti possono attraversare le isole senza nave da trasporto.',
+            travelNoBonusData: 'Bonus di ricerca/edifici della citt\u00e0 non disponibili — viene mostrata solo la velocit\u00e0 base.',
+            travelUsedActiveCity: 'Usati i bonus della tua citt\u00e0 attiva (l\u2019origine non \u00e8 una delle tue citt\u00e0).',
+            travelScopeNote: 'Non include il bonus del Grande Tempio di Ares dell\u2019Olimpo n\u00e9 gli effetti degli eroi.',
             historyEmpty: 'Nessuna cronologia di conquiste registrata per questo elemento.',
             historyNotLoaded: 'Caricamento della cronologia conquiste...',
             historyDisabled: 'Attiva "cronologia conquiste" nelle Impostazioni per usare >history.',
@@ -1027,6 +1160,9 @@
             footerTab: 'Tab filteren',
             footerFav: 'Ctrl+F favoriet',
             footerBBCode: 'Ctrl+B BBCode kopi\u00ebren',
+            footerExport: 'Lijst exporteren',
+            exportEmpty: 'Niets te exporteren in de huidige lijst.',
+            exportCopied: '{n} BBCode-items gekopieerd',
             bbcodeCopied: 'Gekopieerd',
             footerRefresh: 'Ctrl+R verversen',
             footerHelp: '? help',
@@ -1044,14 +1180,26 @@
             commandHelpTitle: 'Opdrachten',
             commandGotoHelp: '>goto 123:456 \u2014 naar een eiland springen',
             commandGhostHelp: '>ghost [minPts] \u2014 spooksteden weergeven',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 eilandafstand',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 eilandafstand',
             commandHelpHint: '>help \u2014 deze lijst tonen',
             commandUnknown: 'Onbekende opdracht: {cmd}',
             premiumRequired: 'Vereist dat de adviseur Beheerder (Premium) actief is.',
             ghostEmpty: 'Geen spooksteden gevonden.',
             distResult: 'Eilandafstand: {n}',
             distFromActive: 'vanaf je actieve stad',
+            distFromOrigin: 'vanaf het vastgezette startpunt',
             distNeedOrigin: 'Geef twee co\u00f6rdinaten, of \u00e9\u00e9n als je actieve stad kan worden gedetecteerd.',
+            originSet: 'Startpunt ingesteld op {x}:{y}',
+            originSetTooltip: 'Instellen als afstandsstartpunt (Ctrl+O)',
+            originCleared: 'Startpunt gewist',
+            originIndicator: 'Startpunt {x}:{y}',
+            originIndicatorTooltip: 'Klik om het vastgezette startpunt te wissen',
+            shortcutsSetOrigin: 'Instellen als afstandsstartpunt',
+            favoriteNoteTooltip: 'Notitie bewerken (Ctrl+N)',
+            favoriteNoteTitle: 'Notitie voor {name}',
+            favoriteNoteLabel: 'Notitie',
+            favoriteNoteSaved: 'Notitie opgeslagen',
+            shortcutsEditNote: 'Notitie van geselecteerde favoriet bewerken',
             scopeHelpTitle: 'Bereiken',
             scopeHelpDesc: '@p spelers \u00b7 @a allianties \u00b7 @t steden \u00b7 @c co\u00f6rdinaten',
             commandIslandHelp: '>island X:Y \u2014 alle steden op een eiland',
@@ -1125,6 +1273,17 @@
             recentlyConquered: '{n}d geleden veroverd',
             lastActivity: 'laatste activiteit {n}d geleden',
             commandHistoryHelp: '>history <naam|x:y> — veroveringsgeschiedenis van een stad, speler of coördinaat',
+            commandTravelHelp: '>travel <eenheid,...> [X:Y] [X:Y] [sirens=N] — reistijd van troepen',
+            commandTopHelp: '>top players|alliances [N] — puntenranglijst',
+            commandVsHelp: '>vs <alliantie1> vs <alliantie2> — vergelijk twee allianties',
+            travelUnknownUnit: 'Onbekende eenheid: {unit}',
+            travelCalcFailed: 'Kon reistijd niet berekenen (live spelgegevens ontbreken).',
+            travelLimitedBy: 'Beperkt door: {unit}',
+            travelColonizeShipLimit: 'Dit overschrijdt de normale 48u-limiet van het kolonisatieschip.',
+            travelFlyingNote: 'Vliegende eenheden kunnen eilanden oversteken zonder transportschip.',
+            travelNoBonusData: 'Onderzoeks-/gebouwbonussen van de stad niet beschikbaar — alleen basissnelheid getoond.',
+            travelUsedActiveCity: 'Bonussen van je actieve stad gebruikt (oorsprong is niet een van je steden).',
+            travelScopeNote: 'Bevat niet de bonus van de Olympus Grote Tempel van Ares of heldeneffecten.',
             historyEmpty: 'Geen veroveringsgeschiedenis geregistreerd voor dit item.',
             historyNotLoaded: 'Veroveringsgeschiedenis wordt geladen...',
             historyDisabled: 'Schakel "veroveringsgeschiedenis" in bij Instellingen om >history te gebruiken.',
@@ -1170,6 +1329,9 @@
             footerTab: 'Tab filtr',
             footerFav: 'Ctrl+F ulubione',
             footerBBCode: 'Ctrl+B kopiuj BBCode',
+            footerExport: 'Eksportuj list\u0119',
+            exportEmpty: 'Nic do wyeksportowania na bie\u017c\u0105cej li\u015bcie.',
+            exportCopied: 'Skopiowano {n} wpis\u00f3w BBCode',
             bbcodeCopied: 'Skopiowano',
             footerRefresh: 'Ctrl+R od\u015bwie\u017c',
             footerHelp: '? pomoc',
@@ -1187,14 +1349,26 @@
             commandHelpTitle: 'Polecenia',
             commandGotoHelp: '>goto 123:456 \u2014 przeskocz na wysp\u0119',
             commandGhostHelp: '>ghost [minPts] \u2014 lista miast-widm',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 odleg\u0142o\u015b\u0107 wysp',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 odleg\u0142o\u015b\u0107 wysp',
             commandHelpHint: '>help \u2014 poka\u017c t\u0119 list\u0119',
             commandUnknown: 'Nieznane polecenie: {cmd}',
             premiumRequired: 'Wymaga aktywnego doradcy Administrator (Premium).',
             ghostEmpty: 'Nie znaleziono miast-widm.',
             distResult: 'Odleg\u0142o\u015b\u0107 wysp: {n}',
             distFromActive: 'od aktywnego miasta',
+            distFromOrigin: 'od przypi\u0119tego punktu pocz\u0105tkowego',
             distNeedOrigin: 'Podaj dwie wsp\u00f3\u0142rz\u0119dne lub jedn\u0105, je\u015bli mo\u017cna wykry\u0107 twoje aktywne miasto.',
+            originSet: 'Ustawiono punkt pocz\u0105tkowy na {x}:{y}',
+            originSetTooltip: 'Ustaw jako punkt pocz\u0105tkowy odleg\u0142o\u015bci (Ctrl+O)',
+            originCleared: 'Usuni\u0119to punkt pocz\u0105tkowy',
+            originIndicator: 'Punkt pocz\u0105tkowy {x}:{y}',
+            originIndicatorTooltip: 'Kliknij, aby usun\u0105\u0107 przypi\u0119ty punkt pocz\u0105tkowy',
+            shortcutsSetOrigin: 'Ustaw jako punkt pocz\u0105tkowy odleg\u0142o\u015bci',
+            favoriteNoteTooltip: 'Edytuj notatk\u0119 (Ctrl+N)',
+            favoriteNoteTitle: 'Notatka dla {name}',
+            favoriteNoteLabel: 'Notatka',
+            favoriteNoteSaved: 'Notatka zapisana',
+            shortcutsEditNote: 'Edytuj notatk\u0119 wybranego ulubionego',
             scopeHelpTitle: 'Zakresy',
             scopeHelpDesc: '@p gracze \u00b7 @a sojusze \u00b7 @t miasta \u00b7 @c wsp\u00f3\u0142rz\u0119dne',
             commandIslandHelp: '>island X:Y \u2014 wszystkie miasta na wyspie',
@@ -1268,6 +1442,17 @@
             recentlyConquered: 'podbito {n}d temu',
             lastActivity: 'ostatnia aktywność {n}d temu',
             commandHistoryHelp: '>history <nazwa|x:y> — historia podbojów miasta, gracza lub współrzędnej',
+            commandTravelHelp: '>travel <jednostka,...> [X:Y] [X:Y] [sirens=N] — czas podró\u017cy wojsk',
+            commandTopHelp: '>top players|alliances [N] — ranking punktowy',
+            commandVsHelp: '>vs <sojusz1> vs <sojusz2> — por\u00f3wnaj dwa sojusze',
+            travelUnknownUnit: 'Nieznana jednostka: {unit}',
+            travelCalcFailed: 'Nie mo\u017cna obliczy\u0107 czasu podr\u00f3\u017cy (brak danych na \u017cywo z gry).',
+            travelLimitedBy: 'Ograniczone przez: {unit}',
+            travelColonizeShipLimit: 'Przekracza to normalny limit 48h dla statku kolonizacyjnego.',
+            travelFlyingNote: 'Jednostki lataj\u0105ce mog\u0105 przekracza\u0107 wyspy bez statku transportowego.',
+            travelNoBonusData: 'Bonusy bada\u0144/budynk\u00f3w miasta niedost\u0119pne — pokazano tylko podstawow\u0105 pr\u0119dko\u015b\u0107.',
+            travelUsedActiveCity: 'U\u017cyto bonus\u00f3w twojego aktywnego miasta (punkt startowy nie jest jednym z twoich miast).',
+            travelScopeNote: 'Nie uwzgl\u0119dnia bonusu Wielkiej \u015awi\u0105tyni Aresa z Olimpu ani efekt\u00f3w bohater\u00f3w.',
             historyEmpty: 'Brak zarejestrowanej historii podbojów dla tego elementu.',
             historyNotLoaded: 'Trwa wczytywanie historii podbojów...',
             historyDisabled: 'Włącz "historię podbojów" w Ustawieniach, aby korzystać z >history.',
@@ -1313,6 +1498,9 @@
             footerTab: 'Tab filtrar',
             footerFav: 'Ctrl+F favorito',
             footerBBCode: 'Ctrl+B copiar BBCode',
+            footerExport: 'Exportar lista',
+            exportEmpty: 'Nada para exportar na lista atual.',
+            exportCopied: '{n} entradas BBCode copiadas',
             bbcodeCopied: 'Copiado',
             footerRefresh: 'Ctrl+R atualizar',
             footerHelp: '? ajuda',
@@ -1330,14 +1518,26 @@
             shortcutsClearRecent: 'Limpar todo o histórico recente',
             shortcutsHelp: 'mostrar esta ajuda',
             commandGhostHelp: '>ghost [minPts] \u2014 listar cidades fantasma',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 dist\u00e2ncia de ilhas',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 dist\u00e2ncia de ilhas',
             commandHelpHint: '>help \u2014 mostrar esta lista',
             commandUnknown: 'Comando desconhecido: {cmd}',
             premiumRequired: 'Requer o conselheiro Administrador (Premium) ativo.',
             ghostEmpty: 'Nenhuma cidade fantasma encontrada.',
             distResult: 'Dist\u00e2ncia de ilhas: {n}',
             distFromActive: 'da sua cidade ativa',
+            distFromOrigin: 'a partir da origem fixada',
             distNeedOrigin: 'Indique duas coordenadas, ou uma, se a sua cidade ativa puder ser detetada.',
+            originSet: 'Origem definida em {x}:{y}',
+            originSetTooltip: 'Definir como origem de dist\u00e2ncia (Ctrl+O)',
+            originCleared: 'Origem removida',
+            originIndicator: 'Origem {x}:{y}',
+            originIndicatorTooltip: 'Clique para remover a origem fixada',
+            shortcutsSetOrigin: 'Definir como origem de dist\u00e2ncia',
+            favoriteNoteTooltip: 'Editar nota (Ctrl+N)',
+            favoriteNoteTitle: 'Nota para {name}',
+            favoriteNoteLabel: 'Nota',
+            favoriteNoteSaved: 'Nota guardada',
+            shortcutsEditNote: 'Editar a nota do favorito selecionado',
             scopeHelpTitle: '\u00c2mbitos',
             scopeHelpDesc: '@p jogadores \u00b7 @a alian\u00e7as \u00b7 @t cidades \u00b7 @c coordenadas',
             commandIslandHelp: '>island X:Y \u2014 todas as cidades de uma ilha',
@@ -1411,6 +1611,17 @@
             recentlyConquered: 'conquistada há {n}d',
             lastActivity: 'última atividade há {n}d',
             commandHistoryHelp: '>history <nome|x:y> — histórico de conquistas de uma cidade, jogador ou coordenada',
+            commandTravelHelp: '>travel <unidade,...> [X:Y] [X:Y] [sirens=N] — tempo de viagem das tropas',
+            commandTopHelp: '>top players|alliances [N] — ranking por pontos',
+            commandVsHelp: '>vs <alian\u00e7a1> vs <alian\u00e7a2> — compara duas alian\u00e7as',
+            travelUnknownUnit: 'Unidade desconhecida: {unit}',
+            travelCalcFailed: 'N\u00e3o foi poss\u00edvel calcular o tempo de viagem (faltam dados em direto do jogo).',
+            travelLimitedBy: 'Limitado por: {unit}',
+            travelColonizeShipLimit: 'Isto excede o limite normal de 48h do barco de coloniza\u00e7\u00e3o.',
+            travelFlyingNote: 'As unidades voadoras podem atravessar ilhas sem barco de transporte.',
+            travelNoBonusData: 'B\u00f3nus de investiga\u00e7\u00e3o/edif\u00edcios da cidade indispon\u00edveis — a mostrar apenas a velocidade base.',
+            travelUsedActiveCity: 'Foram usados os b\u00f3nus da sua cidade ativa (a origem n\u00e3o \u00e9 uma das suas cidades).',
+            travelScopeNote: 'N\u00e3o inclui o b\u00f3nus do Grande Templo de Ares do Olimpo nem efeitos de her\u00f3i.',
             historyEmpty: 'Sem histórico de conquistas registado para isto.',
             historyNotLoaded: 'A carregar o histórico de conquistas...',
             historyDisabled: 'Ative "histórico de conquistas" nas Definições para usar >history.',
@@ -1456,6 +1667,9 @@
             footerTab: 'Tab filtrar',
             footerFav: 'Ctrl+F favorito',
             footerBBCode: 'Ctrl+B copiar BBCode',
+            footerExport: 'Exportar lista',
+            exportEmpty: 'Nada para exportar na lista atual.',
+            exportCopied: '{n} entradas BBCode copiadas',
             bbcodeCopied: 'Copiado',
             footerRefresh: 'Ctrl+R atualizar',
             footerHelp: '? ajuda',
@@ -1473,14 +1687,26 @@
             shortcutsClearRecent: 'Limpar todo o histórico recente',
             shortcutsHelp: 'mostrar esta ajuda',
             commandGhostHelp: '>ghost [minPts] \u2014 listar cidades fantasma',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 dist\u00e2ncia de ilhas',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 dist\u00e2ncia de ilhas',
             commandHelpHint: '>help \u2014 mostrar esta lista',
             commandUnknown: 'Comando desconhecido: {cmd}',
             premiumRequired: 'Requer o conselheiro Administrador (Premium) ativo.',
             ghostEmpty: 'Nenhuma cidade fantasma encontrada.',
             distResult: 'Dist\u00e2ncia de ilhas: {n}',
             distFromActive: 'da sua cidade ativa',
+            distFromOrigin: 'a partir da origem fixada',
             distNeedOrigin: 'Informe duas coordenadas, ou uma, se sua cidade ativa puder ser detectada.',
+            originSet: 'Origem definida em {x}:{y}',
+            originSetTooltip: 'Definir como origem de dist\u00e2ncia (Ctrl+O)',
+            originCleared: 'Origem removida',
+            originIndicator: 'Origem {x}:{y}',
+            originIndicatorTooltip: 'Clique para remover a origem fixada',
+            shortcutsSetOrigin: 'Definir como origem de dist\u00e2ncia',
+            favoriteNoteTooltip: 'Editar nota (Ctrl+N)',
+            favoriteNoteTitle: 'Nota para {name}',
+            favoriteNoteLabel: 'Nota',
+            favoriteNoteSaved: 'Nota salva',
+            shortcutsEditNote: 'Editar a nota do favorito selecionado',
             scopeHelpTitle: '\u00c2mbitos',
             scopeHelpDesc: '@p jogadores \u00b7 @a alian\u00e7as \u00b7 @t cidades \u00b7 @c coordenadas',
             commandIslandHelp: '>island X:Y \u2014 todas as cidades de uma ilha',
@@ -1554,6 +1780,17 @@
             recentlyConquered: 'conquistada há {n}d',
             lastActivity: 'última atividade há {n}d',
             commandHistoryHelp: '>history <nome|x:y> — histórico de conquistas de uma cidade, jogador ou coordenada',
+            commandTravelHelp: '>travel <unidade,...> [X:Y] [X:Y] [sirens=N] — tempo de viagem das tropas',
+            commandTopHelp: '>top players|alliances [N] — ranking por pontos',
+            commandVsHelp: '>vs <alian\u00e7a1> vs <alian\u00e7a2> — compara duas alian\u00e7as',
+            travelUnknownUnit: 'Unidade desconhecida: {unit}',
+            travelCalcFailed: 'N\u00e3o foi poss\u00edvel calcular o tempo de viagem (faltam dados em tempo real do jogo).',
+            travelLimitedBy: 'Limitado por: {unit}',
+            travelColonizeShipLimit: 'Isso excede o limite normal de 48h do barco de coloniza\u00e7\u00e3o.',
+            travelFlyingNote: 'Unidades voadoras podem atravessar ilhas sem navio de transporte.',
+            travelNoBonusData: 'B\u00f4nus de pesquisa/constru\u00e7\u00e3o da cidade indispon\u00edveis — mostrando apenas a velocidade base.',
+            travelUsedActiveCity: 'Foram usados os b\u00f4nus da sua cidade ativa (a origem n\u00e3o \u00e9 uma das suas cidades).',
+            travelScopeNote: 'N\u00e3o inclui o b\u00f4nus do Grande Templo de Ares do Olimpo nem efeitos de her\u00f3i.',
             historyEmpty: 'Nenhum histórico de conquistas registrado para isso.',
             historyNotLoaded: 'Carregando histórico de conquistas...',
             historyDisabled: 'Ative "histórico de conquistas" nas Configurações para usar >history.',
@@ -1599,6 +1836,9 @@
             footerTab: 'Tab filtrele',
             footerFav: 'Ctrl+F favori',
             footerBBCode: 'Ctrl+B BBCode kopyala',
+            footerExport: 'Listeyi d\u0131\u015fa aktar',
+            exportEmpty: 'Mevcut listede d\u0131\u015fa aktar\u0131lacak bir \u015fey yok.',
+            exportCopied: '{n} BBCode kayd\u0131 kopyaland\u0131',
             bbcodeCopied: 'Kopyaland\u0131',
             footerRefresh: 'Ctrl+R yenile',
             footerHelp: '? yard\u0131m',
@@ -1616,14 +1856,26 @@
             commandHelpTitle: 'Komutlar',
             commandGotoHelp: '>goto 123:456 \u2014 bir adaya git',
             commandGhostHelp: '>ghost [minPts] \u2014 hayalet \u015fehirleri listele',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 ada mesafesi',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 ada mesafesi',
             commandHelpHint: '>help \u2014 bu listeyi g\u00f6ster',
             commandUnknown: 'Bilinmeyen komut: {cmd}',
             premiumRequired: 'Yönetici danışmanının (Premium) aktif olmasını gerektirir.',
             ghostEmpty: 'Hayalet \u015fehir bulunamad\u0131.',
             distResult: 'Ada mesafesi: {n}',
             distFromActive: 'aktif \u015fehrinden',
+            distFromOrigin: 'sabitlenmi\u015f ba\u015flang\u0131\u00e7 noktas\u0131ndan',
             distNeedOrigin: '\u0130ki koordinat ver veya aktif \u015fehrin alg\u0131lanabiliyorsa bir tane ver.',
+            originSet: 'Ba\u015flang\u0131\u00e7 noktas\u0131 {x}:{y} olarak ayarland\u0131',
+            originSetTooltip: 'Mesafe ba\u015flang\u0131\u00e7 noktas\u0131 olarak ayarla (Ctrl+O)',
+            originCleared: 'Ba\u015flang\u0131\u00e7 noktas\u0131 temizlendi',
+            originIndicator: 'Ba\u015flang\u0131\u00e7 {x}:{y}',
+            originIndicatorTooltip: 'Sabitlenmi\u015f ba\u015flang\u0131\u00e7 noktas\u0131n\u0131 temizlemek i\u00e7in t\u0131kla',
+            shortcutsSetOrigin: 'Mesafe ba\u015flang\u0131\u00e7 noktas\u0131 olarak ayarla',
+            favoriteNoteTooltip: 'Notu d\u00fczenle (Ctrl+N)',
+            favoriteNoteTitle: '{name} i\u00e7in not',
+            favoriteNoteLabel: 'Not',
+            favoriteNoteSaved: 'Not kaydedildi',
+            shortcutsEditNote: 'Se\u00e7ili favorinin notunu d\u00fczenle',
             scopeHelpTitle: 'Kapsamlar',
             scopeHelpDesc: '@p oyuncular \u00b7 @a ittifaklar \u00b7 @t \u015fehirler \u00b7 @c koordinatlar',
             commandIslandHelp: '>island X:Y \u2014 bir adadaki t\u00fcm \u015fehirler',
@@ -1697,6 +1949,17 @@
             recentlyConquered: '{n} gün önce fethedildi',
             lastActivity: 'son etkinlik {n} gün önce',
             commandHistoryHelp: '>history <isim|x:y> — bir şehrin, oyuncunun veya koordinatın fetih geçmişi',
+            commandTravelHelp: '>travel <birim,...> [X:Y] [X:Y] [sirens=N] — birlik seyahat s\u00fcresi',
+            commandTopHelp: '>top players|alliances [N] — puan s\u0131ralamas\u0131',
+            commandVsHelp: '>vs <ittifak1> vs <ittifak2> — iki ittifak\u0131 kar\u015f\u0131la\u015ft\u0131r',
+            travelUnknownUnit: 'Bilinmeyen birim: {unit}',
+            travelCalcFailed: 'Seyahat s\u00fcresi hesaplanamad\u0131 (canl\u0131 oyun verisi eksik).',
+            travelLimitedBy: 'S\u0131n\u0131rlayan: {unit}',
+            travelColonizeShipLimit: 'Bu, koloni gemisinin normal 48 saatlik s\u0131n\u0131r\u0131n\u0131 a\u015f\u0131yor.',
+            travelFlyingNote: 'U\u00e7an birimler nakliye gemisi olmadan adalar aras\u0131 ge\u00e7i\u015f yapabilir.',
+            travelNoBonusData: '\u015eehir ara\u015ft\u0131rma/bina bonuslar\u0131 mevcut de\u011fil — yaln\u0131zca temel h\u0131z g\u00f6steriliyor.',
+            travelUsedActiveCity: 'Aktif \u015fehrinizin bonuslar\u0131 kullan\u0131ld\u0131 (ba\u015flang\u0131\u00e7 noktas\u0131 \u015fehirlerinizden biri de\u011fil).',
+            travelScopeNote: 'Olympus B\u00fcy\u00fck Ares Tap\u0131na\u011f\u0131 bonusunu veya kahraman etkilerini i\u00e7ermez.',
             historyEmpty: 'Bunun için kayıtlı fetih geçmişi yok.',
             historyNotLoaded: 'Fetih geçmişi yükleniyor...',
             historyDisabled: '>history kullanmak için Ayarlar\'da "fetih geçmişi"ni etkinleştirin.',
@@ -1742,6 +2005,9 @@
             footerTab: 'Tab \u0444\u0438\u043b\u044c\u0442\u0440',
             footerFav: 'Ctrl+F \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0435',
             footerBBCode: 'Ctrl+B \u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c BBCode',
+            footerExport: '\u042d\u043a\u0441\u043f\u043e\u0440\u0442 \u0441\u043f\u0438\u0441\u043a\u0430',
+            exportEmpty: '\u041d\u0435\u0447\u0435\u0433\u043e \u044d\u043a\u0441\u043f\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0442\u0435\u043a\u0443\u0449\u0435\u043c \u0441\u043f\u0438\u0441\u043a\u0435.',
+            exportCopied: '\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0437\u0430\u043f\u0438\u0441\u0435\u0439 BBCode: {n}',
             bbcodeCopied: '\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e',
             footerRefresh: 'Ctrl+R \u043e\u0431\u043d\u043e\u0432\u0438\u0442\u044c',
             footerHelp: '? \u0441\u043f\u0440\u0430\u0432\u043a\u0430',
@@ -1759,14 +2025,26 @@
             commandHelpTitle: '\u041a\u043e\u043c\u0430\u043d\u0434\u044b',
             commandGotoHelp: '>goto 123:456 \u2014 \u043f\u0435\u0440\u0435\u0439\u0442\u0438 \u043a \u043e\u0441\u0442\u0440\u043e\u0432\u0443',
             commandGhostHelp: '>ghost [\u043c\u0438\u043d.] \u2014 \u0441\u043f\u0438\u0441\u043e\u043a \u0433\u043e\u0440\u043e\u0434\u043e\u0432-\u043f\u0440\u0438\u0437\u0440\u0430\u043a\u043e\u0432',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 \u0440\u0430\u0441\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u043c\u0435\u0436\u0434\u0443 \u043e\u0441\u0442\u0440\u043e\u0432\u0430\u043c\u0438',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 \u0440\u0430\u0441\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u043c\u0435\u0436\u0434\u0443 \u043e\u0441\u0442\u0440\u043e\u0432\u0430\u043c\u0438',
             commandHelpHint: '>help \u2014 \u043f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u044d\u0442\u043e\u0442 \u0441\u043f\u0438\u0441\u043e\u043a',
             commandUnknown: '\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u0430\u044f \u043a\u043e\u043c\u0430\u043d\u0434\u0430: {cmd}',
             premiumRequired: '\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044f \u0430\u043a\u0442\u0438\u0432\u043d\u044b\u0439 \u0441\u043e\u0432\u0435\u0442\u043d\u0438\u043a \u0410\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440 (\u041f\u0440\u0435\u043c\u0438\u0443\u043c).',
             ghostEmpty: '\u0413\u043e\u0440\u043e\u0434\u0430-\u043f\u0440\u0438\u0437\u0440\u0430\u043a\u0438 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b.',
             distResult: '\u0420\u0430\u0441\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u043c\u0435\u0436\u0434\u0443 \u043e\u0441\u0442\u0440\u043e\u0432\u0430\u043c\u0438: {n}',
             distFromActive: '\u043e\u0442 \u0432\u0430\u0448\u0435\u0433\u043e \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0433\u043e \u0433\u043e\u0440\u043e\u0434\u0430',
+            distFromOrigin: '\u043e\u0442 \u0437\u0430\u043a\u0440\u0435\u043f\u043b\u0451\u043d\u043d\u043e\u0439 \u0442\u043e\u0447\u043a\u0438 \u043e\u0442\u0441\u0447\u0451\u0442\u0430',
             distNeedOrigin: '\u0423\u043a\u0430\u0436\u0438\u0442\u0435 \u0434\u0432\u0435 \u043a\u043e\u043e\u0440\u0434\u0438\u043d\u0430\u0442\u044b \u0438\u043b\u0438 \u043e\u0434\u043d\u0443, \u0435\u0441\u043b\u0438 \u0432\u0430\u0448 \u0430\u043a\u0442\u0438\u0432\u043d\u044b\u0439 \u0433\u043e\u0440\u043e\u0434 \u043c\u043e\u0436\u0435\u0442 \u0431\u044b\u0442\u044c \u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0451\u043d.',
+            originSet: '\u0422\u043e\u0447\u043a\u0430 \u043e\u0442\u0441\u0447\u0451\u0442\u0430 \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u0430 \u043d\u0430 {x}:{y}',
+            originSetTooltip: '\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u043a\u0430\u043a \u0442\u043e\u0447\u043a\u0443 \u043e\u0442\u0441\u0447\u0451\u0442\u0430 \u0440\u0430\u0441\u0441\u0442\u043e\u044f\u043d\u0438\u044f (Ctrl+O)',
+            originCleared: '\u0422\u043e\u0447\u043a\u0430 \u043e\u0442\u0441\u0447\u0451\u0442\u0430 \u0441\u0431\u0440\u043e\u0448\u0435\u043d\u0430',
+            originIndicator: '\u0422\u043e\u0447\u043a\u0430 \u043e\u0442\u0441\u0447\u0451\u0442\u0430 {x}:{y}',
+            originIndicatorTooltip: '\u041d\u0430\u0436\u043c\u0438\u0442\u0435, \u0447\u0442\u043e\u0431\u044b \u0441\u0431\u0440\u043e\u0441\u0438\u0442\u044c \u0437\u0430\u043a\u0440\u0435\u043f\u043b\u0451\u043d\u043d\u0443\u044e \u0442\u043e\u0447\u043a\u0443 \u043e\u0442\u0441\u0447\u0451\u0442\u0430',
+            shortcutsSetOrigin: '\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u043a\u0430\u043a \u0442\u043e\u0447\u043a\u0443 \u043e\u0442\u0441\u0447\u0451\u0442\u0430 \u0440\u0430\u0441\u0441\u0442\u043e\u044f\u043d\u0438\u044f',
+            favoriteNoteTooltip: '\u0418\u0437\u043c\u0435\u043d\u0438\u0442\u044c \u0437\u0430\u043c\u0435\u0442\u043a\u0443 (Ctrl+N)',
+            favoriteNoteTitle: '\u0417\u0430\u043c\u0435\u0442\u043a\u0430 \u0434\u043b\u044f {name}',
+            favoriteNoteLabel: '\u0417\u0430\u043c\u0435\u0442\u043a\u0430',
+            favoriteNoteSaved: '\u0417\u0430\u043c\u0435\u0442\u043a\u0430 \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u0430',
+            shortcutsEditNote: '\u0418\u0437\u043c\u0435\u043d\u0438\u0442\u044c \u0437\u0430\u043c\u0435\u0442\u043a\u0443 \u0432\u044b\u0431\u0440\u0430\u043d\u043d\u043e\u0433\u043e \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0433\u043e',
             scopeHelpTitle: '\u041e\u0431\u043b\u0430\u0441\u0442\u0438',
             scopeHelpDesc: '@p \u0438\u0433\u0440\u043e\u043a\u0438 \u00b7 @a \u0430\u043b\u044c\u044f\u043d\u0441\u044b \u00b7 @t \u0433\u043e\u0440\u043e\u0434\u0430 \u00b7 @c \u043a\u043e\u043e\u0440\u0434\u0438\u043d\u0430\u0442\u044b',
             commandIslandHelp: '>island X:Y \u2014 \u0432\u0441\u0435 \u0433\u043e\u0440\u043e\u0434\u0430 \u043e\u0441\u0442\u0440\u043e\u0432\u0430',
@@ -1840,6 +2118,17 @@
             recentlyConquered: 'завоёван {n} дн. назад',
             lastActivity: 'последняя активность {n} дн. назад',
             commandHistoryHelp: '>history <имя|x:y> — история завоеваний города, игрока или координаты',
+            commandTravelHelp: '>travel <\u044e\u043d\u0438\u0442,...> [X:Y] [X:Y] [sirens=N] — \u0432\u0440\u0435\u043c\u044f \u043f\u0435\u0440\u0435\u0434\u0432\u0438\u0436\u0435\u043d\u0438\u044f \u0432\u043e\u0439\u0441\u043a',
+            commandTopHelp: '>top players|alliances [N] — \u0440\u0435\u0439\u0442\u0438\u043d\u0433 \u043f\u043e \u043e\u0447\u043a\u0430\u043c',
+            commandVsHelp: '>vs <\u0430\u043b\u044c\u044f\u043d\u04411> vs <\u0430\u043b\u044c\u044f\u043d\u04412> — \u0441\u0440\u0430\u0432\u043d\u0438\u0442\u044c \u0434\u0432\u0430 \u0430\u043b\u044c\u044f\u043d\u0441\u0430',
+            travelUnknownUnit: '\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u044e\u043d\u0438\u0442: {unit}',
+            travelCalcFailed: '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0440\u0430\u0441\u0441\u0447\u0438\u0442\u0430\u0442\u044c \u0432\u0440\u0435\u043c\u044f \u043f\u0435\u0440\u0435\u0434\u0432\u0438\u0436\u0435\u043d\u0438\u044f (\u043d\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0445 \u0438\u0433\u0440\u044b \u0432 \u0440\u0435\u0430\u043b\u044c\u043d\u043e\u043c \u0432\u0440\u0435\u043c\u0435\u043d\u0438).',
+            travelLimitedBy: '\u041e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u043e: {unit}',
+            travelColonizeShipLimit: '\u042d\u0442\u043e \u043f\u0440\u0435\u0432\u044b\u0448\u0430\u0435\u0442 \u043e\u0431\u044b\u0447\u043d\u044b\u0439 \u043b\u0438\u043c\u0438\u0442 \u043a\u043e\u043b\u043e\u043d\u0438\u0437\u0430\u0446\u0438\u043e\u043d\u043d\u043e\u0433\u043e \u043a\u043e\u0440\u0430\u0431\u043b\u044f \u0432 48 \u0447.',
+            travelFlyingNote: '\u041b\u0435\u0442\u0430\u044e\u0449\u0438\u0435 \u044e\u043d\u0438\u0442\u044b \u043c\u043e\u0433\u0443\u0442 \u043f\u0435\u0440\u0435\u0441\u0435\u043a\u0430\u0442\u044c \u043e\u0441\u0442\u0440\u043e\u0432\u0430 \u0431\u0435\u0437 \u0442\u0440\u0430\u043d\u0441\u043f\u043e\u0440\u0442\u043d\u043e\u0433\u043e \u043a\u043e\u0440\u0430\u0431\u043b\u044f.',
+            travelNoBonusData: '\u0411\u043e\u043d\u0443\u0441\u044b \u0438\u0441\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u043d\u0438\u0439/\u0437\u0434\u0430\u043d\u0438\u0439 \u0433\u043e\u0440\u043e\u0434\u0430 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u044b — \u043f\u043e\u043a\u0430\u0437\u0430\u043d\u0430 \u0442\u043e\u043b\u044c\u043a\u043e \u0431\u0430\u0437\u043e\u0432\u0430\u044f \u0441\u043a\u043e\u0440\u043e\u0441\u0442\u044c.',
+            travelUsedActiveCity: '\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u044b \u0431\u043e\u043d\u0443\u0441\u044b \u0432\u0430\u0448\u0435\u0433\u043e \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0433\u043e \u0433\u043e\u0440\u043e\u0434\u0430 (\u0442\u043e\u0447\u043a\u0430 \u043e\u0442\u0441\u0447\u0451\u0442\u0430 \u043d\u0435 \u044f\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u0432\u0430\u0448\u0438\u043c \u0433\u043e\u0440\u043e\u0434\u043e\u043c).',
+            travelScopeNote: '\u041d\u0435 \u0432\u043a\u043b\u044e\u0447\u0430\u0435\u0442 \u0431\u043e\u043d\u0443\u0441 \u0411\u043e\u043b\u044c\u0448\u043e\u0433\u043e \u0445\u0440\u0430\u043c\u0430 \u0410\u0440\u0435\u0441\u0430 \u041e\u043b\u0438\u043c\u043f\u0430 \u0438\u043b\u0438 \u044d\u0444\u0444\u0435\u043a\u0442\u044b \u0433\u0435\u0440\u043e\u0435\u0432.',
             historyEmpty: 'История завоеваний для этого объекта не найдена.',
             historyNotLoaded: 'Загрузка истории завоеваний...',
             historyDisabled: 'Включите «историю завоеваний» в Настройках, чтобы использовать >history.',
@@ -1885,6 +2174,9 @@
             footerTab: 'Tab \u03c6\u03af\u03bb\u03c4\u03c1\u03bf',
             footerFav: 'Ctrl+F \u03b1\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03bf',
             footerBBCode: 'Ctrl+B \u03b1\u03bd\u03c4\u03b9\u03b3\u03c1\u03b1\u03c6\u03ae BBCode',
+            footerExport: '\u0395\u03be\u03b1\u03b3\u03c9\u03b3\u03ae \u03bb\u03af\u03c3\u03c4\u03b1\u03c2',
+            exportEmpty: '\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03b5\u03b9 \u03c4\u03af\u03c0\u03bf\u03c4\u03b1 \u03b3\u03b9\u03b1 \u03b5\u03be\u03b1\u03b3\u03c9\u03b3\u03ae \u03c3\u03c4\u03b7\u03bd \u03c4\u03c1\u03ad\u03c7\u03bf\u03c5\u03c3\u03b1 \u03bb\u03af\u03c3\u03c4\u03b1.',
+            exportCopied: '\u0391\u03bd\u03c4\u03b9\u03b3\u03c1\u03ac\u03c6\u03b7\u03ba\u03b1\u03bd {n} \u03ba\u03b1\u03c4\u03b1\u03c7\u03c9\u03c1\u03ae\u03c3\u03b5\u03b9\u03c2 BBCode',
             bbcodeCopied: '\u0391\u03bd\u03c4\u03b9\u03b3\u03c1\u03ac\u03c6\u03b7\u03ba\u03b5',
             footerRefresh: 'Ctrl+R \u03b1\u03bd\u03ac\u03ba\u03c4\u03b7\u03c3\u03b7',
             footerHelp: '? \u03b2\u03bf\u03ae\u03b8\u03b5\u03b9\u03b1',
@@ -1902,14 +2194,26 @@
             commandHelpTitle: '\u0395\u03bd\u03c4\u03bf\u03bb\u03ad\u03c2',
             commandGotoHelp: '>goto 123:456 \u2014 \u03bc\u03b5\u03c4\u03ac\u03b2\u03b1\u03c3\u03b7 \u03c3\u03b5 \u03bd\u03b7\u03c3\u03af',
             commandGhostHelp: '>ghost [minPts] \u2014 \u03bb\u03af\u03c3\u03c4\u03b1 \u03c0\u03cc\u03bb\u03b5\u03c9\u03bd-\u03c6\u03b1\u03bd\u03c4\u03b1\u03c3\u03bc\u03ac\u03c4\u03c9\u03bd',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 \u03b1\u03c0\u03cc\u03c3\u03c4\u03b1\u03c3\u03b7 \u03bd\u03b7\u03c3\u03b9\u03ce\u03bd',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 \u03b1\u03c0\u03cc\u03c3\u03c4\u03b1\u03c3\u03b7 \u03bd\u03b7\u03c3\u03b9\u03ce\u03bd',
             commandHelpHint: '>help \u2014 \u03b5\u03bc\u03c6\u03ac\u03bd\u03b9\u03c3\u03b7 \u03b1\u03c5\u03c4\u03ae\u03c2 \u03c4\u03b7\u03c2 \u03bb\u03af\u03c3\u03c4\u03b1\u03c2',
             commandUnknown: '\u0386\u03b3\u03bd\u03c9\u03c3\u03c4\u03b7 \u03b5\u03bd\u03c4\u03bf\u03bb\u03ae: {cmd}',
             premiumRequired: '\u0391\u03c0\u03b1\u03b9\u03c4\u03b5\u03af \u03b5\u03bd\u03b5\u03c1\u03b3\u03cc \u03c3\u03cd\u03bc\u03b2\u03bf\u03c5\u03bb\u03bf \u0394\u03b9\u03bf\u03b9\u03ba\u03b7\u03c4\u03ae (Premium).',
             ghostEmpty: '\u0394\u03b5\u03bd \u03b2\u03c1\u03ad\u03b8\u03b7\u03ba\u03b1\u03bd \u03c0\u03cc\u03bb\u03b5\u03b9\u03c2-\u03c6\u03b1\u03bd\u03c4\u03ac\u03c3\u03bc\u03b1\u03c4\u03b1.',
             distResult: '\u0391\u03c0\u03cc\u03c3\u03c4\u03b1\u03c3\u03b7 \u03bd\u03b7\u03c3\u03b9\u03ce\u03bd: {n}',
             distFromActive: '\u03b1\u03c0\u03cc \u03c4\u03b7\u03bd \u03b5\u03bd\u03b5\u03c1\u03b3\u03ae \u03c0\u03cc\u03bb\u03b7 \u03c3\u03bf\u03c5',
+            distFromOrigin: '\u03b1\u03c0\u03cc \u03c4\u03bf \u03ba\u03b1\u03c1\u03c6\u03b9\u03c4\u03c9\u03bc\u03ad\u03bd\u03bf \u03c3\u03b7\u03bc\u03b5\u03af\u03bf \u03b5\u03ba\u03ba\u03af\u03bd\u03b7\u03c3\u03b7\u03c2',
             distNeedOrigin: '\u0394\u03ce\u03c3\u03b5 \u03b4\u03cd\u03bf \u03c3\u03c5\u03bd\u03c4\u03b5\u03c4\u03b1\u03b3\u03bc\u03ad\u03bd\u03b5\u03c2, \u03ae \u03bc\u03af\u03b1 \u03b1\u03bd \u03bc\u03c0\u03bf\u03c1\u03b5\u03af \u03bd\u03b1 \u03b1\u03bd\u03b9\u03c7\u03bd\u03b5\u03c5\u03b8\u03b5\u03af \u03b7 \u03b5\u03bd\u03b5\u03c1\u03b3\u03ae \u03c0\u03cc\u03bb\u03b7 \u03c3\u03bf\u03c5.',
+            originSet: '\u03a4\u03bf \u03c3\u03b7\u03bc\u03b5\u03af\u03bf \u03b5\u03ba\u03ba\u03af\u03bd\u03b7\u03c3\u03b7\u03c2 \u03bf\u03c1\u03af\u03c3\u03c4\u03b7\u03ba\u03b5 \u03c3\u03b5 {x}:{y}',
+            originSetTooltip: '\u039f\u03c1\u03b9\u03c3\u03bc\u03cc\u03c2 \u03c9\u03c2 \u03c3\u03b7\u03bc\u03b5\u03af\u03bf \u03b5\u03ba\u03ba\u03af\u03bd\u03b7\u03c3\u03b7\u03c2 \u03b1\u03c0\u03cc\u03c3\u03c4\u03b1\u03c3\u03b7\u03c2 (Ctrl+O)',
+            originCleared: '\u03a4\u03bf \u03c3\u03b7\u03bc\u03b5\u03af\u03bf \u03b5\u03ba\u03ba\u03af\u03bd\u03b7\u03c3\u03b7\u03c2 \u03b4\u03b9\u03b1\u03b3\u03c1\u03ac\u03c6\u03b7\u03ba\u03b5',
+            originIndicator: '\u03a3\u03b7\u03bc\u03b5\u03af\u03bf \u03b5\u03ba\u03ba\u03af\u03bd\u03b7\u03c3\u03b7\u03c2 {x}:{y}',
+            originIndicatorTooltip: '\u039a\u03ac\u03bd\u03c4\u03b5 \u03ba\u03bb\u03b9\u03ba \u03b3\u03b9\u03b1 \u03b4\u03b9\u03b1\u03b3\u03c1\u03b1\u03c6\u03ae \u03c4\u03bf\u03c5 \u03ba\u03b1\u03c1\u03c6\u03b9\u03c4\u03c9\u03bc\u03ad\u03bd\u03bf\u03c5 \u03c3\u03b7\u03bc\u03b5\u03af\u03bf\u03c5',
+            shortcutsSetOrigin: '\u039f\u03c1\u03b9\u03c3\u03bc\u03cc\u03c2 \u03c9\u03c2 \u03c3\u03b7\u03bc\u03b5\u03af\u03bf \u03b5\u03ba\u03ba\u03af\u03bd\u03b7\u03c3\u03b7\u03c2 \u03b1\u03c0\u03cc\u03c3\u03c4\u03b1\u03c3\u03b7\u03c2',
+            favoriteNoteTooltip: '\u0395\u03c0\u03b5\u03be\u03b5\u03c1\u03b3\u03b1\u03c3\u03af\u03b1 \u03c3\u03b7\u03bc\u03b5\u03af\u03c9\u03c3\u03b7\u03c2 (Ctrl+N)',
+            favoriteNoteTitle: '\u03a3\u03b7\u03bc\u03b5\u03af\u03c9\u03c3\u03b7 \u03b3\u03b9\u03b1 {name}',
+            favoriteNoteLabel: '\u03a3\u03b7\u03bc\u03b5\u03af\u03c9\u03c3\u03b7',
+            favoriteNoteSaved: '\u0397 \u03c3\u03b7\u03bc\u03b5\u03af\u03c9\u03c3\u03b7 \u03b1\u03c0\u03bf\u03b8\u03b7\u03ba\u03b5\u03cd\u03c4\u03b7\u03ba\u03b5',
+            shortcutsEditNote: '\u0395\u03c0\u03b5\u03be\u03b5\u03c1\u03b3\u03b1\u03c3\u03af\u03b1 \u03c3\u03b7\u03bc\u03b5\u03af\u03c9\u03c3\u03b7\u03c2 \u03b5\u03c0\u03b9\u03bb\u03b5\u03b3\u03bc\u03ad\u03bd\u03bf\u03c5 \u03b1\u03b3\u03b1\u03c0\u03b7\u03bc\u03ad\u03bd\u03bf\u03c5',
             scopeHelpTitle: '\u03a0\u03b5\u03b4\u03af\u03b1',
             scopeHelpDesc: '@p \u03c0\u03b1\u03af\u03ba\u03c4\u03b5\u03c2 \u00b7 @a \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b5\u03c2 \u00b7 @t \u03c0\u03cc\u03bb\u03b5\u03b9\u03c2 \u00b7 @c \u03c3\u03c5\u03bd\u03c4\u03b5\u03c4\u03b1\u03b3\u03bc\u03ad\u03bd\u03b5\u03c2',
             commandIslandHelp: '>island X:Y \u2014 \u03cc\u03bb\u03b5\u03c2 \u03bf\u03b9 \u03c0\u03cc\u03bb\u03b5\u03b9\u03c2 \u03b5\u03bd\u03cc\u03c2 \u03bd\u03b7\u03c3\u03b9\u03bf\u03cd',
@@ -1983,6 +2287,17 @@
             recentlyConquered: 'κατακτήθηκε πριν από {n}μ',
             lastActivity: 'τελευταία δραστηριότητα πριν από {n}μ',
             commandHistoryHelp: '>history <όνομα|x:y> — ιστορικό κατακτήσεων μιας πόλης, παίκτη ή συντεταγμένης',
+            commandTravelHelp: '>travel <\u03bc\u03bf\u03bd\u03ac\u03b4\u03b1,...> [X:Y] [X:Y] [sirens=N] — \u03c7\u03c1\u03cc\u03bd\u03bf\u03c2 \u03bc\u03b5\u03c4\u03b1\u03ba\u03af\u03bd\u03b7\u03c3\u03b7\u03c2 \u03c3\u03c4\u03c1\u03b1\u03c4\u03bf\u03cd',
+            commandTopHelp: '>top players|alliances [N] — \u03ba\u03b1\u03c4\u03ac\u03c4\u03b1\u03be\u03b7 \u03b2\u03b1\u03b8\u03bc\u03bf\u03bb\u03bf\u03b3\u03af\u03b1\u03c2',
+            commandVsHelp: '>vs <\u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b11> vs <\u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b12> — \u03c3\u03cd\u03b3\u03ba\u03c1\u03b9\u03c3\u03b7 \u03b4\u03cd\u03bf \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03b9\u03ce\u03bd',
+            travelUnknownUnit: '\u0386\u03b3\u03bd\u03c9\u03c3\u03c4\u03b7 \u03bc\u03bf\u03bd\u03ac\u03b4\u03b1: {unit}',
+            travelCalcFailed: '\u0394\u03b5\u03bd \u03ae\u03c4\u03b1\u03bd \u03b4\u03c5\u03bd\u03b1\u03c4\u03cc\u03c2 \u03bf \u03c5\u03c0\u03bf\u03bb\u03bf\u03b3\u03b9\u03c3\u03bc\u03cc\u03c2 \u03c4\u03bf\u03c5 \u03c7\u03c1\u03cc\u03bd\u03bf\u03c5 \u03bc\u03b5\u03c4\u03b1\u03ba\u03af\u03bd\u03b7\u03c3\u03b7\u03c2 (\u03bb\u03b5\u03af\u03c0\u03bf\u03c5\u03bd \u03b4\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03b1 \u03c0\u03b1\u03b9\u03c7\u03bd\u03b9\u03b4\u03b9\u03bf\u03cd \u03c3\u03b5 \u03c0\u03c1\u03b1\u03b3\u03bc\u03b1\u03c4\u03b9\u03ba\u03cc \u03c7\u03c1\u03cc\u03bd\u03bf).',
+            travelLimitedBy: '\u03a0\u03b5\u03c1\u03b9\u03bf\u03c1\u03af\u03b6\u03b5\u03c4\u03b1\u03b9 \u03b1\u03c0\u03cc: {unit}',
+            travelColonizeShipLimit: '\u0391\u03c5\u03c4\u03cc \u03be\u03b5\u03c0\u03b5\u03c1\u03bd\u03ac \u03c4\u03bf \u03ba\u03b1\u03bd\u03bf\u03bd\u03b9\u03ba\u03cc \u03cc\u03c1\u03b9\u03bf \u03c4\u03c9\u03bd 48\u03c9\u03c1\u03ce\u03bd \u03b3\u03b9\u03b1 \u03c4\u03bf \u03b1\u03c0\u03bf\u03b9\u03ba\u03b9\u03c3\u03c4\u03b9\u03ba\u03cc \u03c0\u03bb\u03bf\u03af\u03bf.',
+            travelFlyingNote: '\u039f\u03b9 \u03b9\u03c0\u03c4\u03ac\u03bc\u03b5\u03bd\u03b5\u03c2 \u03bc\u03bf\u03bd\u03ac\u03b4\u03b5\u03c2 \u03bc\u03c0\u03bf\u03c1\u03bf\u03cd\u03bd \u03bd\u03b1 \u03b4\u03b9\u03b1\u03c3\u03c7\u03af\u03b6\u03bf\u03c5\u03bd \u03bd\u03b7\u03c3\u03b9\u03ac \u03c7\u03c9\u03c1\u03af\u03c2 \u03bc\u03b5\u03c4\u03b1\u03b3\u03c9\u03b3\u03b9\u03ba\u03cc \u03c0\u03bb\u03bf\u03af\u03bf.',
+            travelNoBonusData: '\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd \u03bc\u03c0\u03cc\u03bd\u03bf\u03c5\u03c2 \u03ad\u03c1\u03b5\u03c5\u03bd\u03b1\u03c2/\u03ba\u03c4\u03b9\u03c1\u03af\u03c9\u03bd \u03c0\u03cc\u03bb\u03b7\u03c2 — \u03b5\u03bc\u03c6\u03b1\u03bd\u03af\u03b6\u03b5\u03c4\u03b1\u03b9 \u03bc\u03cc\u03bd\u03bf \u03b7 \u03b2\u03b1\u03c3\u03b9\u03ba\u03ae \u03c4\u03b1\u03c7\u03cd\u03c4\u03b7\u03c4\u03b1.',
+            travelUsedActiveCity: '\u03a7\u03c1\u03b7\u03c3\u03b9\u03bc\u03bf\u03c0\u03bf\u03b9\u03ae\u03b8\u03b7\u03ba\u03b1\u03bd \u03bf\u03b9 \u03bc\u03c0\u03cc\u03bd\u03bf\u03b9 \u03c4\u03b7\u03c2 \u03b5\u03bd\u03b5\u03c1\u03b3\u03ae\u03c2 \u03c0\u03cc\u03bb\u03b7\u03c2 \u03c3\u03b1\u03c2 (\u03b7 \u03b1\u03c6\u03b5\u03c4\u03b7\u03c1\u03af\u03b1 \u03b4\u03b5\u03bd \u03b5\u03af\u03bd\u03b1\u03b9 \u03bc\u03af\u03b1 \u03b1\u03c0\u03cc \u03c4\u03b9\u03c2 \u03c0\u03cc\u03bb\u03b5\u03b9\u03c2 \u03c3\u03b1\u03c2).',
+            travelScopeNote: '\u0394\u03b5\u03bd \u03c0\u03b5\u03c1\u03b9\u03bb\u03b1\u03bc\u03b2\u03ac\u03bd\u03b5\u03b9 \u03c4\u03bf \u03bc\u03c0\u03cc\u03bd\u03bf\u03c5\u03c2 \u03c4\u03bf\u03c5 \u039c\u03b5\u03b3\u03ac\u03bb\u03bf\u03c5 \u039d\u03b1\u03bf\u03cd \u03c4\u03bf\u03c5 \u0386\u03c1\u03b7 \u03c4\u03bf\u03c5 \u039f\u03bb\u03cd\u03bc\u03c0\u03bf\u03c5 \u03ae \u03b5\u03c0\u03b9\u03b4\u03c1\u03ac\u03c3\u03b5\u03b9\u03c2 \u03ae\u03c1\u03ce\u03c9\u03bd.',
             historyEmpty: 'Δεν υπάρχει καταγεγραμμένο ιστορικό κατακτήσεων για αυτό.',
             historyNotLoaded: 'Φόρτωση ιστορικού κατακτήσεων...',
             historyDisabled: 'Ενεργοποιήστε το «ιστορικό κατακτήσεων» στις Ρυθμίσεις για να χρησιμοποιήσετε το >history.',
@@ -2028,6 +2343,9 @@
             footerTab: 'Tab sz\u0171r\u00e9s',
             footerFav: 'Ctrl+F kedvenc',
             footerBBCode: 'Ctrl+B BBCode m\u00e1sol\u00e1sa',
+            footerExport: 'Lista export\u00e1l\u00e1sa',
+            exportEmpty: 'Nincs mit export\u00e1lni az aktu\u00e1lis list\u00e1ban.',
+            exportCopied: '{n} BBCode bejegyz\u00e9s m\u00e1solva',
             bbcodeCopied: 'M\u00e1solva',
             footerRefresh: 'Ctrl+R friss\u00edt\u00e9s',
             footerHelp: '? s\u00fag\u00f3',
@@ -2045,14 +2363,26 @@
             commandHelpTitle: 'Parancsok',
             commandGotoHelp: '>goto 123:456 \u2014 ugr\u00e1s egy szigetre',
             commandGhostHelp: '>ghost [minPts] \u2014 szellemv\u00e1rosok list\u00e1ja',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 szigett\u00e1vols\u00e1g',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 szigett\u00e1vols\u00e1g',
             commandHelpHint: '>help \u2014 lista megjelen\u00edt\u00e9se',
             commandUnknown: 'Ismeretlen parancs: {cmd}',
             premiumRequired: 'Az Adminisztrátor tanácsadó (Premium) aktív állapotát igényli.',
             ghostEmpty: 'Nincs szellemv\u00e1ros.',
             distResult: 'Szigett\u00e1vols\u00e1g: {n}',
             distFromActive: 'az akt\u00edv v\u00e1rosodb\u00f3l',
+            distFromOrigin: 'a kit\u0171z\u00f6tt kiindul\u00f3pontb\u00f3l',
             distNeedOrigin: 'Adj meg k\u00e9t koordin\u00e1t\u00e1t, vagy egyet, ha az akt\u00edv v\u00e1rosod felismerhet\u0151.',
+            originSet: 'Kiindul\u00f3pont be\u00e1ll\u00edtva: {x}:{y}',
+            originSetTooltip: 'Be\u00e1ll\u00edt\u00e1s t\u00e1vols\u00e1g-kiindul\u00f3pontk\u00e9nt (Ctrl+O)',
+            originCleared: 'Kiindul\u00f3pont t\u00f6r\u00f6lve',
+            originIndicator: 'Kiindul\u00f3pont {x}:{y}',
+            originIndicatorTooltip: 'Kattints a kit\u0171z\u00f6tt kiindul\u00f3pont t\u00f6rl\u00e9s\u00e9hez',
+            shortcutsSetOrigin: 'Be\u00e1ll\u00edt\u00e1s t\u00e1vols\u00e1g-kiindul\u00f3pontk\u00e9nt',
+            favoriteNoteTooltip: 'Jegyzet szerkeszt\u00e9se (Ctrl+N)',
+            favoriteNoteTitle: 'Jegyzet ehhez: {name}',
+            favoriteNoteLabel: 'Jegyzet',
+            favoriteNoteSaved: 'Jegyzet mentve',
+            shortcutsEditNote: 'A kiv\u00e1lasztott kedvenc jegyzet\u00e9nek szerkeszt\u00e9se',
             scopeHelpTitle: 'Tartom\u00e1nyok',
             scopeHelpDesc: '@p j\u00e1t\u00e9kosok \u00b7 @a sz\u00f6vets\u00e9gek \u00b7 @t v\u00e1rosok \u00b7 @c koordin\u00e1t\u00e1k',
             commandIslandHelp: '>island X:Y \u2014 egy sziget \u00f6sszes v\u00e1rosa',
@@ -2126,6 +2456,17 @@
             recentlyConquered: '{n} napja meghódítva',
             lastActivity: 'utolsó aktivitás {n} napja',
             commandHistoryHelp: '>history <név|x:y> — egy város, játékos vagy koordináta hódítási előzményei',
+            commandTravelHelp: '>travel <egys\u00e9g,...> [X:Y] [X:Y] [sirens=N] — csapatmozg\u00e1s ideje',
+            commandTopHelp: '>top players|alliances [N] — pontrangsor',
+            commandVsHelp: '>vs <sz\u00f6vets\u00e9g1> vs <sz\u00f6vets\u00e9g2> — k\u00e9t sz\u00f6vets\u00e9g \u00f6sszehasonl\u00edt\u00e1sa',
+            travelUnknownUnit: 'Ismeretlen egys\u00e9g: {unit}',
+            travelCalcFailed: 'Nem siker\u00fclt kisz\u00e1m\u00edtani az utaz\u00e1si id\u0151t (hi\u00e1nyz\u00f3 \u00e9l\u0151 j\u00e1t\u00e9kadatok).',
+            travelLimitedBy: 'Korl\u00e1tozza: {unit}',
+            travelColonizeShipLimit: 'Ez meghaladja a koloniz\u00e1l\u00f3haj\u00f3 szok\u00e1sos 48 \u00f3r\u00e1s korl\u00e1tj\u00e1t.',
+            travelFlyingNote: 'A rep\u00fcl\u0151 egys\u00e9gek sziget\u00e1thaj\u00f3z\u00e1shoz sz\u00e1ll\u00edt\u00f3haj\u00f3 n\u00e9lk\u00fcl is \u00e1tkelhetnek.',
+            travelNoBonusData: 'A v\u00e1ros kutat\u00e1si/\u00e9p\u00fclet-bonuszai nem el\u00e9rhet\u0151k — csak az alapsebess\u00e9g l\u00e1that\u00f3.',
+            travelUsedActiveCity: 'Az akt\u00edv v\u00e1rosod bonuszait haszn\u00e1ltuk (a kiindul\u00f3pont nem az egyik v\u00e1rosod).',
+            travelScopeNote: 'Nem tartalmazza az Olimposzi Nagy Ar\u00e9sz-templom bonuszt vagy a h\u0151s hat\u00e1sait.',
             historyEmpty: 'Nincs rögzített hódítási előzmény ehhez.',
             historyNotLoaded: 'Hódítási előzmények betöltése...',
             historyDisabled: 'Engedélyezd a "hódítási előzmények" opciót a Beállításokban a >history használatához.',
@@ -2171,6 +2512,9 @@
             footerTab: 'Tab filtreaz\u0103',
             footerFav: 'Ctrl+F favorit',
             footerBBCode: 'Ctrl+B copiaz\u0103 BBCode',
+            footerExport: 'Exporta lista',
+            exportEmpty: 'Nimic de exportat \u00een lista curent\u0103.',
+            exportCopied: '{n} intr\u0103ri BBCode copiate',
             bbcodeCopied: 'Copiat',
             footerRefresh: 'Ctrl+R re\u00eencarc\u0103',
             footerHelp: '? ajutor',
@@ -2188,14 +2532,26 @@
             commandHelpTitle: 'Comenzi',
             commandGotoHelp: '>goto 123:456 \u2014 mergi la o insul\u0103',
             commandGhostHelp: '>ghost [minPts] \u2014 listeaz\u0103 ora\u0219ele fantom\u0103',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 distan\u021b\u0103 de insule',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 distan\u021b\u0103 de insule',
             commandHelpHint: '>help \u2014 arat\u0103 aceast\u0103 list\u0103',
             commandUnknown: 'Comand\u0103 necunoscut\u0103: {cmd}',
             premiumRequired: 'Necesit\u0103 consilierul Administrator (Premium) activ.',
             ghostEmpty: 'Nu s-au g\u0103sit ora\u0219e fantom\u0103.',
             distResult: 'Distan\u021b\u0103 de insule: {n}',
             distFromActive: 'din ora\u0219ul t\u0103u activ',
+            distFromOrigin: 'din originea fixat\u0103',
             distNeedOrigin: 'D\u0103 dou\u0103 coordonate, sau una dac\u0103 ora\u0219ul t\u0103u activ poate fi detectat.',
+            originSet: 'Origine setat\u0103 la {x}:{y}',
+            originSetTooltip: 'Seteaz\u0103 ca origine de distan\u021b\u0103 (Ctrl+O)',
+            originCleared: 'Origine \u0219tears\u0103',
+            originIndicator: 'Origine {x}:{y}',
+            originIndicatorTooltip: 'Apas\u0103 pentru a \u0219terge originea fixat\u0103',
+            shortcutsSetOrigin: 'Seteaz\u0103 ca origine de distan\u021b\u0103',
+            favoriteNoteTooltip: 'Editeaz\u0103 nota (Ctrl+N)',
+            favoriteNoteTitle: 'Not\u0103 pentru {name}',
+            favoriteNoteLabel: 'Not\u0103',
+            favoriteNoteSaved: 'Not\u0103 salvat\u0103',
+            shortcutsEditNote: 'Editeaz\u0103 nota favoritului selectat',
             scopeHelpTitle: 'Domenii',
             scopeHelpDesc: '@p juc\u0103tori \u00b7 @a alian\u021be \u00b7 @t ora\u0219e \u00b7 @c coordonate',
             commandIslandHelp: '>island X:Y \u2014 toate ora\u0219ele de pe o insul\u0103',
@@ -2269,6 +2625,17 @@
             recentlyConquered: 'cucerit acum {n}z',
             lastActivity: 'ultima activitate acum {n}z',
             commandHistoryHelp: '>history <nume|x:y> — istoricul cuceririlor unui oraș, jucător sau coordonate',
+            commandTravelHelp: '>travel <unitate,...> [X:Y] [X:Y] [sirens=N] — timp de deplasare al trupelor',
+            commandTopHelp: '>top players|alliances [N] — clasament dup\u0103 puncte',
+            commandVsHelp: '>vs <alian\u021b\u01031> vs <alian\u021b\u01032> — compar\u0103 dou\u0103 alian\u021be',
+            travelUnknownUnit: 'Unitate necunoscut\u0103: {unit}',
+            travelCalcFailed: 'Timpul de deplasare nu a putut fi calculat (lipsesc date live din joc).',
+            travelLimitedBy: 'Limitat de: {unit}',
+            travelColonizeShipLimit: 'Acest lucru dep\u0103\u0219e\u0219te limita normal\u0103 de 48h a navei de colonizare.',
+            travelFlyingNote: 'Unit\u0103\u021bile zbur\u0103toare pot traversa insulele f\u0103r\u0103 nav\u0103 de transport.',
+            travelNoBonusData: 'Bonusurile de cercetare/cl\u0103diri ale ora\u0219ului nu sunt disponibile — se afi\u0219eaz\u0103 doar viteza de baz\u0103.',
+            travelUsedActiveCity: 'Au fost folosite bonusurile ora\u0219ului t\u0103u activ (originea nu este unul dintre ora\u0219ele tale).',
+            travelScopeNote: 'Nu include bonusul Marelui Templu al lui Ares din Olimp sau efectele eroilor.',
             historyEmpty: 'Nu există istoric de cuceriri înregistrat pentru aceasta.',
             historyNotLoaded: 'Se încarcă istoricul cuceririlor...',
             historyDisabled: 'Activează „istoricul cuceririlor” din Setări pentru a folosi >history.',
@@ -2314,6 +2681,9 @@
             footerTab: 'Tab filtr',
             footerFav: 'Ctrl+F obl\u00edben\u00e9',
             footerBBCode: 'Ctrl+B kop\u00edrovat BBCode',
+            footerExport: 'Exportovat seznam',
+            exportEmpty: 'V aktu\u00e1ln\u00edm seznamu nen\u00ed nic k exportu.',
+            exportCopied: 'Zkop\u00edrov\u00e1no {n} polo\u017eek BBCode',
             bbcodeCopied: 'Zkop\u00edrov\u00e1no',
             footerRefresh: 'Ctrl+R obnovit',
             footerHelp: '? n\u00e1pov\u011bda',
@@ -2331,14 +2701,26 @@
             commandHelpTitle: 'P\u0159\u00edkazy',
             commandGotoHelp: '>goto 123:456 \u2014 p\u0159esko\u010dit na ostrov',
             commandGhostHelp: '>ghost [minPts] \u2014 m\u011bsta duch\u016f',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 vzd\u00e1lenost ostrov\u016f',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 vzd\u00e1lenost ostrov\u016f',
             commandHelpHint: '>help \u2014 zobrazit tento seznam',
             commandUnknown: 'Nezn\u00e1m\u00fd p\u0159\u00edkaz: {cmd}',
             premiumRequired: 'Vy\u017eaduje aktivn\u00edho poradce Spr\u00e1vce (Premium).',
             ghostEmpty: 'Nebyla nalezena \u017e\u00e1dn\u00e1 m\u011bsta duch\u016f.',
             distResult: 'Vzd\u00e1lenost ostrov\u016f: {n}',
             distFromActive: 'z va\u0161eho aktivn\u00edho m\u011bsta',
+            distFromOrigin: 'z p\u0159ipnut\u00e9ho po\u010d\u00e1tku',
             distNeedOrigin: 'Zadejte dv\u011b sou\u0159adnice, nebo jednu, pokud lze zjistit va\u0161e aktivn\u00ed m\u011bsto.',
+            originSet: 'Po\u010d\u00e1tek nastaven na {x}:{y}',
+            originSetTooltip: 'Nastavit jako po\u010d\u00e1tek vzd\u00e1lenosti (Ctrl+O)',
+            originCleared: 'Po\u010d\u00e1tek zru\u0161en',
+            originIndicator: 'Po\u010d\u00e1tek {x}:{y}',
+            originIndicatorTooltip: 'Kliknut\u00edm zru\u0161\u00edte p\u0159ipnut\u00fd po\u010d\u00e1tek',
+            shortcutsSetOrigin: 'Nastavit jako po\u010d\u00e1tek vzd\u00e1lenosti',
+            favoriteNoteTooltip: 'Upravit pozn\u00e1mku (Ctrl+N)',
+            favoriteNoteTitle: 'Pozn\u00e1mka pro {name}',
+            favoriteNoteLabel: 'Pozn\u00e1mka',
+            favoriteNoteSaved: 'Pozn\u00e1mka ulo\u017eena',
+            shortcutsEditNote: 'Upravit pozn\u00e1mku vybran\u00e9 obl\u00edben\u00e9 polo\u017eky',
             scopeHelpTitle: 'Rozsahy',
             scopeHelpDesc: '@p hr\u00e1\u010di \u00b7 @a aliance \u00b7 @t m\u011bsta \u00b7 @c sou\u0159adnice',
             commandIslandHelp: '>island X:Y \u2014 v\u0161echna m\u011bsta na ostrov\u011b',
@@ -2412,6 +2794,17 @@
             recentlyConquered: 'dobyto před {n} dny',
             lastActivity: 'poslední aktivita před {n} dny',
             commandHistoryHelp: '>history <jméno|x:y> — historie dobývání města, hráče nebo souřadnice',
+            commandTravelHelp: '>travel <jednotka,...> [X:Y] [X:Y] [sirens=N] — doba p\u0159esunu jednotek',
+            commandTopHelp: '>top players|alliances [N] — \u017eeb\u0159\u00ed\u010dek podle bod\u016f',
+            commandVsHelp: '>vs <aliance1> vs <aliance2> — porovn\u00e1 dv\u011b aliance',
+            travelUnknownUnit: 'Nezn\u00e1m\u00e1 jednotka: {unit}',
+            travelCalcFailed: 'Dobu p\u0159esunu se nepoda\u0159ilo vypo\u010d\u00edtat (chyb\u011bj\u00ed live data ze hry).',
+            travelLimitedBy: 'Omezeno: {unit}',
+            travelColonizeShipLimit: 'To p\u0159ekra\u010duje b\u011b\u017en\u00fd 48h limit kolonizační lodi.',
+            travelFlyingNote: 'L\u00e9taj\u00edc\u00ed jednotky mohou p\u0159ekonat ostrovy bez transportn\u00ed lodi.',
+            travelNoBonusData: 'Bonusy v\u00fdzkumu/budov m\u011bsta nejsou dostupn\u00e9 — zobrazena jen z\u00e1kladn\u00ed rychlost.',
+            travelUsedActiveCity: 'Pou\u017eity bonusy va\u0161eho aktivn\u00edho m\u011bsta (po\u010d\u00e1tek nen\u00ed jedn\u00edm z va\u0161ich m\u011bst).',
+            travelScopeNote: 'Nezahrnuje bonus Velk\u00e9ho chr\u00e1mu Area na Olympu ani efekty hrdiny.',
             historyEmpty: 'Pro tuto položku není zaznamenána žádná historie dobývání.',
             historyNotLoaded: 'Načítání historie dobývání...',
             historyDisabled: 'Povolte "historii dobývání" v Nastavení pro použití >history.',
@@ -2457,6 +2850,9 @@
             footerTab: 'Tab filter',
             footerFav: 'Ctrl+F ob\u013e\u00faben\u00e9',
             footerBBCode: 'Ctrl+B kop\u00edrova\u0165 BBCode',
+            footerExport: 'Exportova\u0165 zoznam',
+            exportEmpty: 'V aktu\u00e1lnom zozname nie je ni\u010d na export.',
+            exportCopied: 'Skop\u00edrovan\u00fdch {n} polo\u017eiek BBCode',
             bbcodeCopied: 'Skop\u00edrovan\u00e9',
             footerRefresh: 'Ctrl+R obnovi\u0165',
             footerHelp: '? pomoc',
@@ -2474,14 +2870,26 @@
             commandHelpTitle: 'Pr\u00edkazy',
             commandGotoHelp: '>goto 123:456 \u2014 sko\u010di\u0165 na ostrov',
             commandGhostHelp: '>ghost [minPts] \u2014 mest\u00e1 duchov',
-            commandDistHelp: '>dist X:Y [X:Y] \u2014 vzdialenos\u0165 ostrovov',
+            commandDistHelp: '>dist X:Y [X:Y...] \u2014 vzdialenos\u0165 ostrovov',
             commandHelpHint: '>help \u2014 zobrazi\u0165 tento zoznam',
             commandUnknown: 'Nezn\u00e1my pr\u00edkaz: {cmd}',
             premiumRequired: 'Vy\u017eaduje aktívneho poradcu Správca (Premium).',
             ghostEmpty: 'Nena\u0161li sa \u017eiadne mest\u00e1 duchov.',
             distResult: 'Vzdialenos\u0165 ostrovov: {n}',
             distFromActive: 'z va\u0161eho akt\u00edvneho mesta',
+            distFromOrigin: 'z pripnut\u00e9ho po\u010diatku',
             distNeedOrigin: 'Zadajte dve s\u00faradnice, alebo jednu, ak mo\u017eno zisti\u0165 va\u0161e akt\u00edvne mesto.',
+            originSet: 'Po\u010diatok nastaven\u00fd na {x}:{y}',
+            originSetTooltip: 'Nastavi\u0165 ako po\u010diatok vzdialenosti (Ctrl+O)',
+            originCleared: 'Po\u010diatok zru\u0161en\u00fd',
+            originIndicator: 'Po\u010diatok {x}:{y}',
+            originIndicatorTooltip: 'Kliknut\u00edm zru\u0161\u00edte pripnut\u00fd po\u010diatok',
+            shortcutsSetOrigin: 'Nastavi\u0165 ako po\u010diatok vzdialenosti',
+            favoriteNoteTooltip: 'Upravi\u0165 pozn\u00e1mku (Ctrl+N)',
+            favoriteNoteTitle: 'Pozn\u00e1mka pre {name}',
+            favoriteNoteLabel: 'Pozn\u00e1mka',
+            favoriteNoteSaved: 'Pozn\u00e1mka ulo\u017een\u00e1',
+            shortcutsEditNote: 'Upravi\u0165 pozn\u00e1mku vybranej obl\u00fabenej polo\u017eky',
             scopeHelpTitle: 'Rozsahy',
             scopeHelpDesc: '@p hr\u00e1\u010di \u00b7 @a aliancie \u00b7 @t mest\u00e1 \u00b7 @c s\u00faradnice',
             commandIslandHelp: '>island X:Y \u2014 v\u0161etky mest\u00e1 na ostrove',
@@ -2555,6 +2963,17 @@
             recentlyConquered: 'dobyté pred {n} dňami',
             lastActivity: 'posledná aktivita pred {n} dňami',
             commandHistoryHelp: '>history <meno|x:y> — história dobýjania mesta, hráča alebo súradnice',
+            commandTravelHelp: '>travel <jednotka,...> [X:Y] [X:Y] [sirens=N] — \u010das presunu jednotiek',
+            commandTopHelp: '>top players|alliances [N] — rebr\u00ed\u010dek pod\u013ea bodov',
+            commandVsHelp: '>vs <aliancia1> vs <aliancia2> — porovnaj dve aliancie',
+            travelUnknownUnit: 'Nezn\u00e1ma jednotka: {unit}',
+            travelCalcFailed: '\u010cas presunu sa nepodarilo vypo\u010d\u00edta\u0165 (ch\u00fdbaj\u00face live d\u00e1ta hry).',
+            travelLimitedBy: 'Obmedzen\u00e9: {unit}',
+            travelColonizeShipLimit: 'Toto prekra\u010duje be\u017en\u00fd 48h limit kolonizačnej lode.',
+            travelFlyingNote: 'Lietaj\u00face jednotky m\u00f4\u017eu prekona\u0165 ostrovy bez transportnej lode.',
+            travelNoBonusData: 'Bonusy v\u00fdskumu/budov mesta nie s\u00fa dostupn\u00e9 — zobrazen\u00e1 iba z\u00e1kladn\u00e1 r\u00fdchlos\u0165.',
+            travelUsedActiveCity: 'Pou\u017eit\u00e9 bonusy va\u0161eho akt\u00edvneho mesta (po\u010diatok nie je jedn\u00fdm z va\u0161ich miest).',
+            travelScopeNote: 'Nezah\u0155\u0148a bonus Ve\u013ek\u00e9ho chr\u00e1mu Area na Olympe ani efekty hrdinu.',
             historyEmpty: 'Pre túto položku nie je zaznamenaná žiadna história dobýjania.',
             historyNotLoaded: 'Načítava sa história dobýjania...',
             historyDisabled: 'Povoľte "históriu dobýjania" v Nastaveniach na použitie >history.',
@@ -2746,6 +3165,10 @@
         showSaveSearch: false,
         saveSearchMode: 'create', // 'create' (new saved search) | 'edit' (rename existing)
         saveSearchEditId: null,
+        // Inline "Edit note" panel for a favorited row, same mutually-
+        // exclusive pattern as showSaveSearch above.
+        showNoteEditor: false,
+        noteEditItem: null,
         savedAt: 0,
         dataSource: null,
         // How many of state.results are currently rendered; grows as the
@@ -2958,7 +3381,7 @@
         if (index >= 0) {
             favorites.splice(index, 1);
         } else {
-            favorites.unshift({ type: item.type, id: item.id, name: item.name, x: item.x, y: item.y });
+            favorites.unshift({ type: item.type, id: item.id, name: item.name, x: item.x, y: item.y, note: '' });
             if (favorites.length > CONFIG.FAVORITES_MAX) {
                 favorites.length = CONFIG.FAVORITES_MAX;
             }
@@ -2969,6 +3392,26 @@
 
     function isFavorite(item) {
         return favoriteSet.has(`${item.type}:${item.id}`);
+    }
+
+    /*
+     * Free-text note (max 140 chars) attached to a favorite entry,
+     * independent from its resolved name — e.g. "support target" or
+     * "ally, do not attack". No-ops if the item isn't favorited.
+     */
+    function favoriteNote(item) {
+        if (!item) return '';
+        const entry = loadFavorites().find((favEntry) => favEntry.type === item.type && String(favEntry.id) === String(item.id));
+        return entry && entry.note ? entry.note : '';
+    }
+
+    function setFavoriteNote(item, note) {
+        const favorites = loadFavorites();
+        const entry = favorites.find((favEntry) => favEntry.type === item.type && String(favEntry.id) === String(item.id));
+        if (!entry) return false;
+        entry.note = String(note || '').slice(0, 140).trim();
+        saveFavorites(favorites);
+        return true;
     }
 
     /*
@@ -2986,13 +3429,14 @@
         storageSet(worldKey('savedSearches'), list);
     }
 
-    function addSavedSearch(query, name) {
+    function addSavedSearch(query, name, note) {
         const list = loadSavedSearches();
         const trimmedName = String(name || '').trim();
         const entry = {
             id: Date.now(),
             query,
             name: trimmedName || query,
+            note: String(note || '').slice(0, 140).trim(),
             createdAt: Date.now(),
         };
         list.unshift(entry);
@@ -3012,13 +3456,58 @@
         saveSavedSearches([]);
     }
 
-    function renameSavedSearch(id, name) {
+    function renameSavedSearch(id, name, note) {
         const list = loadSavedSearches();
         const entry = list.find((item) => item.id === id);
         if (!entry) return;
         const trimmedName = String(name || '').trim();
         entry.name = trimmedName || entry.query;
+        if (note !== undefined) {
+            entry.note = String(note || '').slice(0, 140).trim();
+        }
         saveSavedSearches(list);
+    }
+
+    /*
+     * ============================================================
+     * ORIGIN OVERRIDE
+     * ============================================================
+     *
+     * Per-world override for the implicit origin used by >dist,
+     * >near, >ghost near, >travel and the distance columns. Set via
+     * Ctrl+O / the per-row "set as origin" icon on any town/
+     * coordinate/island result; effectiveOrigin() prefers this over
+     * activeTownCoords() when present, so a multi-city player can
+     * plan from a city other than whichever one the game client
+     * currently has open.
+     */
+    function loadOriginOverride() {
+        const value = storageGet(worldKey('origin'));
+        if (!value || !Number.isFinite(value.x) || !Number.isFinite(value.y)) return null;
+        return { x: value.x, y: value.y };
+    }
+
+    function setOriginOverride(coords) {
+        if (!coords || !Number.isFinite(coords.x) || !Number.isFinite(coords.y)) return;
+        storageSet(worldKey('origin'), { x: coords.x, y: coords.y });
+    }
+
+    function clearOriginOverride() {
+        storageSet(worldKey('origin'), null);
+    }
+
+    function setOriginFromItem(item) {
+        if (!item) return false;
+        let coords = null;
+        if (item.type === 'coordinate' || item.type === 'island') {
+            coords = { x: item.x, y: item.y };
+        } else if (item.type === 'town') {
+            const town = item.data;
+            coords = town ? { x: town.islandX, y: town.islandY } : { x: item.x, y: item.y };
+        }
+        if (!coords) return false;
+        setOriginOverride(coords);
+        return true;
     }
 
     /*
@@ -3097,6 +3586,7 @@
                 id: entry.id,
                 name: entry.name,
                 query: entry.query,
+                note: entry.note || '',
                 section: 'saved',
             });
         }
@@ -3105,6 +3595,7 @@
             const item = hydrateHistoryItem(entry);
             if (item) {
                 item.section = 'favorite';
+                item.note = entry.note || '';
                 rows.push(item);
                 keys.add(`${item.type}:${item.id}`);
             }
@@ -4244,6 +4735,36 @@
     }
 
     /*
+     * Origin actually used by >dist/>near/>ghost near/>travel and the
+     * distance columns: a manually pinned origin (Ctrl+O / the per-row
+     * "set as origin" icon, see ORIGIN OVERRIDE above) wins over the
+     * active city; falling back to activeTownCoords() keeps every
+     * existing call site working unchanged when no override is set.
+     */
+    function effectiveOrigin() {
+        return loadOriginOverride() || activeTownCoords();
+    }
+
+    /*
+     * True when `coords` matches one of the player's own towns (per
+     * DATA.townsByPlayer keyed by the client's own player id) — used
+     * by >travel to warn when the pinned/active origin isn't a city
+     * whose research/building bonuses can actually be read, instead
+     * of silently mixing bonuses from the wrong city.
+     */
+    function originIsOwnTown(coords) {
+        if (!coords) return false;
+        const towns = townsOnIsland(coords.x, coords.y);
+        try {
+            const ownId = GP.Game && Number.isFinite(Number(GP.Game.player_id)) ? Number(GP.Game.player_id) : null;
+            if (!ownId) return false;
+            return towns.some((town) => town.playerId === ownId);
+        } catch (_) {
+            return false;
+        }
+    }
+
+    /*
      * ============================================================
      * PREMIUM GATING (Administrator/Curator advisor)
      * ============================================================
@@ -4297,13 +4818,31 @@
         if (matched.length >= 2) {
             from = parsePair(matched[0]);
             to = parsePair(matched[1]);
+            // 3+ coordinates: treat the first as origin and report the
+            // distance to every remaining destination, instead of only
+            // ever comparing a single pair.
+            if (matched.length > 2) {
+                const rows = [];
+                const seas = getSea(from.x, from.y);
+                for (let i = 1; i < matched.length; i++) {
+                    const dest = parsePair(matched[i]);
+                    if (!dest) continue;
+                    const distance = islandDistance(from, dest);
+                    const destSeas = getSea(dest.x, dest.y) === seas ? seas : `${seas} \u2192 ${getSea(dest.x, dest.y)}`;
+                    rows.push({
+                        type: 'info',
+                        name: `${from.x}:${from.y} \u2192 ${dest.x}:${dest.y} \u00b7 ${destSeas} \u00b7 ${translate('distResult', { n: distance })} \u00b7 ${distanceBand(distance)}`,
+                    });
+                }
+                return rows.length ? rows : [{ type: 'info', name: translate('distNeedOrigin') }];
+            }
         } else {
-            const active = activeTownCoords();
-            if (active) {
-                from = active;
+            const origin = effectiveOrigin();
+            if (origin) {
+                from = origin;
                 to = matched.length === 1 ? parsePair(matched[0]) : null;
                 if (to) {
-                    originLabel = ` (${translate('distFromActive')})`;
+                    originLabel = ` (${translate(loadOriginOverride() ? 'distFromOrigin' : 'distFromActive')})`;
                 }
             }
         }
@@ -4329,7 +4868,7 @@
      */
     function ghostRows(minPoints, near) {
         const minimum = Number.isFinite(minPoints) ? minPoints : CONFIG.GHOST_MIN_POINTS;
-        const origin = near ? activeTownCoords() : null;
+        const origin = near ? effectiveOrigin() : null;
         if (near && !origin) {
             return [{ type: 'info', name: translate('distNeedOrigin') }];
         }
@@ -4352,6 +4891,354 @@
         return picked.map((town) => townResult(town, origin ? {
             distance: islandDistance(origin, { x: town.islandX, y: town.islandY }),
         } : null));
+    }
+
+    /*
+     * ============================================================
+     * >travel — troop movement time calculator
+     * ============================================================
+     *
+     * Formula verified directly against the live Grepolis client
+     * (game.min.js, UnitOrder.getRuntimes/getUnitSpeed), not a
+     * community wiki:
+     *
+     *   effectiveSpeed = GameData.units[unit].speed   (already
+     *     includes the world's Unit Speed multiplier — the client
+     *     never stores a separate "base" speed)
+     *   seconds = floor(50 * distance / (effectiveSpeed * modifiers)
+     *     + Game.constants.units.runtime_setup_time)
+     *
+     * Modifiers (all read live from GP, never cached, and all
+     * optional/defensive — see travelModifiers()):
+     *   - generalModifier (both land & naval): the temple's
+     *     "Improved troop movement" power, if cast on the reference
+     *     city.
+     *   - groundModifier (land only): Meteorology research.
+     *   - navalModifier (naval only): Cartography research +
+     *     Lighthouse building (additive with each other).
+     *   - colonize_ship with "Set Sail" research: navalModifier gets
+     *     GameData.research_bonus.colony_ship_speed added instead of
+     *     the plain naval bonuses (client-verified special case).
+     *   - sirens (naval only, manual `sirens=N` argument — the
+     *     client has no public API to read a town's siren count
+     *     outside an actual attack-planner window): multiplies the
+     *     naval speed by 1 + siren_percentage * min(N, siren_limit).
+     *
+     * A mixed army's travel time is the MAXIMUM of every selected
+     * unit's own duration (the slowest unit determines arrival),
+     * mirroring UnitOrder.getFinalRuntimes().
+     *
+     * Explicitly OUT of scope (documented in >help, not silently
+     * guessed): hero movement bonuses (Atalanta) and the Olympus
+     * Great Temple of Ares +15% all-unit bonus — neither is wired
+     * into the client's own modifier pipeline
+     * (initializeAvailableModifiers) the way Lighthouse/Meteorology/
+     * Cartography/Set Sail/unit_movement_boost are, so there is no
+     * verified formula to reproduce them.
+     */
+
+    const FLYING_UNITS = new Set(['manticore', 'harpy', 'pegasus', 'griffin', 'ladon']);
+    const COLONIZE_SHIP_ID = 'colonize_ship';
+
+    function formatDuration(totalSeconds) {
+        const seconds = Math.max(0, Math.floor(totalSeconds));
+        const days = Math.floor(seconds / 86400);
+        const hours = Math.floor((seconds % 86400) / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        const parts = [];
+        if (days) parts.push(`${days}d`);
+        if (hours || days) parts.push(`${hours}h`);
+        if (minutes || hours || days) parts.push(`${minutes}m`);
+        if (!days && !hours) parts.push(`${secs}s`);
+        return parts.join(' ');
+    }
+
+    /*
+     * Resolves a Grepolis unit key from user input: either the
+     * internal key itself (rider, bireme...) or a case-insensitive
+     * match against the unit's display name in the client's own
+     * current language (GameData.units[x].name), so `>travel
+     * caballero ...` works on an es world without hardcoding any
+     * translation table ourselves.
+     */
+    function resolveUnitKey(token) {
+        const wanted = normalize(token);
+        if (!wanted) return null;
+        try {
+            const units = GP.GameData && GP.GameData.units;
+            if (!units) return null;
+            if (units[token] || units[wanted]) {
+                return units[token] ? token : wanted;
+            }
+            for (const key of Object.keys(units)) {
+                if (normalize(units[key].name) === wanted) return key;
+            }
+        } catch (_) {
+            return null;
+        }
+        return null;
+    }
+
+    /*
+     * Live modifier state for a given reference town id, read
+     * directly from the game client (never cached — researches/
+     * buildings/temple powers can change at any time). Returns null
+     * on any failure so travelRows() can fall back to "no bonuses"
+     * instead of throwing.
+     */
+    function travelModifiers(townId) {
+        try {
+            if (!GP.ITowns || typeof GP.ITowns.getTown !== 'function') return null;
+            const town = GP.ITowns.getTown(String(townId));
+            if (!town) return null;
+            const researches = typeof town.getResearches === 'function' ? town.getResearches() : null;
+            const buildings = typeof town.getBuildings === 'function' ? town.getBuildings() : null;
+            const meteorology = researches && typeof researches.get === 'function' ? Boolean(researches.get('meteorology')) : false;
+            const cartography = researches && typeof researches.get === 'function' ? Boolean(researches.get('cartography')) : false;
+            const setSail = researches && typeof researches.get === 'function' ? Boolean(researches.get('set_sail')) : false;
+            const lighthouse = buildings && typeof buildings.hasBuildingWithLevel === 'function'
+                ? Boolean(buildings.hasBuildingWithLevel('lighthouse', 1))
+                : false;
+            const movementBoost = typeof town.getCastedPower === 'function' ? Boolean(town.getCastedPower('unit_movement_boost')) : false;
+            return { meteorology, cartography, setSail, lighthouse, movementBoost };
+        } catch (_) {
+            return null;
+        }
+    }
+
+    /*
+     * Duration (seconds) for a single unit over `distance` islands,
+     * given the live modifier state and manual siren count. Returns
+     * null if the unit or its speed can't be resolved.
+     */
+    function travelUnitSeconds(unitKey, distance, mods, sirens) {
+        try {
+            const unitDef = GP.GameData && GP.GameData.units && GP.GameData.units[unitKey];
+            const setupTime = GP.Game && GP.Game.constants && GP.Game.constants.units
+                ? Number(GP.Game.constants.units.runtime_setup_time)
+                : null;
+            if (!unitDef || !Number.isFinite(unitDef.speed) || unitDef.speed <= 0 || !Number.isFinite(setupTime)) {
+                return null;
+            }
+            const additional = GP.GameData.additional_runtime_modifier || {};
+            const researchBonus = GP.GameData.research_bonus || {};
+
+            let generalMod = 1;
+            if (mods && mods.movementBoost && Number.isFinite(additional.default_unit_movement_boost)) {
+                generalMod += additional.default_unit_movement_boost / 100;
+            }
+
+            let scopeMod = 1;
+            if (unitDef.is_naval) {
+                if (mods && mods.cartography && Number.isFinite(researchBonus.cartography_speed)) {
+                    scopeMod += researchBonus.cartography_speed;
+                }
+                if (mods && mods.lighthouse && Number.isFinite(additional.lighthouse_speed_bonus)) {
+                    scopeMod += additional.lighthouse_speed_bonus;
+                }
+                if (unitKey === COLONIZE_SHIP_ID && mods && mods.setSail && Number.isFinite(researchBonus.colony_ship_speed)) {
+                    scopeMod += researchBonus.colony_ship_speed;
+                }
+                const sirenCount = Number.isFinite(sirens) ? Math.max(0, sirens) : 0;
+                if (sirenCount > 0 && Number.isFinite(additional.siren_percentage)) {
+                    const cappedSirens = Number.isFinite(additional.siren_limit)
+                        ? Math.min(sirenCount, additional.siren_limit)
+                        : sirenCount;
+                    scopeMod *= 1 + additional.siren_percentage * cappedSirens;
+                }
+            } else {
+                if (mods && mods.meteorology && Number.isFinite(researchBonus.meteorology_speed)) {
+                    scopeMod += researchBonus.meteorology_speed;
+                }
+            }
+
+            const effectiveSpeed = unitDef.speed * generalMod * scopeMod;
+            if (!Number.isFinite(effectiveSpeed) || effectiveSpeed <= 0) return null;
+            return Math.max(1, Math.floor((50 * distance) / effectiveSpeed + setupTime));
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function travelRows(rawArgs) {
+        const raw = String(rawArgs || '').trim();
+        if (!raw) {
+            return [{ type: 'info', name: translate('commandTravelHelp') }];
+        }
+
+        const sirenMatch = raw.match(/\bsirens?=(\d+)\b/i);
+        const sirens = sirenMatch ? Number(sirenMatch[1]) : 0;
+        const withoutSirens = raw.replace(/\bsirens?=\d+\b/i, ' ').trim();
+
+        const coordTokens = withoutSirens.match(/\d{1,3}\s*[:,]\s*\d{1,3}/g) || [];
+        let withoutCoords = withoutSirens;
+        for (const token of coordTokens) withoutCoords = withoutCoords.replace(token, ' ');
+        const unitTokens = withoutCoords.split(/[\s,]+/).map((t) => t.trim()).filter(Boolean);
+
+        if (!unitTokens.length) {
+            return [{ type: 'info', name: translate('commandTravelHelp') }];
+        }
+
+        const unitKeys = [];
+        const unknownTokens = [];
+        for (const token of unitTokens) {
+            const key = resolveUnitKey(token);
+            if (key && !unitKeys.includes(key)) unitKeys.push(key);
+            else if (!key) unknownTokens.push(token);
+        }
+        if (unknownTokens.length) {
+            return [{ type: 'info', name: translate('travelUnknownUnit', { unit: unknownTokens[0] }) }];
+        }
+        if (!unitKeys.length) {
+            return [{ type: 'info', name: translate('commandTravelHelp') }];
+        }
+
+        let from = null;
+        let to = null;
+        if (coordTokens.length >= 2) {
+            from = parseCoordinates(coordTokens[0].replace(/\s+/g, ''));
+            to = parseCoordinates(coordTokens[1].replace(/\s+/g, ''));
+        } else if (coordTokens.length === 1) {
+            from = effectiveOrigin();
+            to = parseCoordinates(coordTokens[0].replace(/\s+/g, ''));
+        } else {
+            from = effectiveOrigin();
+        }
+
+        if (!from || !to) {
+            return [{ type: 'info', name: translate('distNeedOrigin') }];
+        }
+
+        const distance = islandDistance(from, to);
+
+        // Modifiers are read from a real town at the origin coordinate
+        // when one belongs to the player (researches/buildings/temple
+        // powers are per-city, and only readable for the player's own
+        // towns — see originIsOwnTown); otherwise fall back to the
+        // active city, and warn that the result may not reflect the
+        // pinned origin's actual bonuses.
+        let refTownId = null;
+        let usedFallbackCity = false;
+        const ownTowns = townsOnIsland(from.x, from.y);
+        try {
+            const ownId = GP.Game && Number.isFinite(Number(GP.Game.player_id)) ? Number(GP.Game.player_id) : null;
+            const ownTown = ownId ? ownTowns.find((town) => town.playerId === ownId) : null;
+            if (ownTown) {
+                refTownId = ownTown.id;
+            } else if (GP.Game && Number.isFinite(Number(GP.Game.townId))) {
+                refTownId = Number(GP.Game.townId);
+                usedFallbackCity = true;
+            }
+        } catch (_) {
+            refTownId = null;
+        }
+
+        const mods = refTownId ? travelModifiers(refTownId) : null;
+
+        const results = [];
+        for (const unitKey of unitKeys) {
+            const seconds = travelUnitSeconds(unitKey, distance, mods, sirens);
+            const unitDef = GP.GameData.units[unitKey];
+            results.push({ unitKey, name: unitDef ? unitDef.name : unitKey, seconds });
+        }
+
+        const resolvable = results.filter((r) => Number.isFinite(r.seconds));
+        if (!resolvable.length) {
+            return [{ type: 'info', name: translate('travelCalcFailed') }];
+        }
+
+        const slowest = resolvable.reduce((worst, r) => (r.seconds > worst.seconds ? r : worst), resolvable[0]);
+        const seas = getSea(from.x, from.y) === getSea(to.x, to.y)
+            ? getSea(from.x, from.y)
+            : `${getSea(from.x, from.y)} \u2192 ${getSea(to.x, to.y)}`;
+
+        const rows = [{
+            type: 'info',
+            name: `${from.x}:${from.y} \u2192 ${to.x}:${to.y} \u00b7 ${seas} \u00b7 ${translate('distResult', { n: distance })} \u00b7 ${formatDuration(slowest.seconds)}`,
+        }];
+
+        if (resolvable.length > 1) {
+            rows.push({
+                type: 'info',
+                name: translate('travelLimitedBy', { unit: slowest.name }),
+            });
+            for (const r of resolvable) {
+                rows.push({ type: 'info', name: `${r.name}: ${formatDuration(r.seconds)}` });
+            }
+        }
+
+        if (slowest.unitKey === COLONIZE_SHIP_ID && slowest.seconds > 48 * 3600) {
+            rows.push({ type: 'info', name: translate('travelColonizeShipLimit') });
+        }
+
+        if (unitKeys.some((key) => FLYING_UNITS.has(key))) {
+            rows.push({ type: 'info', name: translate('travelFlyingNote') });
+        }
+
+        if (!mods) {
+            rows.push({ type: 'info', name: translate('travelNoBonusData') });
+        } else if (usedFallbackCity) {
+            rows.push({ type: 'info', name: translate('travelUsedActiveCity') });
+        }
+
+        rows.push({ type: 'info', name: translate('travelScopeNote') });
+
+        return rows;
+    }
+
+    /*
+     * >top players|alliances [N] — plain points ranking. Not gated:
+     * this is the same public ranking already shown in-game without
+     * any Premium advisor (the Hall of Fame / in-game ranking
+     * window), sourced from the same players.txt/alliances.txt dumps
+     * every other search already reads, so reproducing the sort
+     * order isn't reproducing a paid overview.
+     */
+    function topRows(tokens) {
+        const kind = (tokens[0] || '').toLowerCase();
+        const isPlayers = kind.startsWith('player');
+        const isAlliances = kind.startsWith('alliance');
+        if (!isPlayers && !isAlliances) {
+            return [{ type: 'info', name: translate('commandTopHelp') }];
+        }
+        const nToken = tokens.find((token, index) => index > 0 && Number.isFinite(Number(token)));
+        const limit = Math.max(1, Math.min(CONFIG.MAX_RESULTS, nToken ? Math.floor(Number(nToken)) : CONFIG.MAX_RESULTS));
+
+        if (isPlayers) {
+            const sorted = DATA.players.slice().sort((a, b) => b.points - a.points).slice(0, limit);
+            if (!sorted.length) return [{ type: 'info', name: translate('noResults') }];
+            return sorted.map((player) => ({ type: 'player', id: player.id, name: player.name, data: player, score: player.points }));
+        }
+
+        const sorted = DATA.alliances.slice().sort((a, b) => b.points - a.points).slice(0, limit);
+        if (!sorted.length) return [{ type: 'info', name: translate('noResults') }];
+        return sorted.map((alliance) => ({ type: 'alliance', id: alliance.id, name: alliance.name, data: alliance, score: alliance.points }));
+    }
+
+    /*
+     * >vs <alliance1> vs <alliance2> — side-by-side alliance totals.
+     * Only shows each alliance's own already-public row (rank/
+     * members/towns/points, same as a plain alliance search), never
+     * a member listing, so it isn't the multi-city aggregation the
+     * Curator gate exists for (same reasoning >history uses for its
+     * own single-entity exemption).
+     */
+    function vsRows(rawArgs) {
+        const raw = String(rawArgs || '').trim();
+        const parts = raw.split(/\s+vs\s+|\s*\|\s*/i).map((part) => part.trim()).filter(Boolean);
+        if (parts.length !== 2) {
+            return [{ type: 'info', name: translate('commandVsHelp') }];
+        }
+        const left = findAlliance(parts[0]);
+        const right = findAlliance(parts[1]);
+        if (!left || !right) {
+            return [{ type: 'info', name: translate('noResults') }];
+        }
+        return [
+            { type: 'alliance', id: left.id, name: left.name, data: left, score: 30000 },
+            { type: 'alliance', id: right.id, name: right.name, data: right, score: 29999 },
+        ];
     }
 
     function islandRows(rawArgs) {
@@ -4394,7 +5281,7 @@
             const other = tokens.find((token) => token !== coordToken);
             radius = other ? parseRadius(other) : 3;
         } else {
-            origin = activeTownCoords();
+            origin = effectiveOrigin();
             radius = parseRadius(tokens[0]);
         }
 
@@ -4537,7 +5424,7 @@
     function playerDetailRows(player) {
         const header = { type: 'player', id: player.id, name: player.name, data: player, score: 30000 };
         const towns = (DATA.townsByPlayer.get(player.id) || []).slice().sort((a, b) => b.points - a.points);
-        const origin = activeTownCoords();
+        const origin = effectiveOrigin();
         const rows = [header];
         if (towns.length) {
             rows.push({ type: 'info', name: `${translate('playerTownsTitle')} \u00b7 ${towns.length}` });
@@ -4758,17 +5645,20 @@
         const [nameRaw, ...tokens] = rest.split(/\s+/);
         const name = (nameRaw || '').toLowerCase();
         const args = tokens.join(' ');
-        const knownCommands = ['goto', 'ghost', 'dist', 'island', 'near', 'ocean', 'history', 'settings', 'help'];
+        const knownCommands = ['goto', 'ghost', 'dist', 'island', 'near', 'ocean', 'history', 'travel', 'top', 'vs', 'settings', 'help'];
 
         if (!name || (tokens.length === 0 && !knownCommands.includes(name))) {
             const suggestions = [
                 { type: 'command-suggestion', name: '>goto <x>:<y>', command: '>goto', helpText: translate('commandGotoHelp') },
                 { type: 'command-suggestion', name: '>ghost [minPts] [near]', command: '>ghost', helpText: translate('commandGhostHelp') },
-                { type: 'command-suggestion', name: '>dist X:Y [X:Y]', command: '>dist', helpText: translate('commandDistHelp') },
+                { type: 'command-suggestion', name: '>dist X:Y [X:Y...]', command: '>dist', helpText: translate('commandDistHelp') },
                 { type: 'command-suggestion', name: '>island X:Y', command: '>island', helpText: translate('commandIslandHelp') },
                 { type: 'command-suggestion', name: '>near [X:Y] [radius]', command: '>near', helpText: translate('commandNearHelp') },
                 { type: 'command-suggestion', name: '>ocean M34 [alliance]', command: '>ocean', helpText: translate('commandOceanHelp') },
                 { type: 'command-suggestion', name: '>history <name|x:y>', command: '>history', helpText: translate('commandHistoryHelp') },
+                { type: 'command-suggestion', name: '>travel <unit,...> [X:Y] [X:Y] [sirens=N]', command: '>travel', helpText: translate('commandTravelHelp') },
+                { type: 'command-suggestion', name: '>top players|alliances [N]', command: '>top', helpText: translate('commandTopHelp') },
+                { type: 'command-suggestion', name: '>vs <alliance1> vs <alliance2>', command: '>vs', helpText: translate('commandVsHelp') },
                 { type: 'command-suggestion', name: '>settings', command: '>settings', helpText: translate('commandSettingsHelp') },
                 { type: 'command-suggestion', name: '>help', command: '>help', helpText: translate('commandHelpHint') },
             ];
@@ -4821,6 +5711,15 @@
             case 'history':
                 return historyRows(args);
 
+            case 'travel':
+                return travelRows(args);
+
+            case 'top':
+                return topRows(tokens);
+
+            case 'vs':
+                return vsRows(args);
+
             default:
                 return [{ type: 'info', name: translate('commandUnknown', { cmd: nameRaw || '' }) }];
         }
@@ -4860,6 +5759,22 @@
         } else {
             render();
         }
+    }
+
+    /*
+     * Pins the currently focused row's coordinates as the distance
+     * origin (see ORIGIN OVERRIDE above), then re-renders so the
+     * footer origin indicator and every distance column pick it up
+     * immediately. No-ops for rows without coordinates (players,
+     * alliances, info rows, saved searches).
+     */
+    function setOriginSelected() {
+        const item = getFocusedItem();
+        if (!setOriginFromItem(item)) {
+            return;
+        }
+        showToast(translate('originSet', { x: item.x, y: item.y }));
+        render();
     }
 
     /*
@@ -4992,6 +5907,31 @@
 
     function copySelectedBBCode() {
         copyBBCode(getFocusedItem());
+    }
+
+    /*
+     * Bulk export (Ctrl+Shift+B / the footer "export" button): copies
+     * every visible row's BBCode (see bbcodeFor), one per line, from
+     * whichever list currently owns keyboard focus — the left-hand
+     * list or an open detail pane (see state.focusPane) — instead of
+     * only the single selected row like Ctrl+B. Rows without a BBCode
+     * equivalent (info rows, coordinates, saved searches...) are
+     * skipped rather than producing empty lines. Does not close the
+     * palette, since exporting a whole list is a "keep working" action
+     * unlike opening/copying a single result.
+     */
+    function exportResultsBBCode() {
+        const inDetailPane = state.focusPane === 'detail' && state.hierarchyStack.length > 0;
+        const list = inDetailPane ? currentHierarchyRows() : state.results;
+        const codes = list.map((item) => bbcodeFor(item)).filter(Boolean);
+        if (!codes.length) {
+            showToast(translate('exportEmpty'));
+            return;
+        }
+        const text = codes.join('\n');
+        copyToClipboard(text).then(() => {
+            showToast(translate('exportCopied', { n: codes.length }));
+        });
     }
 
     let searchTimer = null;
@@ -5502,7 +6442,7 @@
             }
             case 'player': {
                 const towns = (DATA.townsByPlayer.get(item.id) || []).slice().sort((a, b) => b.points - a.points);
-                const origin = activeTownCoords();
+                const origin = effectiveOrigin();
                 return towns.map((town) => townResult(town, origin ? {
                     distance: islandDistance(origin, { x: town.islandX, y: town.islandY }),
                 } : null));
@@ -5635,10 +6575,12 @@
                         <span id="qf-footer-tab">${escapeHTML(translate('footerTab'))}</span>
                         <span id="qf-footer-fav">${escapeHTML(translate('footerFav'))}</span>
                         <span id="qf-footer-bbcode">${escapeHTML(translate('footerBBCode'))}</span>
+                        <button type="button" id="qf-footer-export" class="qf-footer-action">${escapeHTML(translate('footerExport'))}</button>
                         <button type="button" id="qf-footer-refresh" class="qf-footer-action">${escapeHTML(translate('footerRefresh'))}</button>
                         <button type="button" id="qf-footer-help" class="qf-footer-action">${escapeHTML(translate('footerHelp'))}</button>
                     </div>
                     <div id="qf-footer-meta">
+                        <button type="button" id="qf-origin-indicator" hidden></button>
                         <span id="qf-status"></span>
                         <button type="button" id="qf-version">v${VERSION}</button>
                     </div>
@@ -5686,6 +6628,11 @@
             openSettings();
         });
 
+        overlay.querySelector('#qf-footer-export').addEventListener('click', (event) => {
+            event.preventDefault();
+            exportResultsBBCode();
+        });
+
         overlay.querySelector('#qf-footer-refresh').addEventListener('click', (event) => {
             event.preventDefault();
             if (!state.loading) {
@@ -5704,6 +6651,13 @@
                 const url = getUpdateCheckUrl();
                 if (url) window.open(url, '_blank', 'noopener');
             }
+        });
+
+        overlay.querySelector('#qf-origin-indicator').addEventListener('click', (event) => {
+            event.preventDefault();
+            clearOriginOverride();
+            showToast(translate('originCleared'));
+            renderFooter();
         });
     }
 
@@ -5733,7 +6687,7 @@
         // The help/settings/save-search panels replace #qf-results
         // outright and are never split; any open detail pane from a
         // previous view is stale once one of them is showing.
-        const inPanel = state.showHelp || state.showSettings || state.showSaveSearch;
+        const inPanel = state.showHelp || state.showSettings || state.showSaveSearch || state.showNoteEditor;
         if (inPanel && state.hierarchyStack.length) {
             resetHierarchy();
         }
@@ -5813,6 +6767,12 @@
         if (state.showSaveSearch) {
             results.innerHTML = renderSaveSearchPanel();
             bindSaveSearchEvents(results);
+            return;
+        }
+
+        if (state.showNoteEditor) {
+            results.innerHTML = renderNoteEditorPanel();
+            bindNoteEditorEvents(results);
             return;
         }
 
@@ -5982,6 +6942,20 @@
                 ? translate('updateAvailableTooltip', { version: state.updateAvailable })
                 : '';
         }
+
+        const originIndicator = document.getElementById('qf-origin-indicator');
+        if (originIndicator) {
+            const origin = loadOriginOverride();
+            if (origin) {
+                originIndicator.hidden = false;
+                originIndicator.textContent = translate('originIndicator', { x: origin.x, y: origin.y });
+                originIndicator.title = translate('originIndicatorTooltip');
+            } else {
+                originIndicator.hidden = true;
+                originIndicator.textContent = '';
+                originIndicator.title = '';
+            }
+        }
     }
 
     const HISTORY_SECTION_TITLE_KEYS = {
@@ -6051,6 +7025,9 @@
             ['Home / End', translate('shortcutsFirstLast')],
             ['Ctrl+F', translate('footerFav')],
             ['Ctrl+B', translate('footerBBCode')],
+            ['Ctrl+O', translate('shortcutsSetOrigin')],
+            ['Ctrl+N', translate('shortcutsEditNote')],
+            ['Ctrl+Shift+B', translate('footerExport')],
             ['Ctrl+R', translate('footerRefresh')],
             ['Ctrl+D', translate('shortcutsSaveSearch')],
             ['Ctrl+E', translate('shortcutsRenameSaved')],
@@ -6063,11 +7040,14 @@
         const commands = [
             ['>goto 123:456', translate('commandGotoHelp')],
             ['>ghost [minPts] [near]', translate('commandGhostHelp')],
-            ['>dist X:Y [X:Y]', translate('commandDistHelp')],
+            ['>dist X:Y [X:Y...]', translate('commandDistHelp')],
             ['>island X:Y', translate('commandIslandHelp')],
             ['>near [X:Y] [radius]', translate('commandNearHelp')],
             ['>ocean M34 [alliance]', translate('commandOceanHelp')],
             ['>history <name|x:y>', translate('commandHistoryHelp')],
+            ['>travel <unit,...> [X:Y] [X:Y] [sirens=N]', translate('commandTravelHelp')],
+            ['>top players|alliances [N]', translate('commandTopHelp')],
+            ['>vs <alliance1> vs <alliance2>', translate('commandVsHelp')],
             ['>settings', translate('commandSettingsHelp')],
             ['>help', translate('commandHelpHint')],
         ];
@@ -6106,11 +7086,13 @@
         const editing = state.saveSearchMode === 'edit';
         let query = state.query;
         let defaultName = state.query;
+        let defaultNote = '';
 
         if (editing) {
             const entry = loadSavedSearches().find((item) => item.id === state.saveSearchEditId);
             query = entry ? entry.query : '';
             defaultName = entry ? entry.name : '';
+            defaultNote = entry ? (entry.note || '') : '';
         }
 
         return `
@@ -6127,6 +7109,18 @@
                         value="${escapeHTML(defaultName)}"
                     >
                 </div>
+                <div class="qf-settings-row">
+                    <label class="qf-settings-label" for="qf-save-search-note">${escapeHTML(translate('favoriteNoteLabel'))}</label>
+                    <input
+                        id="qf-save-search-note"
+                        class="qf-settings-input"
+                        type="text"
+                        autocomplete="off"
+                        spellcheck="false"
+                        maxlength="140"
+                        value="${escapeHTML(defaultNote)}"
+                    >
+                </div>
                 <div class="qf-help-text">${escapeHTML(query)}</div>
                 <div class="qf-settings-actions">
                     <button type="button" id="qf-save-search-cancel" class="qf-settings-btn qf-settings-btn-secondary">${escapeHTML(translate('saveSearchCancel'))}</button>
@@ -6134,6 +7128,62 @@
                 </div>
             </div>
         `;
+    }
+
+    /*
+     * Inline "Edit note" panel for a favorited row (Ctrl+N / the
+     * per-row note icon). Same qf-settings-* look as the save-search
+     * panel above.
+     */
+    function renderNoteEditorPanel() {
+        const item = state.noteEditItem;
+        const currentNote = item ? favoriteNote(item) : '';
+        return `
+            <div class="qf-settings">
+                <div class="qf-help-title">${escapeHTML(translate('favoriteNoteTitle', { name: item ? item.name : '' }))}</div>
+                <div class="qf-settings-row">
+                    <label class="qf-settings-label" for="qf-note-input">${escapeHTML(translate('favoriteNoteLabel'))}</label>
+                    <input
+                        id="qf-note-input"
+                        class="qf-settings-input"
+                        type="text"
+                        autocomplete="off"
+                        spellcheck="false"
+                        maxlength="140"
+                        value="${escapeHTML(currentNote)}"
+                    >
+                </div>
+                <div class="qf-settings-actions">
+                    <button type="button" id="qf-note-cancel" class="qf-settings-btn qf-settings-btn-secondary">${escapeHTML(translate('saveSearchCancel'))}</button>
+                    <button type="button" id="qf-note-confirm" class="qf-settings-btn qf-settings-btn-primary">${escapeHTML(translate('saveSearchSave'))}</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function bindNoteEditorEvents(container) {
+        const noteInput = container.querySelector('#qf-note-input');
+        if (noteInput) {
+            noteInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    submitNoteEditorPanel(container);
+                } else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    closeNoteEditorPanel();
+                }
+            });
+        }
+
+        const cancelBtn = container.querySelector('#qf-note-cancel');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => closeNoteEditorPanel());
+        }
+
+        const confirmBtn = container.querySelector('#qf-note-confirm');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => submitNoteEditorPanel(container));
+        }
     }
 
     function bindSaveSearchEvents(container) {
@@ -6381,6 +7431,7 @@
         setText('qf-footer-tab', 'footerTab');
         setText('qf-footer-fav', 'footerFav');
         setText('qf-footer-bbcode', 'footerBBCode');
+        setText('qf-footer-export', 'footerExport');
         setText('qf-footer-refresh', 'footerRefresh');
         setText('qf-footer-help', 'footerHelp');
     }
@@ -6422,6 +7473,8 @@
         pencil: svgIcon('<path d="M4 20l.9-4.2L15.4 5.3a1.8 1.8 0 0 1 2.5 0l1.8 1.8a1.8 1.8 0 0 1 0 2.5L9.2 19.1 4 20z"></path><line x1="14" y1="6.7" x2="17.3" y2="10"></line>'),
         chevronRight: svgIcon('<polyline points="9 5 16 12 9 19"></polyline>'),
         chevronLeft: svgIcon('<polyline points="15 5 8 12 15 19"></polyline>'),
+        origin: svgIcon('<circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"></circle><line x1="12" y1="2.5" x2="12" y2="5.5"></line><line x1="12" y1="18.5" x2="12" y2="21.5"></line><line x1="2.5" y1="12" x2="5.5" y2="12"></line><line x1="18.5" y1="12" x2="21.5" y2="12"></line>'),
+        note: svgIcon('<path d="M6 3h9l4 4v14H6z"></path><path d="M15 3v4h4"></path><line x1="8.5" y1="11" x2="15.5" y2="11"></line><line x1="8.5" y1="14.5" x2="15.5" y2="14.5"></line>'),
     };
 
     /*
@@ -6629,6 +7682,7 @@
         if (item.type === 'saved-search') {
             const editBtn = `<span class="qf-saved-edit" title="${escapeHTML(translate('saveSearchEditTooltip'))}">${ICONS.pencil}</span>`;
             const removeBtn = `<span class="qf-saved-remove" title="${escapeHTML(translate('saveSearchRemove'))}">${ICONS.trash}</span>`;
+            const noteHTML = item.note ? `<div class="qf-result-note">${escapeHTML(item.note)}</div>` : '';
             return `
                 <div class="qf-result${selected}${header}" data-index="${index}"${paneAttr}>
                     <span class="qf-result-icon">${icon}</span>
@@ -6640,6 +7694,7 @@
                             ${badge ? `<span class="qf-badge ${badgeClass}">${escapeHTML(badge)}</span>` : ''}
                         </div>
                         ${meta ? `<div class="qf-result-meta">${meta}</div>` : ''}
+                        ${noteHTML}
                     </div>
                 </div>
             `;
@@ -6659,6 +7714,19 @@
         const bbcodeBtn = bbcodeFor(item)
             ? `<span class="qf-bbcode-btn" title="${escapeHTML(translate('footerBBCode'))}">${ICONS.bbcode}</span>`
             : '';
+        // Mouse equivalent of Ctrl+O: only rows with coordinates
+        // (town/coordinate/island, see setOriginFromItem) can be
+        // pinned as the >dist/>near/>ghost near/>travel origin.
+        const originBtn = (item.type === 'town' || item.type === 'coordinate' || item.type === 'island')
+            ? `<span class="qf-origin-btn" title="${escapeHTML(translate('originSetTooltip'))}">${ICONS.origin}</span>`
+            : '';
+        // Mouse equivalent of Ctrl+N: only favorited rows can carry a
+        // note (see favoriteNote/setFavoriteNote), so the icon only
+        // shows once a row is already starred.
+        const noteBtn = item.section === 'favorite'
+            ? `<span class="qf-note-btn" title="${escapeHTML(translate('favoriteNoteTooltip'))}">${ICONS.note}</span>`
+            : '';
+        const noteHTML = item.note ? `<div class="qf-result-note">${escapeHTML(item.note)}</div>` : '';
 
         return `
             <div class="qf-result${selected}${favorite}${header}" data-index="${index}"${paneAttr}${title}>
@@ -6668,11 +7736,14 @@
                         <span class="qf-result-name">${escapeHTML(item.name)}</span>
                         ${star}
                         ${bbcodeBtn}
+                        ${originBtn}
+                        ${noteBtn}
                         ${removeBtn}
                         ${badge ? `<span class="qf-badge ${badgeClass}">${escapeHTML(badge)}</span>` : ''}
                         ${chevron}
                     </div>
                     ${meta ? `<div class="qf-result-meta">${meta}</div>` : ''}
+                    ${noteHTML}
                 </div>
             </div>
         `;
@@ -6752,6 +7823,12 @@
                 return;
             }
 
+            if (key === CONFIG.EXPORT_KEY && event.shiftKey) {
+                event.preventDefault();
+                exportResultsBBCode();
+                return;
+            }
+
             if (key === CONFIG.BBCODE_KEY) {
                 event.preventDefault();
                 copySelectedBBCode();
@@ -6769,6 +7846,21 @@
                 const item = state.results[state.selected];
                 if (item && item.type === 'saved-search') {
                     openRenameSavedSearchPanel(item);
+                }
+                return;
+            }
+
+            if (key === CONFIG.ORIGIN_KEY) {
+                event.preventDefault();
+                setOriginSelected();
+                return;
+            }
+
+            if (key === CONFIG.NOTE_KEY) {
+                event.preventDefault();
+                const item = getFocusedItem();
+                if (item && isFavorite(item)) {
+                    openNoteEditorPanel(item);
                 }
                 return;
             }
@@ -6963,6 +8055,25 @@
             return;
         }
 
+        if (event.target.closest('.qf-origin-btn')) {
+            event.stopPropagation();
+            setPaneSelected(inDetailPane, index);
+            if (setOriginFromItem(item)) {
+                showToast(translate('originSet', { x: item.x, y: item.y }));
+                render();
+            }
+            return;
+        }
+
+        if (event.target.closest('.qf-note-btn')) {
+            event.stopPropagation();
+            setPaneSelected(inDetailPane, index);
+            if (item && isFavorite(item)) {
+                openNoteEditorPanel(item);
+            }
+            return;
+        }
+
         setPaneSelected(inDetailPane, index);
         openResult(item);
     }
@@ -7045,6 +8156,7 @@
             state.showHelp = false;
             state.showSettings = false;
             state.showSaveSearch = false;
+            state.showNoteEditor = false;
 
             input.value = '';
             render();
@@ -7108,6 +8220,7 @@
         if (!isSavableQuery(state.query)) return;
         state.showHelp = false;
         state.showSettings = false;
+        state.showNoteEditor = false;
         state.showSaveSearch = true;
         state.saveSearchMode = 'create';
         state.saveSearchEditId = null;
@@ -7130,6 +8243,7 @@
         if (!item || item.type !== 'saved-search') return;
         state.showHelp = false;
         state.showSettings = false;
+        state.showNoteEditor = false;
         state.showSaveSearch = true;
         state.saveSearchMode = 'edit';
         state.saveSearchEditId = item.id;
@@ -7158,18 +8272,62 @@
     function submitSaveSearchPanel(container) {
         const nameInput = container.querySelector('#qf-save-search-name');
         const name = nameInput ? nameInput.value : '';
+        const noteInput = container.querySelector('#qf-save-search-note');
+        const note = noteInput ? noteInput.value : '';
 
         if (state.saveSearchMode === 'edit') {
-            renameSavedSearch(state.saveSearchEditId, name);
+            renameSavedSearch(state.saveSearchEditId, name, note);
             showToast(translate('saveSearchRenamed'));
         } else {
-            addSavedSearch(state.query, name);
+            addSavedSearch(state.query, name, note);
             showToast(translate('saveSearchSaved'));
         }
 
         state.showSaveSearch = false;
         const input = document.getElementById('qf-input');
         if (input) input.value = '';
+        performSearch('', ++searchToken);
+    }
+
+    /*
+     * Opens the inline "Edit note" panel for a favorited row (Ctrl+N /
+     * the per-row note icon). No-ops for anything that isn't currently
+     * a favorite, since only favorites/saved searches carry a note.
+     */
+    function openNoteEditorPanel(item) {
+        if (!item || item.type === 'info' || !isFavorite(item)) return;
+        state.showHelp = false;
+        state.showSettings = false;
+        state.showSaveSearch = false;
+        state.showNoteEditor = true;
+        state.noteEditItem = item;
+        render();
+        const noteInput = document.getElementById('qf-note-input');
+        if (noteInput) {
+            requestAnimationFrame(() => {
+                noteInput.focus();
+                noteInput.select();
+            });
+        }
+    }
+
+    function closeNoteEditorPanel() {
+        state.showNoteEditor = false;
+        state.noteEditItem = null;
+        render();
+        const input = document.getElementById('qf-input');
+        if (input) input.focus();
+    }
+
+    function submitNoteEditorPanel(container) {
+        const noteInput = container.querySelector('#qf-note-input');
+        const note = noteInput ? noteInput.value : '';
+        if (state.noteEditItem) {
+            setFavoriteNote(state.noteEditItem, note);
+        }
+        state.showNoteEditor = false;
+        state.noteEditItem = null;
+        showToast(translate('favoriteNoteSaved'));
         performSearch('', ++searchToken);
     }
 
@@ -7894,6 +9052,44 @@
         .qf-remove:hover {
             color: #e08a8a !important;
             background: rgba(255, 255, 255, .08);
+        }
+
+        .qf-origin-btn,
+        .qf-note-btn {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            padding: 3px;
+            margin: -2px -2px -2px 0;
+            border-radius: 4px;
+            color: rgba(255, 255, 255, 0);
+            opacity: 0;
+            transition: color .06s ease, background-color .06s ease, opacity .06s ease;
+        }
+
+        .qf-result:hover .qf-origin-btn,
+        .qf-result:hover .qf-note-btn {
+            color: rgba(255, 255, 255, .45);
+            opacity: 1;
+        }
+
+        .qf-origin-btn:hover,
+        .qf-note-btn:hover {
+            color: #d7a33f !important;
+            background: rgba(255, 255, 255, .08);
+        }
+
+        .qf-result-note {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: rgba(215, 163, 63, .75);
+            font-size: 11px;
+            font-style: italic;
+            text-align: left;
         }
 
         .qf-saved-edit,
