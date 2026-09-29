@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder (Beta)
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.13.0-beta.1
+// @version      2.13.0-beta.2
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market. (Privacy policy: https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md)
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.13.0-beta.1';
+    const VERSION = '2.13.0-beta.2';
 
     /*
      * ============================================================
@@ -280,14 +280,17 @@
             searchPlaceholder: 'Search players, alliances or towns...',
             footerNavigate: '\u2191 \u2193 navigate',
             footerOpen: 'Enter to open',
-            footerClose: 'Esc to close',
+            shortcutsEscTwoStage: 'Close panel / palette (press twice if a detail pane is open)',
             emptyTitle: 'Search Grepolis',
             emptySubtitle: 'Players \u00b7 Alliances \u00b7 Towns',
             emptyHintCoords: 'You can also enter coordinates: <strong>{example}</strong>',
+            emptyHintCommands: 'Type <strong>&gt;</strong> for commands (ghost towns, distances...) or <strong>?</strong> for all shortcuts.',
             loadingWorldData: 'Loading world data...',
             noResults: 'No results found.',
             resultsMore: 'Showing {shown} of {total} \u2014 scroll for more',
-            errorLoadingData: 'Error loading data: {error}',
+            errorLoadingDataGeneric: 'Could not load world data. Try refreshing.',
+            errorLoadingDataTimeout: 'The request took too long. Check your connection and try refreshing.',
+            errorLoadingDataWorldNotDetected: 'Could not detect the current world.',
             badgePlayer: 'Player',
             badgeAlliance: 'Alliance',
             badgeTown: 'Town',
@@ -420,14 +423,17 @@
             searchPlaceholder: 'Buscar jugadores, alianzas o ciudades...',
             footerNavigate: '\u2191 \u2193 seleccionar',
             footerOpen: 'Enter abrir',
-            footerClose: 'Esc cerrar',
+            shortcutsEscTwoStage: 'Cerrar panel / paleta (pulsa dos veces si hay un panel de detalle abierto)',
             emptyTitle: 'Buscar en Grepolis',
             emptySubtitle: 'Jugadores \u00b7 Alianzas \u00b7 Ciudades',
             emptyHintCoords: 'Tambi\u00e9n puedes introducir coordenadas: <strong>{example}</strong>',
+            emptyHintCommands: 'Escribe <strong>&gt;</strong> para comandos (ciudades fantasma, distancias...) o <strong>?</strong> para ver todos los atajos.',
             loadingWorldData: 'Cargando datos del mundo...',
             noResults: 'No se encontraron resultados.',
             resultsMore: 'Mostrando {shown} de {total} \u2014 desplaza para ver m\u00e1s',
-            errorLoadingData: 'Error cargando datos: {error}',
+            errorLoadingDataGeneric: 'No se pudieron cargar los datos del mundo. Intenta refrescar.',
+            errorLoadingDataTimeout: 'La solicitud tardó demasiado. Revisa tu conexión e intenta refrescar.',
+            errorLoadingDataWorldNotDetected: 'No se pudo detectar el mundo actual.',
             badgePlayer: 'Jugador',
             badgeAlliance: 'Alianza',
             badgeTown: 'Ciudad',
@@ -560,14 +566,17 @@
             searchPlaceholder: 'Spieler, Allianzen oder St\u00e4dte suchen...',
             footerNavigate: '\u2191 \u2193 ausw\u00e4hlen',
             footerOpen: 'Enter \u00f6ffnen',
-            footerClose: 'Esc schlie\u00dfen',
+            shortcutsEscTwoStage: 'Panel/Palette schließen (bei geöffnetem Detailbereich zweimal drücken)',
             emptyTitle: 'Grepolis durchsuchen',
             emptySubtitle: 'Spieler \u00b7 Allianzen \u00b7 St\u00e4dte',
             emptyHintCoords: 'Du kannst auch Koordinaten eingeben: <strong>{example}</strong>',
+            emptyHintCommands: 'Gib <strong>&gt;</strong> für Befehle ein (Geisterstädte, Entfernungen ...) oder <strong>?</strong> für alle Tastenkürzel.',
             loadingWorldData: 'Weltdaten werden geladen...',
             noResults: 'Keine Ergebnisse gefunden.',
             resultsMore: '{shown} von {total} angezeigt \u2014 scrollen f\u00fcr mehr',
-            errorLoadingData: 'Fehler beim Laden der Daten: {error}',
+            errorLoadingDataGeneric: 'Weltdaten konnten nicht geladen werden. Bitte aktualisieren.',
+            errorLoadingDataTimeout: 'Die Anfrage hat zu lange gedauert. Überprüfe deine Verbindung und aktualisiere erneut.',
+            errorLoadingDataWorldNotDetected: 'Die aktuelle Welt konnte nicht erkannt werden.',
             badgePlayer: 'Spieler',
             badgeAlliance: 'Allianz',
             badgeTown: 'Stadt',
@@ -700,14 +709,17 @@
             searchPlaceholder: 'Rechercher des joueurs, alliances ou villes...',
             footerNavigate: '\u2191 \u2193 s\u00e9lectionner',
             footerOpen: 'Entr\u00e9e ouvrir',
-            footerClose: '\u00c9chap fermer',
+            shortcutsEscTwoStage: 'Fermer le panneau / la palette (appuyez deux fois si un panneau de détail est ouvert)',
             emptyTitle: 'Rechercher dans Grepolis',
             emptySubtitle: 'Joueurs \u00b7 Alliances \u00b7 Villes',
             emptyHintCoords: 'Vous pouvez aussi saisir des coordonn\u00e9es : <strong>{example}</strong>',
+            emptyHintCommands: 'Tapez <strong>&gt;</strong> pour les commandes (villes fantômes, distances...) ou <strong>?</strong> pour tous les raccourcis.',
             loadingWorldData: 'Chargement des donn\u00e9es du monde...',
             noResults: 'Aucun r\u00e9sultat trouv\u00e9.',
             resultsMore: '{shown} sur {total} affich\u00e9s \u2014 faites d\u00e9filer pour plus',
-            errorLoadingData: 'Erreur lors du chargement des donn\u00e9es : {error}',
+            errorLoadingDataGeneric: 'Impossible de charger les données du monde. Essayez de rafraîchir.',
+            errorLoadingDataTimeout: 'La requête a pris trop de temps. Vérifiez votre connexion et réessayez.',
+            errorLoadingDataWorldNotDetected: 'Impossible de détecter le monde actuel.',
             badgePlayer: 'Joueur',
             badgeAlliance: 'Alliance',
             badgeTown: 'Ville',
@@ -840,14 +852,17 @@
             searchPlaceholder: 'Cerca giocatori, alleanze o citt\u00e0...',
             footerNavigate: '\u2191 \u2193 seleziona',
             footerOpen: 'Invio apri',
-            footerClose: 'Esc chiudi',
+            shortcutsEscTwoStage: 'Chiudi pannello / palette (premi due volte se un pannello dettagli è aperto)',
             emptyTitle: 'Cerca in Grepolis',
             emptySubtitle: 'Giocatori \u00b7 Alleanze \u00b7 Citt\u00e0',
             emptyHintCoords: 'Puoi anche inserire le coordinate: <strong>{example}</strong>',
+            emptyHintCommands: 'Digita <strong>&gt;</strong> per i comandi (città fantasma, distanze...) o <strong>?</strong> per tutte le scorciatoie.',
             loadingWorldData: 'Caricamento dati del mondo...',
             noResults: 'Nessun risultato trovato.',
             resultsMore: '{shown} di {total} mostrati \u2014 scorri per altri',
-            errorLoadingData: 'Errore nel caricamento dei dati: {error}',
+            errorLoadingDataGeneric: 'Impossibile caricare i dati del mondo. Prova ad aggiornare.',
+            errorLoadingDataTimeout: 'La richiesta ha impiegato troppo tempo. Controlla la connessione e riprova.',
+            errorLoadingDataWorldNotDetected: 'Impossibile rilevare il mondo attuale.',
             badgePlayer: 'Giocatore',
             badgeAlliance: 'Alleanza',
             badgeTown: 'Citt\u00e0',
@@ -980,14 +995,17 @@
             searchPlaceholder: 'Zoek spelers, allianties of steden...',
             footerNavigate: '\u2191 \u2193 selecteren',
             footerOpen: 'Enter openen',
-            footerClose: 'Esc sluiten',
+            shortcutsEscTwoStage: 'Paneel/palet sluiten (druk tweemaal als er een detailvenster open staat)',
             emptyTitle: 'Zoeken in Grepolis',
             emptySubtitle: 'Spelers \u00b7 Allianties \u00b7 Steden',
             emptyHintCoords: 'Je kunt ook co\u00f6rdinaten invoeren: <strong>{example}</strong>',
+            emptyHintCommands: 'Typ <strong>&gt;</strong> voor opdrachten (spooksteden, afstanden...) of <strong>?</strong> voor alle sneltoetsen.',
             loadingWorldData: 'Wereldgegevens laden...',
             noResults: 'Geen resultaten gevonden.',
             resultsMore: '{shown} van {total} weergegeven \u2014 scroll voor meer',
-            errorLoadingData: 'Fout bij het laden van gegevens: {error}',
+            errorLoadingDataGeneric: 'Kon wereldgegevens niet laden. Probeer te vernieuwen.',
+            errorLoadingDataTimeout: 'De aanvraag duurde te lang. Controleer je verbinding en probeer opnieuw.',
+            errorLoadingDataWorldNotDetected: 'Kon de huidige wereld niet detecteren.',
             badgePlayer: 'Speler',
             badgeAlliance: 'Alliantie',
             badgeTown: 'Stad',
@@ -1120,14 +1138,17 @@
             searchPlaceholder: 'Szukaj graczy, sojuszy lub miast...',
             footerNavigate: '\u2191 \u2193 wybierz',
             footerOpen: 'Enter otw\u00f3rz',
-            footerClose: 'Esc zamknij',
+            shortcutsEscTwoStage: 'Zamknij panel / paletę (naciśnij dwukrotnie, jeśli otwarty jest panel szczegółów)',
             emptyTitle: 'Szukaj w Grepolis',
             emptySubtitle: 'Gracze \u00b7 Sojusze \u00b7 Miasta',
             emptyHintCoords: 'Mo\u017cesz te\u017c wpisa\u0107 wsp\u00f3\u0142rz\u0119dne: <strong>{example}</strong>',
+            emptyHintCommands: 'Wpisz <strong>&gt;</strong>, aby użyć poleceń (miasta widma, odległości...) lub <strong>?</strong>, aby zobaczyć wszystkie skróty.',
             loadingWorldData: '\u0141adowanie danych \u015bwiata...',
             noResults: 'Nie znaleziono wynik\u00f3w.',
             resultsMore: 'Pokazano {shown} z {total} \u2014 przewi\u0144, aby zobaczy\u0107 wi\u0119cej',
-            errorLoadingData: 'B\u0142\u0105d podczas \u0142adowania danych: {error}',
+            errorLoadingDataGeneric: 'Nie udało się wczytać danych świata. Spróbuj odświeżyć.',
+            errorLoadingDataTimeout: 'Żądanie trwało zbyt długo. Sprawdź połączenie i spróbuj ponownie.',
+            errorLoadingDataWorldNotDetected: 'Nie można wykryć bieżącego świata.',
             badgePlayer: 'Gracz',
             badgeAlliance: 'Sojusz',
             badgeTown: 'Miasto',
@@ -1260,14 +1281,17 @@
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
             footerNavigate: '\u2191 \u2193 selecionar',
             footerOpen: 'Enter abrir',
-            footerClose: 'Esc fechar',
+            shortcutsEscTwoStage: 'Fechar painel / paleta (prime duas vezes se um painel de detalhe estiver aberto)',
             emptyTitle: 'Pesquisar no Grepolis',
             emptySubtitle: 'Jogadores \u00b7 Alian\u00e7as \u00b7 Cidades',
             emptyHintCoords: 'Tamb\u00e9m podes introduzir coordenadas: <strong>{example}</strong>',
+            emptyHintCommands: 'Escreve <strong>&gt;</strong> para comandos (cidades fantasma, distâncias...) ou <strong>?</strong> para todos os atalhos.',
             loadingWorldData: 'A carregar dados do mundo...',
             noResults: 'Nenhum resultado encontrado.',
             resultsMore: 'A mostrar {shown} de {total} \u2014 desloque para ver mais',
-            errorLoadingData: 'Erro ao carregar dados: {error}',
+            errorLoadingDataGeneric: 'Não foi possível carregar os dados do mundo. Tenta atualizar.',
+            errorLoadingDataTimeout: 'O pedido demorou demasiado. Verifica a tua ligação e tenta novamente.',
+            errorLoadingDataWorldNotDetected: 'Não foi possível detetar o mundo atual.',
             badgePlayer: 'Jogador',
             badgeAlliance: 'Alian\u00e7a',
             badgeTown: 'Cidade',
@@ -1400,14 +1424,17 @@
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
             footerNavigate: '\u2191 \u2193 selecionar',
             footerOpen: 'Enter abrir',
-            footerClose: 'Esc fechar',
+            shortcutsEscTwoStage: 'Fechar painel / paleta (pressione duas vezes se um painel de detalhes estiver aberto)',
             emptyTitle: 'Pesquisar no Grepolis',
             emptySubtitle: 'Jogadores \u00b7 Alian\u00e7as \u00b7 Cidades',
             emptyHintCoords: 'Voc\u00ea tamb\u00e9m pode digitar coordenadas: <strong>{example}</strong>',
+            emptyHintCommands: 'Digite <strong>&gt;</strong> para comandos (cidades fantasma, distâncias...) ou <strong>?</strong> para todos os atalhos.',
             loadingWorldData: 'Carregando dados do mundo...',
             noResults: 'Nenhum resultado encontrado.',
             resultsMore: 'Exibindo {shown} de {total} \u2014 role para ver mais',
-            errorLoadingData: 'Erro ao carregar dados: {error}',
+            errorLoadingDataGeneric: 'Não foi possível carregar os dados do mundo. Tente atualizar.',
+            errorLoadingDataTimeout: 'A solicitação demorou demais. Verifique sua conexão e tente novamente.',
+            errorLoadingDataWorldNotDetected: 'Não foi possível detectar o mundo atual.',
             badgePlayer: 'Jogador',
             badgeAlliance: 'Alian\u00e7a',
             badgeTown: 'Cidade',
@@ -1540,14 +1567,17 @@
             searchPlaceholder: 'Oyuncu, ittifak veya \u015fehir ara...',
             footerNavigate: '\u2191 \u2193 se\u00e7',
             footerOpen: 'Enter a\u00e7',
-            footerClose: 'Esc kapat',
+            shortcutsEscTwoStage: 'Paneli / paleti kapat (bir ayrıntı paneli açıksa iki kez basın)',
             emptyTitle: "Grepolis'te ara",
             emptySubtitle: 'Oyuncular \u00b7 \u0130ttifaklar \u00b7 \u015eehirler',
             emptyHintCoords: 'Koordinat da girebilirsin: <strong>{example}</strong>',
+            emptyHintCommands: 'Komutlar için (hayalet şehirler, mesafeler...) <strong>&gt;</strong>, tüm kısayollar için <strong>?</strong> yazın.',
             loadingWorldData: 'D\u00fcnya verileri y\u00fckleniyor...',
             noResults: 'Sonu\u00e7 bulunamad\u0131.',
             resultsMore: '{total} sonu\u00e7tan {shown} g\u00f6steriliyor \u2014 daha fazlas\u0131 i\u00e7in kayd\u0131r\u0131n',
-            errorLoadingData: 'Veri y\u00fcklenirken hata olu\u015ftu: {error}',
+            errorLoadingDataGeneric: 'Dünya verileri yüklenemedi. Yenilemeyi deneyin.',
+            errorLoadingDataTimeout: 'İstek çok uzun sürdü. Bağlantınızı kontrol edip tekrar deneyin.',
+            errorLoadingDataWorldNotDetected: 'Mevcut dünya tespit edilemedi.',
             badgePlayer: 'Oyuncu',
             badgeAlliance: '\u0130ttifak',
             badgeTown: '\u015eehir',
@@ -1680,14 +1710,17 @@
             searchPlaceholder: '\u041f\u043e\u0438\u0441\u043a \u0438\u0433\u0440\u043e\u043a\u043e\u0432, \u0430\u043b\u044c\u044f\u043d\u0441\u043e\u0432 \u0438\u043b\u0438 \u0433\u043e\u0440\u043e\u0434\u043e\u0432...',
             footerNavigate: '\u2191 \u2193 \u0432\u044b\u0431\u0440\u0430\u0442\u044c',
             footerOpen: 'Enter \u043e\u0442\u043a\u0440\u044b\u0442\u044c',
-            footerClose: 'Esc \u0437\u0430\u043a\u0440\u044b\u0442\u044c',
+            shortcutsEscTwoStage: 'Закрыть панель / палитру (нажмите дважды, если открыта панель деталей)',
             emptyTitle: '\u041f\u043e\u0438\u0441\u043a \u0432 Grepolis',
             emptySubtitle: '\u0418\u0433\u0440\u043e\u043a\u0438 \u00b7 \u0410\u043b\u044c\u044f\u043d\u0441\u044b \u00b7 \u0413\u043e\u0440\u043e\u0434\u0430',
             emptyHintCoords: '\u041c\u043e\u0436\u043d\u043e \u0442\u0430\u043a\u0436\u0435 \u0432\u0432\u0435\u0441\u0442\u0438 \u043a\u043e\u043e\u0440\u0434\u0438\u043d\u0430\u0442\u044b: <strong>{example}</strong>',
+            emptyHintCommands: 'Введите <strong>&gt;</strong> для команд (города-призраки, расстояния...) или <strong>?</strong> для всех горячих клавиш.',
             loadingWorldData: '\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u0434\u0430\u043d\u043d\u044b\u0445 \u043c\u0438\u0440\u0430...',
             noResults: '\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b.',
             resultsMore: '\u041f\u043e\u043a\u0430\u0437\u0430\u043d\u043e {shown} \u0438\u0437 {total} \u2014 \u043f\u0440\u043e\u043a\u0440\u0443\u0442\u0438\u0442\u0435 \u0434\u043b\u044f \u0431\u043e\u043b\u044c\u0448\u0435\u0433\u043e',
-            errorLoadingData: '\u041e\u0448\u0438\u0431\u043a\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0438 \u0434\u0430\u043d\u043d\u044b\u0445: {error}',
+            errorLoadingDataGeneric: 'Не удалось загрузить данные мира. Попробуйте обновить.',
+            errorLoadingDataTimeout: 'Запрос занял слишком много времени. Проверьте соединение и попробуйте снова.',
+            errorLoadingDataWorldNotDetected: 'Не удалось определить текущий мир.',
             badgePlayer: '\u0418\u0433\u0440\u043e\u043a',
             badgeAlliance: '\u0410\u043b\u044c\u044f\u043d\u0441',
             badgeTown: '\u0413\u043e\u0440\u043e\u0434',
@@ -1820,14 +1853,17 @@
             searchPlaceholder: '\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03c0\u03b1\u03b9\u03ba\u03c4\u03ce\u03bd, \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03b9\u03ce\u03bd \u03ae \u03c0\u03cc\u03bb\u03b5\u03c9\u03bd...',
             footerNavigate: '\u2191 \u2193 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ae',
             footerOpen: 'Enter \u03ac\u03bd\u03bf\u03b9\u03b3\u03bc\u03b1',
-            footerClose: 'Esc \u03ba\u03bb\u03b5\u03af\u03c3\u03b9\u03bc\u03bf',
+            shortcutsEscTwoStage: 'Κλείσιμο πίνακα / παλέτας (πατήστε δύο φορές αν είναι ανοιχτό ένα πλαίσιο λεπτομερειών)',
             emptyTitle: '\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03c3\u03c4\u03bf Grepolis',
             emptySubtitle: '\u03a0\u03b1\u03af\u03ba\u03c4\u03b5\u03c2 \u00b7 \u03a3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b5\u03c2 \u00b7 \u03a0\u03cc\u03bb\u03b5\u03b9\u03c2',
             emptyHintCoords: '\u039c\u03c0\u03bf\u03c1\u03b5\u03af\u03c2 \u03b5\u03c0\u03af\u03c3\u03b7\u03c2 \u03bd\u03b1 \u03b5\u03b9\u03c3\u03b1\u03b3\u03ac\u03b3\u03b5\u03b9\u03c2 \u03c3\u03c5\u03bd\u03c4\u03b5\u03c4\u03b1\u03b3\u03bc\u03ad\u03bd\u03b5\u03c2: <strong>{example}</strong>',
+            emptyHintCommands: 'Πληκτρολόγησε <strong>&gt;</strong> για εντολές (πόλεις-φαντάσματα, αποστάσεις...) ή <strong>?</strong> για όλες τις συντομεύσεις.',
             loadingWorldData: '\u03a6\u03cc\u03c1\u03c4\u03c9\u03c3\u03b7 \u03b4\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03c9\u03bd \u03ba\u03cc\u03c3\u03bc\u03bf\u03c5...',
             noResults: '\u0394\u03b5\u03bd \u03b2\u03c1\u03ad\u03b8\u03b7\u03ba\u03b1\u03bd \u03b1\u03c0\u03bf\u03c4\u03b5\u03bb\u03ad\u03c3\u03bc\u03b1\u03c4\u03b1.',
             resultsMore: '\u0395\u03bc\u03c6\u03ac\u03bd\u03b9\u03c3\u03b7 {shown} \u03b1\u03c0\u03cc {total} \u2014 \u03ba\u03c5\u03bb\u03af\u03c3\u03c4\u03b5 \u03b3\u03b9\u03b1 \u03c0\u03b5\u03c1\u03b9\u03c3\u03c3\u03cc\u03c4\u03b5\u03c1\u03b1',
-            errorLoadingData: '\u03a3\u03c6\u03ac\u03bb\u03bc\u03b1 \u03c6\u03cc\u03c1\u03c4\u03c9\u03c3\u03b7\u03c2 \u03b4\u03b5\u03b4\u03bf\u03bc\u03ad\u03bd\u03c9\u03bd: {error}',
+            errorLoadingDataGeneric: 'Δεν ήταν δυνατή η φόρτωση των δεδομένων του κόσμου. Δοκίμασε ανανέωση.',
+            errorLoadingDataTimeout: 'Η αίτηση καθυστέρησε πολύ. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.',
+            errorLoadingDataWorldNotDetected: 'Δεν ήταν δυνατός ο εντοπισμός του τρέχοντος κόσμου.',
             badgePlayer: '\u03a0\u03b1\u03af\u03ba\u03c4\u03b7\u03c2',
             badgeAlliance: '\u03a3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b1',
             badgeTown: '\u03a0\u03cc\u03bb\u03b7',
@@ -1960,14 +1996,17 @@
             searchPlaceholder: 'J\u00e1t\u00e9kosok, sz\u00f6vets\u00e9gek vagy v\u00e1rosok keres\u00e9se...',
             footerNavigate: '\u2191 \u2193 kiv\u00e1laszt\u00e1s',
             footerOpen: 'Enter megnyit\u00e1s',
-            footerClose: 'Esc bez\u00e1r\u00e1s',
+            shortcutsEscTwoStage: 'Panel / paletta bezárása (kattints kétszer, ha egy részletnézet nyitva van)',
             emptyTitle: 'Keres\u00e9s a Grepolisban',
             emptySubtitle: 'J\u00e1t\u00e9kosok \u00b7 Sz\u00f6vets\u00e9gek \u00b7 V\u00e1rosok',
             emptyHintCoords: 'Koordin\u00e1t\u00e1kat is megadhatsz: <strong>{example}</strong>',
+            emptyHintCommands: 'Írj <strong>&gt;</strong> jelet a parancsokhoz (szellemvárosok, távolságok...), vagy <strong>?</strong>-et az összes gyorsbillentyűhöz.',
             loadingWorldData: 'Vil\u00e1gadatok bet\u00f6lt\u00e9se...',
             noResults: 'Nincs tal\u00e1lat.',
             resultsMore: '{shown}/{total} tal\u00e1lat megjelen\u0151\u2014 g\u00f6rgessen tov\u00e1bbiak\u00e9rt',
-            errorLoadingData: 'Hiba az adatok bet\u00f6lt\u00e9sekor: {error}',
+            errorLoadingDataGeneric: 'Nem sikerült betölteni a világ adatait. Próbáld meg frissíteni.',
+            errorLoadingDataTimeout: 'A kérés túl sok ideig tartott. Ellenőrizd a kapcsolatot, majd próbáld újra.',
+            errorLoadingDataWorldNotDetected: 'Nem sikerült felismerni az aktuális világot.',
             badgePlayer: 'J\u00e1t\u00e9kos',
             badgeAlliance: 'Sz\u00f6vets\u00e9g',
             badgeTown: 'V\u00e1ros',
@@ -2100,14 +2139,17 @@
             searchPlaceholder: 'Caut\u0103 juc\u0103tori, alian\u021be sau ora\u0219e...',
             footerNavigate: '\u2191 \u2193 selecteaz\u0103',
             footerOpen: 'Enter deschide',
-            footerClose: 'Esc \u00eenchide',
+            shortcutsEscTwoStage: 'Închide panoul / paleta (apasă de două ori dacă un panou de detalii este deschis)',
             emptyTitle: 'Caut\u0103 \u00een Grepolis',
             emptySubtitle: 'Juc\u0103tori \u00b7 Alian\u021be \u00b7 Ora\u0219e',
             emptyHintCoords: 'Po\u021bi introduce \u0219i coordonate: <strong>{example}</strong>',
+            emptyHintCommands: 'Tastează <strong>&gt;</strong> pentru comenzi (orașe fantomă, distanțe...) sau <strong>?</strong> pentru toate scurtăturile.',
             loadingWorldData: 'Se \u00eencarc\u0103 datele lumii...',
             noResults: 'Niciun rezultat g\u0103sit.',
             resultsMore: 'Se afi\u0219eaz\u0103 {shown} din {total} \u2014 derula\u021bi pentru mai multe',
-            errorLoadingData: 'Eroare la \u00eenc\u0103rcarea datelor: {error}',
+            errorLoadingDataGeneric: 'Nu s-au putut încărca datele lumii. Încearcă să reîmprosătești.',
+            errorLoadingDataTimeout: 'Cererea a durat prea mult. Verifică-ți conexiunea și încearcă din nou.',
+            errorLoadingDataWorldNotDetected: 'Nu s-a putut detecta lumea curentă.',
             badgePlayer: 'Juc\u0103tor',
             badgeAlliance: 'Alian\u021b\u0103',
             badgeTown: 'Ora\u0219',
@@ -2240,14 +2282,17 @@
             searchPlaceholder: 'Hledat hr\u00e1\u010de, aliance nebo m\u011bsta...',
             footerNavigate: '\u2191 \u2193 vybrat',
             footerOpen: 'Enter otev\u0159\u00edt',
-            footerClose: 'Esc zav\u0159\u00edt',
+            shortcutsEscTwoStage: 'Zavřít panel / paletu (stiskněte dvakrát, pokud je otevřený panel podrobností)',
             emptyTitle: 'Hledat v Grepolis',
             emptySubtitle: 'Hr\u00e1\u010di \u00b7 Aliance \u00b7 M\u011bsta',
             emptyHintCoords: 'M\u016f\u017ee\u0161 tak\u00e9 zadat sou\u0159adnice: <strong>{example}</strong>',
+            emptyHintCommands: 'Napiš <strong>&gt;</strong> pro příkazy (opuštěná města, vzdálenosti...) nebo <strong>?</strong> pro všechny zkratky.',
             loadingWorldData: 'Na\u010d\u00edt\u00e1n\u00ed dat sv\u011bta...',
             noResults: 'Nebyly nalezeny \u017e\u00e1dn\u00e9 v\u00fdsledky.',
             resultsMore: 'Zobrazeno {shown} z {total} \u2014 posunut\u00edm zobraz\u00edte dal\u0161\u00ed',
-            errorLoadingData: 'Chyba p\u0159i na\u010d\u00edt\u00e1n\u00ed dat: {error}',
+            errorLoadingDataGeneric: 'Data světa se nepodařilo načíst. Zkuste obnovit stránku.',
+            errorLoadingDataTimeout: 'Požadavek trval příliš dlouho. Zkontrolujte připojení a zkuste to znovu.',
+            errorLoadingDataWorldNotDetected: 'Nepodařilo se rozpoznat aktuální svět.',
             badgePlayer: 'Hr\u00e1\u010d',
             badgeAlliance: 'Aliance',
             badgeTown: 'M\u011bsto',
@@ -2380,14 +2425,17 @@
             searchPlaceholder: 'H\u013ead\u0165 hr\u00e1\u010dov, alianciu alebo mest\u00e1...',
             footerNavigate: '\u2191 \u2193 vybra\u0165',
             footerOpen: 'Enter otvori\u0165',
-            footerClose: 'Esc zavrie\u0165',
+            shortcutsEscTwoStage: 'Zatvoriť panel / paletu (stlačte dvakrát, ak je otvorený panel podrobností)',
             emptyTitle: 'H\u013eada\u0165 v Grepolis',
             emptySubtitle: 'Hr\u00e1\u010di \u00b7 Aliancie \u00b7 Mest\u00e1',
             emptyHintCoords: 'M\u00f4\u017ee\u0161 zada\u0165 aj s\u00faradnice: <strong>{example}</strong>',
+            emptyHintCommands: 'Napíš <strong>&gt;</strong> pre príkazy (opustené mestá, vzdialenosti...) alebo <strong>?</strong> pre všetky skratky.',
             loadingWorldData: 'Na\u010d\u00edtavanie d\u00e1t sveta...',
             noResults: 'Neboli n\u00e1jden\u00e9 \u017eiadne v\u00fdsledky.',
             resultsMore: 'Zobrazen\u00fdch {shown} z {total} \u2014 posunut\u00edm zobraz\u00edte \u010fal\u0161ie',
-            errorLoadingData: 'Chyba pri na\u010d\u00edtan\u00ed d\u00e1t: {error}',
+            errorLoadingDataGeneric: 'Dáta sveta sa nepodarilo načítať. Skúste obnoviť stránku.',
+            errorLoadingDataTimeout: 'Požiadavka trvala príliš dlho. Skontrolujte pripojenie a skúste to znova.',
+            errorLoadingDataWorldNotDetected: 'Nepodarilo sa rozpoznať aktuálny svet.',
             badgePlayer: 'Hr\u00e1\u010d',
             badgeAlliance: 'Aliancia',
             badgeTown: 'Mesto',
@@ -2739,6 +2787,8 @@
         townById: new Map(),
         townsByCoord: new Map(),
         townsByPlayer: new Map(),
+        townsByOcean: new Map(),
+        islandsByBucket: new Map(),
         islandIdByCoord: new Map(),
         islandCapacityByCoord: new Map(),
     };
@@ -3135,6 +3185,111 @@
      * recomputing Unicode folding 80k times per keystroke.
      */
 
+    function tokenizeNorm(value) {
+        return value.split(/\s+/).filter(Boolean);
+    }
+
+    // A single transposed/wrong/missing letter shouldn't drop a query
+    // to "no match" (e.g. "Naploi" should still find "Napoli"), but the
+    // tolerance has to shrink for short queries or almost anything would
+    // match almost anything (a 2-letter query with distance 2 is
+    // meaningless). Capped at 3 regardless of length to keep the bounded
+    // Levenshtein below cheap.
+    function typoToleranceFor(length) {
+        if (length <= 4) return 1;
+        if (length <= 8) return 2;
+        return 3;
+    }
+
+    /*
+     * Bounded Levenshtein distance: returns the edit distance if it is
+     * <= maxDistance, otherwise Infinity without finishing the full
+     * O(a.length * b.length) table. Two fast exits keep this cheap
+     * across a full-index scan: a plain length-difference check before
+     * starting, and a per-row "every cell already exceeds the budget"
+     * bail once the table is underway.
+     */
+    function editDistanceWithin(a, b, maxDistance) {
+        if (a === b) return 0;
+        if (Math.abs(a.length - b.length) > maxDistance) return Infinity;
+
+        const n = b.length;
+        let prevRow = new Array(n + 1);
+        for (let j = 0; j <= n; j++) prevRow[j] = j;
+
+        for (let i = 1; i <= a.length; i++) {
+            const currRow = new Array(n + 1);
+            currRow[0] = i;
+            let rowMin = currRow[0];
+            for (let j = 1; j <= n; j++) {
+                const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                currRow[j] = Math.min(prevRow[j] + 1, currRow[j - 1] + 1, prevRow[j - 1] + cost);
+                if (currRow[j] < rowMin) rowMin = currRow[j];
+            }
+            if (rowMin > maxDistance) return Infinity;
+            prevRow = currRow;
+        }
+
+        return prevRow[n] <= maxDistance ? prevRow[n] : Infinity;
+    }
+
+    /*
+     * Reordered multi-word match: "Honor Panzer" -> "Panzer of Honor".
+     * Every query word must find its own, not-yet-used name word (via
+     * exact/prefix/substring/typo-tolerant comparison) for this to
+     * count as a match at all — a single unmatched query word means the
+     * whole thing falls through to the plain subsequence/typo tiers
+     * below instead of a false-positive partial credit.
+     */
+    function scoreTokens(nameNorm, queryNorm) {
+        const nameTokens = tokenizeNorm(nameNorm);
+        const queryTokens = tokenizeNorm(queryNorm);
+
+        const used = new Set();
+        let total = 0;
+
+        for (const queryToken of queryTokens) {
+            let best = 0;
+            let bestIndex = -1;
+
+            for (let i = 0; i < nameTokens.length; i++) {
+                if (used.has(i)) continue;
+                const nameToken = nameTokens[i];
+                let score = 0;
+
+                if (nameToken === queryToken) {
+                    score = 1000;
+                } else if (nameToken.startsWith(queryToken)) {
+                    score = 800;
+                } else if (nameToken.includes(queryToken)) {
+                    score = 600;
+                } else {
+                    const distance = editDistanceWithin(nameToken, queryToken, typoToleranceFor(queryToken.length));
+                    if (distance !== Infinity) {
+                        score = 300 - distance * 80;
+                    }
+                }
+
+                if (score > best) {
+                    best = score;
+                    bestIndex = i;
+                }
+            }
+
+            if (best <= 0) {
+                return 0;
+            }
+            used.add(bestIndex);
+            total += best;
+        }
+
+        // Scaled below a literal substring hit (up to 6000) but above the
+        // flat fuzzy-subsequence tier (3000-3900): matching every word of
+        // a query against the name, just in a different order, is a much
+        // stronger signal than an arbitrary scattered-letters subsequence.
+        return 4000 + Math.min(900, total);
+    }
+
     function scoreMatch(nameNorm, queryNorm) {
         if (!nameNorm || !queryNorm) {
             return 0;
@@ -3153,15 +3308,42 @@
             return 6000 - index;
         }
 
-        // Fuzzy subsequence: "pelu" -> "Peluriano".
+        // Only worth tokenizing when the query itself has more than one
+        // word: a single-word query against a multi-word name is already
+        // covered by the substring check above (nameNorm keeps its
+        // spaces, so "panzer" is a substring of "panzer of honor").
+        if (queryNorm.includes(' ')) {
+            const tokenScore = scoreTokens(nameNorm, queryNorm);
+            if (tokenScore > 0) {
+                return tokenScore;
+            }
+        }
+
+        // Fuzzy subsequence: "pelu" -> "Peluriano". Tighter matches (the
+        // matched letters closer together in the name) score higher than
+        // loose ones scattered across a long name, so among many
+        // subsequence hits the closest-looking name still wins instead of
+        // ties silently falling back to array order.
         let position = 0;
+        let firstIndex = -1;
         for (let i = 0; i < nameNorm.length; i++) {
             if (nameNorm[i] === queryNorm[position]) {
+                if (position === 0) firstIndex = i;
                 position++;
                 if (position === queryNorm.length) {
-                    return 3000;
+                    const span = i - firstIndex + 1;
+                    return 3000 + Math.round((queryNorm.length / span) * 900);
                 }
             }
+        }
+
+        // Typo tolerance: a wrong/missing/extra letter that breaks the
+        // ordered-subsequence property above (e.g. a transposition like
+        // "Naploi" vs "Napoli") still returns a low-ranked match instead
+        // of vanishing entirely.
+        const distance = editDistanceWithin(nameNorm, queryNorm, typoToleranceFor(queryNorm.length));
+        if (distance !== Infinity) {
+            return 1500 - distance * 300;
         }
 
         return 0;
@@ -3201,14 +3383,37 @@
      * once on startup.
      */
 
-    function fetchText(path) {
+    // Same-origin as these requests are, a stalled/hanging connection
+    // (bad wifi, a proxy holding the socket open, etc.) would otherwise
+    // leave state.loading stuck forever with no way out short of
+    // reloading the whole game page: the footer's Ctrl+R/refresh button
+    // is itself disabled while state.loading is true. An explicit abort
+    // guarantees loadAll()'s catch branch always runs eventually.
+    const FETCH_TIMEOUT_MS = 20000;
+
+    function fetchText(path, timeoutMs) {
         const url = `https://${WORLD}.grepolis.com${path}`;
-        return fetch(url, { credentials: 'same-origin' }).then((response) => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status} on ${path}`);
-            }
-            return response.text();
-        });
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timeoutId = controller
+            ? setTimeout(() => controller.abort(), timeoutMs || FETCH_TIMEOUT_MS)
+            : null;
+
+        return fetch(url, { credentials: 'same-origin', signal: controller ? controller.signal : undefined })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} on ${path}`);
+                }
+                return response.text();
+            })
+            .catch((error) => {
+                if (error && error.name === 'AbortError') {
+                    throw new Error(`Timed out fetching ${path}`);
+                }
+                throw error;
+            })
+            .finally(() => {
+                if (timeoutId) clearTimeout(timeoutId);
+            });
     }
 
     function indexPlayers(players) {
@@ -3221,11 +3426,29 @@
         DATA.allianceById = new Map(alliances.map((alliance) => [alliance.id, alliance]));
     }
 
+    // Grid cell size (in world tiles) used to bucket islands for >near's
+    // spatial lookup: a large world can have tens of thousands of
+    // distinct island coordinates, and scanning every single one of
+    // them on every keystroke while typing a radius is the most
+    // expensive command in the file. Buckets let a given search only
+    // touch the handful of cells that could possibly fall within the
+    // requested radius, instead of the whole world.
+    const NEAR_BUCKET_SIZE = 10;
+
+    function bucketKeyFor(x, y) {
+        return `${Math.floor(x / NEAR_BUCKET_SIZE)}:${Math.floor(y / NEAR_BUCKET_SIZE)}`;
+    }
+
     function indexTowns(towns) {
         DATA.towns = towns;
         DATA.townById = new Map();
         DATA.townsByCoord = new Map();
         DATA.townsByPlayer = new Map();
+        // Precomputed once here instead of recomputing getSea() for
+        // every town on every >ocean keystroke: townsInOcean() then
+        // becomes a single Map lookup instead of a full O(all towns)
+        // linear scan.
+        DATA.townsByOcean = new Map();
 
         for (const town of DATA.towns) {
             DATA.townById.set(town.id, town);
@@ -3245,6 +3468,25 @@
                 DATA.townsByPlayer.set(town.playerId, []);
             }
             DATA.townsByPlayer.get(town.playerId).push(town);
+
+            const ocean = getSea(town.islandX, town.islandY);
+            if (!DATA.townsByOcean.has(ocean)) {
+                DATA.townsByOcean.set(ocean, []);
+            }
+            DATA.townsByOcean.get(ocean).push(town);
+        }
+
+        // Spatial index for >near: one entry per distinct island
+        // coordinate (reusing the town lists already grouped above),
+        // grouped into NEAR_BUCKET_SIZE x NEAR_BUCKET_SIZE grid cells.
+        DATA.islandsByBucket = new Map();
+        for (const [key, coordTowns] of DATA.townsByCoord) {
+            const [x, y] = key.split(':').map(Number);
+            const bucket = bucketKeyFor(x, y);
+            if (!DATA.islandsByBucket.has(bucket)) {
+                DATA.islandsByBucket.set(bucket, []);
+            }
+            DATA.islandsByBucket.get(bucket).push({ x, y, towns: coordTowns });
         }
     }
 
@@ -3272,90 +3514,116 @@
         }
     }
 
-    function parsePlayers(text) {
-        const players = [];
+    /*
+     * Parsing /data/*.txt line-by-line is cheap per line, but a large
+     * world's towns.txt alone can have tens of thousands of rows, and
+     * doing all of them back-to-back in one synchronous pass blocks
+     * the whole browser tab (not just the palette) right after the
+     * network fetch resolves. Yielding every PARSE_CHUNK_SIZE lines via
+     * requestAnimationFrame spreads that work across frames instead,
+     * so the tab stays responsive (and the loading spinner keeps
+     * animating) while a cold cache-miss load parses a big world.
+     */
+    const PARSE_CHUNK_SIZE = 3000;
 
-        for (const line of text.split(/\r?\n/)) {
-            if (!line) continue;
+    function yieldToMainThread() {
+        return new Promise((resolve) => {
+            if (typeof requestAnimationFrame === 'function') {
+                requestAnimationFrame(() => resolve());
+            } else {
+                setTimeout(resolve, 0);
+            }
+        });
+    }
 
-            const parts = line.split(',');
-            if (parts.length < 2) continue;
-
-            const id = Number(parts[0]);
-            if (!id) continue;
-
-            const name = decodeName(parts[1]);
-
-            players.push({
-                id,
-                name,
-                nameNorm: normalize(name),
-                allianceId: parts[2] ? Number(parts[2]) : null,
-                points: Number(parts[3]) || 0,
-                rank: Number(parts[4]) || 0,
-                towns: Number(parts[5]) || 0,
-            });
+    async function parseLinesChunked(text, parseLine) {
+        const lines = text.split(/\r?\n/);
+        const out = [];
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (line) {
+                const item = parseLine(line);
+                if (item) out.push(item);
+            }
+            if (i % PARSE_CHUNK_SIZE === PARSE_CHUNK_SIZE - 1) {
+                await yieldToMainThread();
+            }
         }
+        return out;
+    }
 
-        return players;
+    function parsePlayerLine(line) {
+        const parts = line.split(',');
+        if (parts.length < 2) return null;
+
+        const id = Number(parts[0]);
+        if (!id) return null;
+
+        const name = decodeName(parts[1]);
+
+        return {
+            id,
+            name,
+            nameNorm: normalize(name),
+            allianceId: parts[2] ? Number(parts[2]) : null,
+            points: Number(parts[3]) || 0,
+            rank: Number(parts[4]) || 0,
+            towns: Number(parts[5]) || 0,
+        };
+    }
+
+    function parsePlayers(text) {
+        return parseLinesChunked(text, parsePlayerLine);
+    }
+
+    function parseAllianceLine(line) {
+        const parts = line.split(',');
+        if (parts.length < 2) return null;
+
+        const id = Number(parts[0]);
+        if (!id) return null;
+
+        const name = decodeName(parts[1]);
+
+        return {
+            id,
+            name,
+            nameNorm: normalize(name),
+            points: Number(parts[2]) || 0,
+            towns: Number(parts[3]) || 0,
+            members: Number(parts[4]) || 0,
+            rank: Number(parts[5]) || 0,
+        };
     }
 
     function parseAlliances(text) {
-        const alliances = [];
+        return parseLinesChunked(text, parseAllianceLine);
+    }
 
-        for (const line of text.split(/\r?\n/)) {
-            if (!line) continue;
+    function parseTownLine(line) {
+        const parts = line.split(',');
+        if (parts.length < 7) return null;
 
-            const parts = line.split(',');
-            if (parts.length < 2) continue;
+        const id = Number(parts[0]);
+        if (!id) return null;
 
-            const id = Number(parts[0]);
-            if (!id) continue;
+        const playerId = Number(parts[1]);
+        const name = decodeName(parts[2]);
 
-            const name = decodeName(parts[1]);
-
-            alliances.push({
-                id,
-                name,
-                nameNorm: normalize(name),
-                points: Number(parts[2]) || 0,
-                towns: Number(parts[3]) || 0,
-                members: Number(parts[4]) || 0,
-                rank: Number(parts[5]) || 0,
-            });
-        }
-
-        return alliances;
+        return {
+            id,
+            playerId,
+            name,
+            nameNorm: normalize(name),
+            islandX: Number(parts[3]),
+            islandY: Number(parts[4]),
+            numberOnIsland: Number(parts[5]),
+            points: Number(parts[6]) || 0,
+        };
     }
 
     function parseTowns(text) {
-        const towns = [];
-
-        for (const line of text.split(/\r?\n/)) {
-            if (!line) continue;
-
-            const parts = line.split(',');
-            if (parts.length < 7) continue;
-
-            const id = Number(parts[0]);
-            if (!id) continue;
-
-            const playerId = Number(parts[1]);
-            const name = decodeName(parts[2]);
-
-            towns.push({
-                id,
-                playerId,
-                name,
-                nameNorm: normalize(name),
-                islandX: Number(parts[3]),
-                islandY: Number(parts[4]),
-                numberOnIsland: Number(parts[5]),
-                points: Number(parts[6]) || 0,
-            });
-        }
-
-        return towns;
+        return parseLinesChunked(text, parseTownLine);
     }
 
     /*
@@ -3363,27 +3631,23 @@
      * is the islet's shape layout (unused here); "phase" is its town
      * capacity (see indexIslands for how that was confirmed).
      */
+    function parseIslandLine(line) {
+        const parts = line.split(',');
+        if (parts.length < 3) return null;
+
+        const id = Number(parts[0]);
+        if (!id) return null;
+
+        return {
+            id,
+            x: Number(parts[1]),
+            y: Number(parts[2]),
+            capacity: Number(parts[4]) || 0,
+        };
+    }
+
     function parseIslands(text) {
-        const islands = [];
-
-        for (const line of text.split(/\r?\n/)) {
-            if (!line) continue;
-
-            const parts = line.split(',');
-            if (parts.length < 3) continue;
-
-            const id = Number(parts[0]);
-            if (!id) continue;
-
-            islands.push({
-                id,
-                x: Number(parts[1]),
-                y: Number(parts[2]),
-                capacity: Number(parts[4]) || 0,
-            });
-        }
-
-        return islands;
+        return parseLinesChunked(text, parseIslandLine);
     }
 
     /*
@@ -3551,13 +3815,29 @@
         }
     }
 
+    /*
+     * Classifies a caught load error into one of a small set of
+     * translation keys instead of surfacing the raw error.message
+     * (an English, technical string like "HTTP 404 on /data/towns.txt"
+     * or "Timed out fetching...") directly inside an otherwise fully
+     * localized UI. The full untranslated detail is still logged to
+     * the console for whoever actually needs to debug it.
+     */
+    function classifyLoadError(error) {
+        const message = error && error.message ? error.message : String(error);
+        if (/^Timed out fetching/.test(message)) {
+            return 'errorLoadingDataTimeout';
+        }
+        return 'errorLoadingDataGeneric';
+    }
+
     async function loadAll(force) {
         if (state.loaded || state.loading) {
             return;
         }
 
         if (!WORLD) {
-            state.loadError = 'Could not detect the current world.';
+            state.loadError = 'errorLoadingDataWorldNotDetected';
             return;
         }
 
@@ -3586,17 +3866,19 @@
                 fetchText('/data/islands.txt'),
             ]);
 
-            const players = parsePlayers(playersText);
-            const alliances = parseAlliances(alliancesText);
-            const towns = parseTowns(townsText);
-            const islands = parseIslands(islandsText);
+            // Chunked/async so a large world's parse doesn't block the
+            // tab in one long synchronous pass (see PARSE_CHUNK_SIZE).
+            const players = await parsePlayers(playersText);
+            const alliances = await parseAlliances(alliancesText);
+            const towns = await parseTowns(townsText);
+            const islands = await parseIslands(islandsText);
 
             applyLoadedData('network', players, alliances, towns, islands, Date.now());
             cacheSet(players, alliances, towns, islands); // fire-and-forget; failures are ignored
             state.loading = false;
             finishLoad();
         } catch (error) {
-            state.loadError = error && error.message ? error.message : String(error);
+            state.loadError = classifyLoadError(error);
             console.error('[QF] Error loading world data:', error);
             state.loading = false;
             render();
@@ -4120,12 +4402,23 @@
             return [{ type: 'info', name: translate('nearNeedOrigin') }];
         }
 
+        // Only scan the grid buckets that could possibly contain a point
+        // within `radius` of origin, instead of every island coordinate
+        // in the entire world (see NEAR_BUCKET_SIZE/indexTowns).
         const islands = [];
-        for (const [key, towns] of DATA.townsByCoord) {
-            const [x, y] = key.split(':').map(Number);
-            const distance = islandDistance(origin, { x, y });
-            if (distance <= radius) {
-                islands.push({ x, y, distance, towns });
+        const bucketRadius = Math.ceil(radius / NEAR_BUCKET_SIZE) + 1;
+        const originBucketX = Math.floor(origin.x / NEAR_BUCKET_SIZE);
+        const originBucketY = Math.floor(origin.y / NEAR_BUCKET_SIZE);
+        for (let bx = originBucketX - bucketRadius; bx <= originBucketX + bucketRadius; bx++) {
+            for (let by = originBucketY - bucketRadius; by <= originBucketY + bucketRadius; by++) {
+                const bucket = DATA.islandsByBucket.get(`${bx}:${by}`);
+                if (!bucket) continue;
+                for (const island of bucket) {
+                    const distance = islandDistance(origin, island);
+                    if (distance <= radius) {
+                        islands.push({ x: island.x, y: island.y, distance, towns: island.towns });
+                    }
+                }
             }
         }
         islands.sort((a, b) => a.distance - b.distance || b.towns.length - a.towns.length);
@@ -4154,13 +4447,14 @@
 
     function townsInOcean(ocean, allianceId) {
         const wanted = ocean.toUpperCase();
+        const candidates = DATA.townsByOcean.get(wanted) || [];
+        if (!allianceId) {
+            return candidates.slice();
+        }
         const towns = [];
-        for (const town of DATA.towns) {
-            if (oceanOf(town.islandX, town.islandY) !== wanted) continue;
-            if (allianceId) {
-                const player = DATA.playerById.get(town.playerId);
-                if (!player || player.allianceId !== allianceId) continue;
-            }
+        for (const town of candidates) {
+            const player = DATA.playerById.get(town.playerId);
+            if (!player || player.allianceId !== allianceId) continue;
             towns.push(town);
         }
         return towns;
@@ -5452,13 +5746,29 @@
             detailPane.innerHTML = '';
         }
 
-        if (document.activeElement !== input) {
+        // Only steal focus back to the search input when focus isn't
+        // already somewhere inside the palette: bindSettingsEvents()
+        // re-renders on every settings field's blur (to reflect clamped/
+        // normalized values), and re-focusing #qf-input unconditionally
+        // there would yank focus away mid-Tab-navigation from whatever
+        // settings field the user just moved to.
+        if (document.activeElement !== input && !overlay.contains(document.activeElement)) {
             requestAnimationFrame(() => input.focus());
         }
 
         const saveSearchBtn = document.getElementById('qf-save-search-btn');
         if (saveSearchBtn) {
             saveSearchBtn.hidden = !isSavableQuery(state.query);
+        }
+
+        // Esc pops the detail pane first and only closes the whole
+        // palette on a second press when one is open — not otherwise
+        // discoverable from the static "ESC" key hint alone, so the
+        // tooltip spells it out only while that two-stage behavior
+        // is actually in play.
+        const escKey = document.getElementById('qf-esc-key');
+        if (escKey) {
+            escKey.title = splitOpen ? translate('shortcutsEscTwoStage') : '';
         }
 
         // Segment chips only make sense while actively searching or
@@ -5517,12 +5827,12 @@
             return;
         }
 
-        if (!state.query) {
-            renderHistory(results);
-            return;
-        }
-
         if (state.loading) {
+            // Checked before the empty-query history branch below: a user
+            // who opens the palette right after a page reload and leaves
+            // the query empty would otherwise silently see the history/
+            // favorites view with no indication that world data is still
+            // loading underneath, only noticing once they typed something.
             // Drop any stale results while a refresh is in flight.
             state.fullResults = [];
             state.segmentCounts = null;
@@ -5538,12 +5848,17 @@
             return;
         }
 
+        if (!state.query) {
+            renderHistory(results);
+            return;
+        }
+
         if (!state.results.length) {
             if (state.loadError) {
                 results.innerHTML = `
                     <div class="qf-empty qf-empty-error">
                         <div class="qf-empty-title">${escapeHTML(translate('dataError'))}</div>
-                        <div class="qf-empty-hint">${escapeHTML(translate('errorLoadingData', { error: state.loadError }))}</div>
+                        <div class="qf-empty-hint">${escapeHTML(translate(state.loadError))}</div>
                     </div>
                 `;
             } else {
@@ -5685,6 +6000,9 @@
                     <div class="qf-empty-hint">
                         ${translate('emptyHintCoords', { example: '55:123' })}
                     </div>
+                    <div class="qf-empty-hint">
+                        ${translate('emptyHintCommands')}
+                    </div>
                 </div>
             `;
             return;
@@ -5738,7 +6056,7 @@
             ['Ctrl+E', translate('shortcutsRenameSaved')],
             ['Delete', translate('shortcutsRemoveRecent')],
             ['Ctrl+Shift+Delete', translate('shortcutsClearRecent')],
-            ['Esc', translate('footerClose')],
+            ['Esc', translate('shortcutsEscTwoStage')],
             ['?', translate('shortcutsHelp')],
         ];
 
@@ -5980,12 +6298,27 @@
             const isCheckbox = el.type === 'checkbox';
             const eventName = isCheckbox ? 'change' : (el.tagName === 'SELECT' ? 'change' : 'input');
             el.addEventListener(eventName, () => applySettingField(key, isCheckbox ? el.checked : el.value));
-            // Re-render the whole panel on blur so values normalized by
-            // applySettingField (e.g. an out-of-range number clamped
-            // back, or an invalid hotkey falling back to the default)
-            // are reflected in the field instead of showing the raw
-            // input the user typed.
-            el.addEventListener('blur', () => render());
+            // On blur, only patch this one field's displayed value from
+            // the now-normalized `settings` object (e.g. an out-of-range
+            // number clamped back, or an invalid hotkey falling back to
+            // the default) instead of calling the full render(): a full
+            // re-render tears down and rebuilds the whole panel's DOM,
+            // which — since it runs synchronously inside the blur event,
+            // right as the browser is about to move focus to whatever
+            // element Tab targets next — destroys that target element
+            // out from under the browser and silently strands focus back
+            // on #qf-input instead of advancing to the next field.
+            el.addEventListener('blur', () => {
+                if (key === 'hotkey') {
+                    el.value = (settings.hotkey || 'f').toUpperCase();
+                } else if (key in SETTINGS_BOUNDS) {
+                    el.value = settings[key];
+                }
+                // 'language'/'conquestHistoryEnabled' never need
+                // normalization-on-blur: the former already re-renders
+                // via applySettingField on 'change', the latter is a
+                // checkbox with only two possible values.
+            });
         });
 
         const checkUpdatesBtn = container.querySelector('#qf-settings-check-updates');
@@ -6982,7 +7315,18 @@
 
             if (state.open && event.key === 'Escape') {
                 event.preventDefault();
-                close();
+                // Mirrors handleInputKeydown's own Escape case (see
+                // there for why): this listener only fires this branch
+                // when the input itself isn't focused (e.g. focus is on
+                // a settings field, or nowhere in particular), so the
+                // two-stage pop-then-close behavior must stay in sync
+                // between both handlers.
+                if (state.hierarchyStack.length) {
+                    resetHierarchy();
+                    render();
+                } else {
+                    close();
+                }
             }
         },
         false
@@ -7681,6 +8025,10 @@
             font-size: 11px;
         }
 
+        .qf-empty-hint + .qf-empty-hint {
+            margin-top: 8px;
+        }
+
         .qf-empty-hint strong {
             padding: 2px 7px;
             border: 1px solid rgba(255, 255, 255, .14);
@@ -7888,6 +8236,16 @@
         .qf-settings-input:focus {
             border-color: rgba(215, 163, 63, .6);
             background: rgba(255, 255, 255, .06);
+        }
+
+        /* The closed <select> box inherits the dark background/light text
+         * above, but Chromium/Firefox render the native <option> popup
+         * list using its own colors (light background, dark text)
+         * regardless of the <select>'s styling unless the <option>
+         * elements are styled explicitly too — hence the separate rule. */
+        select.qf-settings-input option {
+            background: #2c2c2c;
+            color: #f2f2f2;
         }
 
         .qf-settings-input-number {
