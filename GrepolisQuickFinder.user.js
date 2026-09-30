@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder (Beta)
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.14.0-beta.4
+// @version      2.14.0-beta.5
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market. (Privacy policy: https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md)
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.14.0-beta.4';
+    const VERSION = '2.14.0-beta.5';
 
     /*
      * ============================================================
@@ -187,9 +187,9 @@
 
     /*
      * Fetches the raw .user.js text from `url` and extracts its
-     * @version header value. Returns null on any failure (network
-     * error, timeout, missing header) — callers treat that as "no
-     * update info available" rather than an error to surface.
+     * @version header value. Resolves to undefined on any failure
+     * (network error, timeout, missing header) so callers can tell a
+     * failed check apart from a successful one.
      */
     function fetchRemoteVersion(url) {
         const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
@@ -202,9 +202,10 @@
             })
             .then((text) => {
                 const match = text.match(/@version\s+([^\s]+)/);
-                return match ? match[1] : null;
+                if (!match) throw new Error('No @version header');
+                return match[1];
             })
-            .catch(() => null)
+            .catch(() => undefined)
             .finally(() => {
                 if (timeoutId) clearTimeout(timeoutId);
             });
@@ -216,9 +217,12 @@
      * if the current install is already up to date / the check could
      * not run. Never throws; safe to call fire-and-forget.
      */
+    let lastUpdateCheckFailed = false;
+
     function checkForUpdates(options) {
         const force = Boolean(options && options.force);
         const url = getUpdateCheckUrl();
+        lastUpdateCheckFailed = false;
         if (!url) return Promise.resolve(null);
 
         const saved = loadUpdateCheckState();
@@ -229,8 +233,13 @@
         }
 
         return fetchRemoteVersion(url).then((remoteVersion) => {
+            if (remoteVersion === undefined) {
+                lastUpdateCheckFailed = true;
+                return state.updateAvailable;
+            }
+            lastUpdateCheckFailed = false;
             saveUpdateCheckState({ lastCheckedAt: Date.now(), remoteVersion });
-            state.updateAvailable = remoteVersion && compareVersions(remoteVersion, VERSION) > 0 ? remoteVersion : null;
+            state.updateAvailable = compareVersions(remoteVersion, VERSION) > 0 ? remoteVersion : null;
             return state.updateAvailable;
         });
     }
@@ -435,6 +444,8 @@
             updateAvailableTooltip: 'New version {version} available — click to download',
             settingsCheckUpdates: 'Check for updates',
             updateUpToDate: 'You already have the latest version',
+            updateCheckFailed: 'Could not check for updates',
+            copyFailed: 'Could not copy to the clipboard',
             settingsConquestHistory: 'Enable conquest history',
             settingsConquestHistoryHint: 'Downloads a multi-MB file (conquers.txt) to power >history',
             islandTownsWithCapacity: '{n}/{cap} towns',
@@ -614,6 +625,8 @@
             updateAvailableTooltip: 'Nueva versión {version} disponible — haz clic para descargar',
             settingsCheckUpdates: 'Buscar actualizaciones',
             updateUpToDate: 'Ya tienes la última versión',
+            updateCheckFailed: 'No se pudo comprobar si hay actualizaciones',
+            copyFailed: 'No se pudo copiar al portapapeles',
             settingsConquestHistory: 'Activar historial de conquistas',
             settingsConquestHistoryHint: 'Descarga un archivo de varios MB (conquers.txt) para >history',
             islandTownsWithCapacity: '{n}/{cap} ciudades',
@@ -793,6 +806,8 @@
             updateAvailableTooltip: 'Neue Version {version} verfügbar — klicken zum Herunterladen',
             settingsCheckUpdates: 'Nach Updates suchen',
             updateUpToDate: 'Du hast bereits die neueste Version',
+            updateCheckFailed: 'Updates konnten nicht geprüft werden',
+            copyFailed: 'Kopieren in die Zwischenablage fehlgeschlagen',
             settingsConquestHistory: 'Eroberungshistorie aktivieren',
             settingsConquestHistoryHint: 'Lädt eine mehrere MB große Datei (conquers.txt) für >history',
             islandTownsWithCapacity: '{n}/{cap} Städte',
@@ -972,6 +987,8 @@
             updateAvailableTooltip: 'Nouvelle version {version} disponible — cliquez pour télécharger',
             settingsCheckUpdates: 'Vérifier les mises à jour',
             updateUpToDate: 'Vous avez déjà la dernière version',
+            updateCheckFailed: 'Impossible de vérifier les mises à jour',
+            copyFailed: 'Impossible de copier dans le presse-papiers',
             settingsConquestHistory: 'Activer l’historique des conquêtes',
             settingsConquestHistoryHint: 'Télécharge un fichier de plusieurs Mo (conquers.txt) pour >history',
             islandTownsWithCapacity: '{n}/{cap} villes',
@@ -1151,6 +1168,8 @@
             updateAvailableTooltip: 'Nuova versione {version} disponibile — clicca per scaricare',
             settingsCheckUpdates: 'Controlla aggiornamenti',
             updateUpToDate: 'Hai già l’ultima versione',
+            updateCheckFailed: 'Impossibile verificare gli aggiornamenti',
+            copyFailed: 'Impossibile copiare negli appunti',
             settingsConquestHistory: 'Attiva cronologia conquiste',
             settingsConquestHistoryHint: 'Scarica un file di alcuni MB (conquers.txt) per >history',
             islandTownsWithCapacity: '{n}/{cap} città',
@@ -1330,6 +1349,8 @@
             updateAvailableTooltip: 'Nieuwe versie {version} beschikbaar — klik om te downloaden',
             settingsCheckUpdates: 'Controleren op updates',
             updateUpToDate: 'Je hebt al de laatste versie',
+            updateCheckFailed: 'Kon niet op updates controleren',
+            copyFailed: 'Kopiëren naar het klembord is mislukt',
             settingsConquestHistory: 'Veroveringsgeschiedenis inschakelen',
             settingsConquestHistoryHint: 'Downloadt een bestand van meerdere MB (conquers.txt) voor >history',
             islandTownsWithCapacity: '{n}/{cap} steden',
@@ -1509,6 +1530,8 @@
             updateAvailableTooltip: 'Dostępna nowa wersja {version} — kliknij, aby pobrać',
             settingsCheckUpdates: 'Sprawdź aktualizacje',
             updateUpToDate: 'Masz już najnowszą wersję',
+            updateCheckFailed: 'Nie udało się sprawdzić aktualizacji',
+            copyFailed: 'Nie udało się skopiować do schowka',
             settingsConquestHistory: 'Włącz historię podbojów',
             settingsConquestHistoryHint: 'Pobiera kilkumegabajtowy plik (conquers.txt) dla >history',
             islandTownsWithCapacity: '{n}/{cap} miast',
@@ -1688,6 +1711,8 @@
             updateAvailableTooltip: 'Nova versão {version} disponível — clique para descarregar',
             settingsCheckUpdates: 'Procurar atualizações',
             updateUpToDate: 'Já tem a versão mais recente',
+            updateCheckFailed: 'Não foi possível verificar atualizações',
+            copyFailed: 'Não foi possível copiar para a área de transferência',
             settingsConquestHistory: 'Ativar histórico de conquistas',
             settingsConquestHistoryHint: 'Descarrega um ficheiro de vários MB (conquers.txt) para >history',
             islandTownsWithCapacity: '{n}/{cap} cidades',
@@ -1867,6 +1892,8 @@
             updateAvailableTooltip: 'Nova versão {version} disponível — clique para baixar',
             settingsCheckUpdates: 'Verificar atualizações',
             updateUpToDate: 'Você já tem a versão mais recente',
+            updateCheckFailed: 'Não foi possível verificar atualizações',
+            copyFailed: 'Não foi possível copiar para a área de transferência',
             settingsConquestHistory: 'Ativar histórico de conquistas',
             settingsConquestHistoryHint: 'Baixa um arquivo de vários MB (conquers.txt) para >history',
             islandTownsWithCapacity: '{n}/{cap} cidades',
@@ -2046,6 +2073,8 @@
             updateAvailableTooltip: 'Yeni sürüm {version} mevcut — indirmek için tıklayın',
             settingsCheckUpdates: 'Güncellemeleri denetle',
             updateUpToDate: 'Zaten en son sürüme sahipsiniz',
+            updateCheckFailed: 'Güncellemeler denetlenemedi',
+            copyFailed: 'Panoya kopyalanamadı',
             settingsConquestHistory: 'Fetih geçmişini etkinleştir',
             settingsConquestHistoryHint: '>history için birkaç MB\'lık bir dosya (conquers.txt) indirir',
             islandTownsWithCapacity: '{n}/{cap} şehir',
@@ -2225,6 +2254,8 @@
             updateAvailableTooltip: 'Доступна новая версия {version} — нажмите, чтобы скачать',
             settingsCheckUpdates: 'Проверить обновления',
             updateUpToDate: 'У вас уже установлена последняя версия',
+            updateCheckFailed: 'Не удалось проверить обновления',
+            copyFailed: 'Не удалось скопировать в буфер обмена',
             settingsConquestHistory: 'Включить историю завоеваний',
             settingsConquestHistoryHint: 'Загружает файл размером в несколько МБ (conquers.txt) для >history',
             islandTownsWithCapacity: '{n}/{cap} городов',
@@ -2404,6 +2435,8 @@
             updateAvailableTooltip: 'Διαθέσιμη νέα έκδοση {version} — κάντε κλικ για λήψη',
             settingsCheckUpdates: 'Έλεγχος για ενημερώσεις',
             updateUpToDate: 'Έχετε ήδη την πιο πρόσφατη έκδοση',
+            updateCheckFailed: 'Δεν ήταν δυνατός ο έλεγχος για ενημερώσεις',
+            copyFailed: 'Η αντιγραφή στο πρόχειρο απέτυχε',
             settingsConquestHistory: 'Ενεργοποίηση ιστορικού κατακτήσεων',
             settingsConquestHistoryHint: 'Κατεβάζει ένα αρχείο πολλών MB (conquers.txt) για το >history',
             islandTownsWithCapacity: '{n}/{cap} πόλεις',
@@ -2583,6 +2616,8 @@
             updateAvailableTooltip: 'Új verzió elérhető: {version} — kattints a letöltéshez',
             settingsCheckUpdates: 'Frissítések keresése',
             updateUpToDate: 'Már a legújabb verziót használod',
+            updateCheckFailed: 'A frissítések ellenőrzése nem sikerült',
+            copyFailed: 'A vágólapra másolás nem sikerült',
             settingsConquestHistory: 'Hódítási előzmények engedélyezése',
             settingsConquestHistoryHint: 'Letölt egy több MB-os fájlt (conquers.txt) a >history parancshoz',
             islandTownsWithCapacity: '{n}/{cap} város',
@@ -2762,6 +2797,8 @@
             updateAvailableTooltip: 'Versiune nouă {version} disponibilă — clic pentru descărcare',
             settingsCheckUpdates: 'Caută actualizări',
             updateUpToDate: 'Ai deja cea mai recentă versiune',
+            updateCheckFailed: 'Nu s-au putut verifica actualizările',
+            copyFailed: 'Nu s-a putut copia în clipboard',
             settingsConquestHistory: 'Activează istoricul cuceririlor',
             settingsConquestHistoryHint: 'Descarcă un fișier de câțiva MB (conquers.txt) pentru >history',
             islandTownsWithCapacity: '{n}/{cap} orașe',
@@ -2941,6 +2978,8 @@
             updateAvailableTooltip: 'K dispozici je nová verze {version} — klikněte pro stažení',
             settingsCheckUpdates: 'Zkontrolovat aktualizace',
             updateUpToDate: 'Již máte nejnovější verzi',
+            updateCheckFailed: 'Aktualizace se nepodařilo zkontrolovat',
+            copyFailed: 'Kopírování do schránky se nezdařilo',
             settingsConquestHistory: 'Povolit historii dobývání',
             settingsConquestHistoryHint: 'Stáhne několika MB soubor (conquers.txt) pro >history',
             islandTownsWithCapacity: '{n}/{cap} měst',
@@ -3120,6 +3159,8 @@
             updateAvailableTooltip: 'K dispozícii je nová verzia {version} — kliknite pre stiahnutie',
             settingsCheckUpdates: 'Skontrolovať aktualizácie',
             updateUpToDate: 'Už máte najnovšiu verziu',
+            updateCheckFailed: 'Aktualizácie sa nepodarilo skontrolovať',
+            copyFailed: 'Kopírovanie do schránky zlyhalo',
             settingsConquestHistory: 'Povoliť históriu dobýjania',
             settingsConquestHistoryHint: 'Stiahne niekoľko MB veľký súbor (conquers.txt) pre >history',
             islandTownsWithCapacity: '{n}/{cap} miest',
@@ -3244,6 +3285,30 @@
      * browser profile plays on.
      */
 
+    function sanitizeSettings(stored) {
+        const clean = { ...SETTINGS_DEFAULTS };
+        if (typeof stored.language === 'string' && (stored.language === 'auto' || Object.prototype.hasOwnProperty.call(LOCALES, stored.language))) {
+            clean.language = stored.language;
+        }
+        if (typeof stored.hotkey === 'string' && isValidHotkey(stored.hotkey.toLowerCase())) {
+            clean.hotkey = stored.hotkey.toLowerCase();
+        }
+        for (const key of Object.keys(SETTINGS_BOUNDS)) {
+            const value = Number(stored[key]);
+            if (stored[key] !== null && stored[key] !== '' && Number.isFinite(value)) {
+                clean[key] = clampSetting(key, value);
+            }
+        }
+        if (typeof stored.conquestHistoryEnabled === 'boolean') {
+            clean.conquestHistoryEnabled = stored.conquestHistoryEnabled;
+        }
+        return clean;
+    }
+
+    function isValidHotkey(letter) {
+        return /^[a-z]$/.test(letter) && letter !== CONFIG.EXPORT_KEY;
+    }
+
     function loadSettings() {
         let raw = null;
         try {
@@ -3256,7 +3321,7 @@
         }
         try {
             const parsed = JSON.parse(raw);
-            return { ...SETTINGS_DEFAULTS, ...(parsed && typeof parsed === 'object' ? parsed : {}) };
+            return sanitizeSettings(parsed && typeof parsed === 'object' ? parsed : {});
         } catch (_) {
             return { ...SETTINGS_DEFAULTS };
         }
@@ -3286,6 +3351,7 @@
         CONFIG.RESULTS_PAGE_SIZE = clampSetting('resultsPageSize', settings.resultsPageSize);
         CONFIG.MAX_RESULTS = clampSetting('maxResults', settings.maxResults);
         CONFIG.CACHE_TTL = clampSetting('cacheTtlHours', settings.cacheTtlHours) * 60 * 60 * 1000;
+        CONFIG.CONQUEST_HISTORY_CACHE_TTL = CONFIG.CACHE_TTL;
         CONFIG.NEAR_MAX_RADIUS = clampSetting('nearMaxRadius', settings.nearMaxRadius);
         CONFIG.GHOST_MIN_POINTS = clampSetting('ghostMinPoints', settings.ghostMinPoints);
         CONFIG.CONQUEST_HISTORY_ENABLED = Boolean(settings.conquestHistoryEnabled);
@@ -3397,6 +3463,7 @@
         loading: false,
         eventsByTown: new Map(),
         totalEvents: 0,
+        failedAt: 0,
     };
 
     /*
@@ -3488,13 +3555,18 @@
         return `qf:${namespace}:${WORLD || 'unknown'}`;
     }
 
+    function loadStoredList(key) {
+        const list = storageGet(key);
+        return Array.isArray(list) ? list.filter((entry) => entry && typeof entry === 'object') : [];
+    }
+
     function loadHistory() {
-        const list = storageGet(worldKey('history'));
-        return Array.isArray(list) ? list : [];
+        return loadStoredList(worldKey('history'));
     }
 
     function addHistory(item) {
-        const list = loadHistory().filter((entry) => !(entry.type === item.type && String(entry.id) === String(item.id)));
+        const key = historyEntryKey(item);
+        const list = loadHistory().filter((entry) => historyEntryKey(entry) !== key);
         list.unshift({ type: item.type, id: item.id, name: item.name, x: item.x, y: item.y });
         if (list.length > CONFIG.HISTORY_MAX) {
             list.length = CONFIG.HISTORY_MAX;
@@ -3505,10 +3577,12 @@
     /*
      * Coordinate entries without a town on them carry no stable `id`
      * (see searchCoordinates/hydrateHistoryItem), so type+id alone
-     * cannot identify them; x/y is used instead for that one type.
+     * cannot identify them; x/y is used instead. Islands share the
+     * key with coordinates because a stored island entry is shown as
+     * a plain coordinate when the Curator advisor is not active.
      */
     function historyEntryKey(entry) {
-        if (entry.type === 'coordinate') {
+        if (entry.type === 'coordinate' || entry.type === 'island') {
             return `coordinate:${entry.x}:${entry.y}`;
         }
         return `${entry.type}:${entry.id}`;
@@ -3525,12 +3599,11 @@
     }
 
     function loadFavorites() {
-        const list = storageGet(worldKey('favorites'));
-        return Array.isArray(list) ? list : [];
+        return loadStoredList(worldKey('favorites'));
     }
 
     function syncFavorites() {
-        favoriteSet = new Set(loadFavorites().map((entry) => `${entry.type}:${entry.id}`));
+        favoriteSet = new Set(loadFavorites().map(historyEntryKey));
     }
 
     function saveFavorites(list) {
@@ -3544,7 +3617,8 @@
      */
     function toggleFavorite(item) {
         const favorites = loadFavorites();
-        const index = favorites.findIndex((entry) => entry.type === item.type && String(entry.id) === String(item.id));
+        const key = historyEntryKey(item);
+        const index = favorites.findIndex((entry) => historyEntryKey(entry) === key);
         if (index >= 0) {
             favorites.splice(index, 1);
         } else {
@@ -3558,7 +3632,7 @@
     }
 
     function isFavorite(item) {
-        return favoriteSet.has(`${item.type}:${item.id}`);
+        return favoriteSet.has(historyEntryKey(item));
     }
 
     /*
@@ -3568,13 +3642,15 @@
      */
     function favoriteNote(item) {
         if (!item) return '';
-        const entry = loadFavorites().find((favEntry) => favEntry.type === item.type && String(favEntry.id) === String(item.id));
+        const key = historyEntryKey(item);
+        const entry = loadFavorites().find((favEntry) => historyEntryKey(favEntry) === key);
         return entry && entry.note ? entry.note : '';
     }
 
     function setFavoriteNote(item, note) {
         const favorites = loadFavorites();
-        const entry = favorites.find((favEntry) => favEntry.type === item.type && String(favEntry.id) === String(item.id));
+        const key = historyEntryKey(item);
+        const entry = favorites.find((favEntry) => historyEntryKey(favEntry) === key);
         if (!entry) return false;
         entry.note = String(note || '').slice(0, 140).trim();
         saveFavorites(favorites);
@@ -3588,8 +3664,7 @@
      * town/coordinate target.
      */
     function loadSavedSearches() {
-        const list = storageGet(worldKey('savedSearches'));
-        return Array.isArray(list) ? list : [];
+        return loadStoredList(worldKey('savedSearches')).filter((entry) => typeof entry.query === 'string');
     }
 
     function saveSavedSearches(list) {
@@ -3692,14 +3767,14 @@
                 if (player) {
                     return { type: 'player', id: player.id, name: player.name, data: player };
                 }
-                return entry.name ? { type: 'player', id: Number(entry.id), name: entry.name } : null;
+                return !state.loaded && entry.name ? { type: 'player', id: Number(entry.id), name: entry.name } : null;
             }
             case 'alliance': {
                 const alliance = DATA.allianceById.get(Number(entry.id));
                 if (alliance) {
                     return { type: 'alliance', id: alliance.id, name: alliance.name, data: alliance };
                 }
-                return entry.name ? { type: 'alliance', id: Number(entry.id), name: entry.name } : null;
+                return !state.loaded && entry.name ? { type: 'alliance', id: Number(entry.id), name: entry.name } : null;
             }
             case 'town': {
                 const town = DATA.townById.get(Number(entry.id));
@@ -3714,7 +3789,7 @@
                         data: town,
                     };
                 }
-                if (entry.name && Number.isFinite(entry.x) && Number.isFinite(entry.y)) {
+                if (!state.loaded && entry.name && Number.isFinite(entry.x) && Number.isFinite(entry.y)) {
                     return { type: 'town', id: Number(entry.id), name: entry.name, x: entry.x, y: entry.y };
                 }
                 return null;
@@ -3726,7 +3801,7 @@
                 return null;
             case 'island':
                 if (Number.isFinite(entry.x) && Number.isFinite(entry.y)) {
-                    return islandRow(entry.x, entry.y);
+                    return isCuratorActive() ? islandRow(entry.x, entry.y) : plainCoordinateResult(entry.x, entry.y);
                 }
                 return null;
             default:
@@ -3764,12 +3839,12 @@
                 item.section = 'favorite';
                 item.note = entry.note || '';
                 rows.push(item);
-                keys.add(`${item.type}:${item.id}`);
+                keys.add(historyEntryKey(item));
             }
         }
 
         for (const entry of loadHistory()) {
-            const key = `${entry.type}:${entry.id}`;
+            const key = historyEntryKey(entry);
             if (keys.has(key)) continue;
             const item = hydrateHistoryItem(entry);
             if (item) {
@@ -3797,6 +3872,24 @@
             }
         }
         return counts;
+    }
+
+    /*
+     * Rebuilds the empty-query history rows in place: keeps the
+     * selected Saved/Favorites/Recent chip (unless it became empty),
+     * the row selection and any open detail pane, unlike
+     * performSearch('') which resets all of them.
+     */
+    function rebuildHistoryView() {
+        const previousSelected = state.selected;
+        state.fullResults = buildHistoryResults();
+        state.historyCounts = computeHistoryCounts(state.fullResults);
+        if (state.historySegment !== CONFIG.DEFAULT_HISTORY_SEGMENT && !state.historyCounts[state.historySegment]) {
+            state.historySegment = CONFIG.DEFAULT_HISTORY_SEGMENT;
+        }
+        applyHistorySegment();
+        state.selected = Math.min(previousSelected, Math.max(0, state.results.length - 1));
+        render();
     }
 
     function applyHistorySegment() {
@@ -4050,7 +4143,7 @@
     const FETCH_TIMEOUT_MS = 20000;
 
     function fetchText(path, timeoutMs) {
-        const url = `https://${WORLD}.grepolis.com${path}`;
+        const url = `${location.origin}${path}`;
         const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
         const timeoutId = controller
             ? setTimeout(() => controller.abort(), timeoutMs || FETCH_TIMEOUT_MS)
@@ -4072,6 +4165,13 @@
             .finally(() => {
                 if (timeoutId) clearTimeout(timeoutId);
             });
+    }
+
+    function resetIndexes() {
+        indexPlayers([]);
+        indexAlliances([]);
+        indexTowns([]);
+        indexIslands([]);
     }
 
     function indexPlayers(players) {
@@ -4186,7 +4286,7 @@
 
     function yieldToMainThread() {
         return new Promise((resolve) => {
-            if (typeof requestAnimationFrame === 'function') {
+            if (typeof requestAnimationFrame === 'function' && !document.hidden) {
                 requestAnimationFrame(() => resolve());
             } else {
                 setTimeout(resolve, 0);
@@ -4333,7 +4433,7 @@
 
             const townId = Number(parts[0]);
             const ts = Number(parts[1]);
-            if (!townId || !Number.isFinite(ts)) continue;
+            if (!townId || !Number.isFinite(ts) || ts <= 0) continue;
 
             const event = {
                 ts: ts * 1000,
@@ -4386,9 +4486,43 @@
         return `qfi:${WORLD}`;
     }
 
+    const IDB_OPEN_TIMEOUT_MS = 4000;
+
+    /*
+     * Runs one IndexedDB transaction on a fresh connection and always
+     * closes it afterwards. Long-lived game tabs would otherwise keep
+     * old connections open and block a later DB_VERSION upgrade
+     * (onblocked), which used to leave the palette loading forever;
+     * the timeout guarantees the cache degrades to "no cache" instead.
+     */
+    function idbRun(storeName, mode, work) {
+        return Promise.race([
+            idbOpen().then((db) => new Promise((resolve, reject) => {
+                let settled = false;
+                const finish = (fn, value) => {
+                    if (settled) return;
+                    settled = true;
+                    try { db.close(); } catch (_) { /* already closed */ }
+                    fn(value);
+                };
+                try {
+                    const tx = db.transaction(storeName, mode);
+                    const result = work(tx.objectStore(storeName));
+                    tx.oncomplete = () => finish(resolve, result.value);
+                    tx.onerror = () => finish(reject, tx.error);
+                    tx.onabort = () => finish(reject, tx.error);
+                } catch (error) {
+                    finish(reject, error);
+                }
+            })),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('IndexedDB timeout')), IDB_OPEN_TIMEOUT_MS)),
+        ]);
+    }
+
     function idbOpen() {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onblocked = () => reject(new Error('IndexedDB blocked'));
             request.onupgradeneeded = () => {
                 const db = request.result;
                 if (!db.objectStoreNames.contains(DB_STORE)) {
@@ -4398,49 +4532,44 @@
                     db.createObjectStore(CONQUEST_STORE, { keyPath: 'key' });
                 }
             };
-            request.onsuccess = () => resolve(request.result);
+            request.onsuccess = () => {
+                const db = request.result;
+                db.onversionchange = () => db.close();
+                resolve(db);
+            };
             request.onerror = () => reject(request.error);
         });
     }
 
     function cacheGet() {
-        return idbOpen()
-            .then((db) => new Promise((resolve, reject) => {
-                const tx = db.transaction(DB_STORE, 'readonly');
-                const request = tx.objectStore(DB_STORE).get(cacheKey());
-                request.onsuccess = () => resolve(request.result || null);
-                request.onerror = () => reject(request.error);
-            }))
-            .catch(() => null);
+        return idbRun(DB_STORE, 'readonly', (store) => {
+            const result = { value: null };
+            store.get(cacheKey()).onsuccess = (event) => {
+                result.value = event.target.result || null;
+            };
+            return result;
+        }).catch(() => null);
     }
 
     function cacheSet(players, alliances, towns, islands) {
-        return idbOpen()
-            .then((db) => new Promise((resolve, reject) => {
-                const tx = db.transaction(DB_STORE, 'readwrite');
-                tx.objectStore(DB_STORE).put({
-                    key: cacheKey(),
-                    savedAt: Date.now(),
-                    players,
-                    alliances,
-                    towns,
-                    islands,
-                });
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
-            }))
-            .catch(() => null);
+        return idbRun(DB_STORE, 'readwrite', (store) => {
+            store.put({
+                key: cacheKey(),
+                savedAt: Date.now(),
+                players,
+                alliances,
+                towns,
+                islands,
+            });
+            return {};
+        }).catch(() => null);
     }
 
     function cacheDelete() {
-        return idbOpen()
-            .then((db) => new Promise((resolve, reject) => {
-                const tx = db.transaction(DB_STORE, 'readwrite');
-                tx.objectStore(DB_STORE).delete(cacheKey());
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
-            }))
-            .catch(() => null);
+        return idbRun(DB_STORE, 'readwrite', (store) => {
+            store.delete(cacheKey());
+            return {};
+        }).catch(() => null);
     }
 
     function applyLoadedData(source, players, alliances, towns, islands, savedAt) {
@@ -4464,8 +4593,12 @@
         // discarded by performSearch() (it had nothing to search
         // against yet). Re-run it now that the index is ready, so
         // the user doesn't see a spurious "No results found."
-        if (state.query) {
-            performSearch(state.query, ++searchToken);
+        const input = document.getElementById('qf-input');
+        const pending = input ? input.value : state.query;
+        if (isPanelOpen()) {
+            render();
+        } else if (pending && pending.trim()) {
+            performSearch(pending, ++searchToken);
         } else if (state.open) {
             performSearch('', ++searchToken);
         } else {
@@ -4510,10 +4643,20 @@
                 // entries are treated as stale so the BBCode island lookup
                 // has data to work with instead of silently staying empty.
                 if (cached && cached.savedAt && cached.islands && Date.now() - cached.savedAt < CONFIG.CACHE_TTL) {
-                    applyLoadedData('cache', cached.players || [], cached.alliances || [], cached.towns || [], cached.islands || [], cached.savedAt);
-                    state.loading = false;
-                    finishLoad();
-                    return;
+                    let applied = false;
+                    try {
+                        applyLoadedData('cache', cached.players || [], cached.alliances || [], cached.towns || [], cached.islands || [], cached.savedAt);
+                        applied = true;
+                    } catch (cacheError) {
+                        console.warn('[QF] Ignoring corrupted cache entry:', cacheError);
+                        resetIndexes();
+                        cacheDelete();
+                    }
+                    if (applied) {
+                        state.loading = false;
+                        finishLoad();
+                        return;
+                    }
                 }
             }
 
@@ -4553,11 +4696,31 @@
         if (!WORLD) {
             return;
         }
+        if (state.loading) {
+            return;
+        }
+        const previous = { loaded: state.loaded, savedAt: state.savedAt, dataSource: state.dataSource };
+        state.loading = true;
         await cacheDelete();
+        state.loading = false;
         state.loaded = false;
         state.savedAt = 0;
         state.dataSource = null;
         await loadAll(true);
+        if (!state.loaded && previous.loaded) {
+            state.loaded = true;
+            state.savedAt = previous.savedAt;
+            state.dataSource = previous.dataSource;
+            state.loadError = null;
+            render();
+        }
+        if (CONFIG.CONQUEST_HISTORY_ENABLED) {
+            CONQUEST.loaded = false;
+            await loadConquestHistory(true);
+            if (!CONQUEST.loaded && CONQUEST.eventsByTown.size) {
+                CONQUEST.loaded = true;
+            }
+        }
     }
 
     /*
@@ -4576,14 +4739,13 @@
      */
 
     function conquestCacheGet() {
-        return idbOpen()
-            .then((db) => new Promise((resolve, reject) => {
-                const tx = db.transaction(CONQUEST_STORE, 'readonly');
-                const request = tx.objectStore(CONQUEST_STORE).get(cacheKey());
-                request.onsuccess = () => resolve(request.result || null);
-                request.onerror = () => reject(request.error);
-            }))
-            .catch(() => null);
+        return idbRun(CONQUEST_STORE, 'readonly', (store) => {
+            const result = { value: null };
+            store.get(cacheKey()).onsuccess = (event) => {
+                result.value = event.target.result || null;
+            };
+            return result;
+        }).catch(() => null);
     }
 
     /*
@@ -4595,19 +4757,15 @@
      * consistent and trivially inspectable in DevTools).
      */
     function conquestCacheSet(eventsByTown, total) {
-        return idbOpen()
-            .then((db) => new Promise((resolve, reject) => {
-                const tx = db.transaction(CONQUEST_STORE, 'readwrite');
-                tx.objectStore(CONQUEST_STORE).put({
-                    key: cacheKey(),
-                    savedAt: Date.now(),
-                    total,
-                    events: [...eventsByTown.entries()],
-                });
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
-            }))
-            .catch(() => null);
+        return idbRun(CONQUEST_STORE, 'readwrite', (store) => {
+            store.put({
+                key: cacheKey(),
+                savedAt: Date.now(),
+                total,
+                events: [...eventsByTown.entries()],
+            });
+            return {};
+        }).catch(() => null);
     }
 
     function applyConquestData(eventsByTown, total) {
@@ -4630,6 +4788,9 @@
         if (!WORLD || CONQUEST.loaded || CONQUEST.loading) {
             return;
         }
+        if (!force && Date.now() - CONQUEST.failedAt < CONQUEST_RETRY_BACKOFF_MS) {
+            return;
+        }
 
         CONQUEST.loading = true;
 
@@ -4639,7 +4800,7 @@
                 if (cached && cached.savedAt && Date.now() - cached.savedAt < CONFIG.CONQUEST_HISTORY_CACHE_TTL) {
                     applyConquestData(new Map(cached.events || []), cached.total || 0);
                     CONQUEST.loading = false;
-                    if (state.open) render();
+                    refreshAfterConquestLoad();
                     return;
                 }
             }
@@ -4649,11 +4810,25 @@
             applyConquestData(eventsByTown, total);
             conquestCacheSet(eventsByTown, total); // fire-and-forget
             CONQUEST.loading = false;
-            if (state.open) render();
+            refreshAfterConquestLoad();
         } catch (error) {
             console.error('[QF] Error loading conquest history:', error);
             CONQUEST.loading = false;
+            CONQUEST.failedAt = Date.now();
         }
+    }
+
+    const CONQUEST_RETRY_BACKOFF_MS = 60 * 1000;
+
+    /*
+     * Rows built while conquers.txt was still loading (the
+     * "history not loaded" hint, town rows without a recent-conquest
+     * badge) are stale once it arrives, so re-run the current query
+     * instead of only repainting the old rows.
+     */
+    function refreshAfterConquestLoad() {
+        if (!state.open) return;
+        rerunCurrentQuery();
     }
 
     /*
@@ -4749,7 +4924,7 @@
      * chronological, so the last array entry is the most recent one.
      */
     function lastConquestEvent(townId) {
-        if (!CONQUEST.loaded || !townId) return null;
+        if (!CONQUEST.loaded || !CONFIG.CONQUEST_HISTORY_ENABLED || !townId) return null;
         const events = CONQUEST.eventsByTown.get(townId);
         return events && events.length ? events[events.length - 1] : null;
     }
@@ -5290,7 +5465,11 @@
         const ownTowns = townsOnIsland(from.x, from.y);
         try {
             const ownId = GP.Game && Number.isFinite(Number(GP.Game.player_id)) ? Number(GP.Game.player_id) : null;
-            const ownTown = ownId ? ownTowns.find((town) => town.playerId === ownId) : null;
+            const activeId = GP.Game && Number.isFinite(Number(GP.Game.townId)) ? Number(GP.Game.townId) : null;
+            const ownTown = ownId
+                ? ownTowns.find((town) => town.id === activeId && town.playerId === ownId)
+                    || ownTowns.find((town) => town.playerId === ownId)
+                : null;
             if (ownTown) {
                 refTownId = ownTown.id;
             } else if (GP.Game && Number.isFinite(Number(GP.Game.townId))) {
@@ -5341,6 +5520,10 @@
 
         if (unitKeys.some((key) => FLYING_UNITS.has(key))) {
             rows.push({ type: 'info', name: translate('travelFlyingNote') });
+        }
+
+        if (resolvable.length < results.length) {
+            rows.push({ type: 'info', name: translate('travelCalcFailed') });
         }
 
         if (!mods) {
@@ -5800,7 +5983,8 @@
 
         if (bestTown && bestTown.score === 10000) return townHistoryRows(bestTown.data);
         if (player && player.nameNorm === normalize(query)) return playerHistoryRows(player);
-        if (bestTown && (!player || bestTown.score >= 6000)) return townHistoryRows(bestTown.data);
+        const playerScore = player ? scoreMatch(player.nameNorm, normalize(query)) : 0;
+        if (bestTown && bestTown.score >= playerScore) return townHistoryRows(bestTown.data);
         if (player) return playerHistoryRows(player);
         return [{ type: 'info', name: translate('noResults') }];
     }
@@ -5853,8 +6037,7 @@
                 if (!coords) {
                     return [{ type: 'info', name: translate('commandGotoHelp') }];
                 }
-                openCoordinate(coords);
-                return null;
+                return [plainCoordinateResult(coords.x, coords.y, 16000)];
             }
 
             case 'ghost': {
@@ -5914,19 +6097,27 @@
         return true;
     }
 
+    const FAVORITABLE_TYPES = new Set(['player', 'alliance', 'town', 'island', 'coordinate']);
+
+    function isFavoritable(item) {
+        return Boolean(item) && FAVORITABLE_TYPES.has(item.type);
+    }
+
+    function isPanelOpen() {
+        return state.showHelp || state.showSettings || state.showSaveSearch || state.showNoteEditor;
+    }
+
     function toggleFavoriteSelected() {
         const item = getFocusedItem();
-        if (!item || item.type === 'info') {
+        if (!item || !isFavoritable(item)) {
             return;
         }
         toggleFavorite(item);
         // In the history view the row set must be rebuilt so a just-
-        // unfavorited item leaves the Favorites group. Toggling a
-        // favorite never changes an open detail pane's own rows (those
-        // are alliance members / a player's towns, not the history
-        // list), so the pane itself is left alone either way.
-        if (!state.query) {
-            performSearch('', ++searchToken);
+        // unfavorited item leaves the Favorites group, without
+        // touching an open detail pane.
+        if (!state.query && !isPanelOpen()) {
+            rebuildHistoryView();
         } else {
             render();
         }
@@ -5939,13 +6130,68 @@
      * immediately. No-ops for rows without coordinates (players,
      * alliances, info rows, saved searches).
      */
-    function setOriginSelected() {
-        const item = getFocusedItem();
+    function setOriginSelected(target) {
+        const item = target || getFocusedItem();
+        const current = loadOriginOverride();
+        if (item && current && (item.type === 'coordinate' || item.type === 'island' || item.type === 'town')) {
+            const town = item.type === 'town' ? item.data : null;
+            const x = town ? town.islandX : item.x;
+            const y = town ? town.islandY : item.y;
+            if (x === current.x && y === current.y) {
+                clearOriginOverride();
+                showToast(translate('originCleared'));
+                refreshAfterOriginChange();
+                return;
+            }
+        }
         if (!setOriginFromItem(item)) {
             return;
         }
         showToast(translate('originSet', { x: item.x, y: item.y }));
+        refreshAfterOriginChange();
+    }
+
+    /*
+     * Distances are baked into rows when they are built, so pinning or
+     * clearing the origin must rebuild the current results and every
+     * open detail-pane level instead of only repainting the footer.
+     */
+    function refreshAfterOriginChange() {
+        rerunCurrentQuery();
+    }
+
+    /*
+     * Re-runs the query currently in the input (rows may have been
+     * built from stale data or a stale origin) while keeping the
+     * selected row and any open detail pane, which performSearch()
+     * would otherwise reset. Detail-pane levels are rebuilt too.
+     */
+    function rerunCurrentQuery() {
+        const input = document.getElementById('qf-input');
+        const query = input ? input.value : state.query;
+        const stack = state.hierarchyStack;
+        const focusPane = state.focusPane;
+        const selected = state.selected;
+        if (query && query.trim() && !isPanelOpen()) {
+            performSearch(query, ++searchToken);
+            state.selected = Math.min(selected, Math.max(0, state.results.length - 1));
+        }
+        if (stack.length && !state.hierarchyStack.length) {
+            state.hierarchyStack = stack;
+            state.focusPane = focusPane;
+        }
+        refreshHierarchyLevels();
         render();
+    }
+
+    function refreshHierarchyLevels() {
+        for (const level of state.hierarchyStack) {
+            if (level.premiumBlocked) continue;
+            const selected = level.selected;
+            refreshLevel(level);
+            level.selected = Math.min(selected, Math.max(0, level.rows.length - 1));
+        }
+        if (state.open) render();
     }
 
     /*
@@ -6040,6 +6286,7 @@
     // browser); execCommand('copy') via a throwaway textarea is the
     // fallback every other in-page copy button on the web still uses.
     function fallbackCopyToClipboard(text) {
+        const previous = document.activeElement;
         try {
             const textarea = document.createElement('textarea');
             textarea.value = text;
@@ -6048,10 +6295,12 @@
             document.body.appendChild(textarea);
             textarea.focus();
             textarea.select();
-            document.execCommand('copy');
+            const ok = document.execCommand('copy');
             textarea.remove();
-            return Promise.resolve();
+            if (previous && typeof previous.focus === 'function') previous.focus();
+            return ok ? Promise.resolve() : Promise.reject(new Error('execCommand copy failed'));
         } catch (error) {
+            if (previous && typeof previous.focus === 'function') previous.focus();
             return Promise.reject(error);
         }
     }
@@ -6144,12 +6393,19 @@
             return Promise.resolve(true);
         }
 
-        return copyToClipboard(text).then(() => {
-            if (historyItem) addHistory(historyItem);
-            if (!bulk) close();
-            showToast(label(false), toastCode);
-            return true;
-        });
+        return copyToClipboard(text).then(
+            () => {
+                if (historyItem) addHistory(historyItem);
+                if (!bulk) close();
+                showToast(label(false), toastCode);
+                return true;
+            },
+            (error) => {
+                console.error('[QF] Clipboard copy failed:', error);
+                showToast(translate('copyFailed'));
+                return false;
+            },
+        );
     }
 
     /*
@@ -6247,6 +6503,7 @@
         const token = ++searchToken;
 
         searchTimer = setTimeout(() => {
+            searchTimer = null;
             if (token !== searchToken) {
                 return; // something new was typed while we waited: discard.
             }
@@ -6254,11 +6511,29 @@
         }, CONFIG.SEARCH_DELAY);
     }
 
+    /*
+     * Runs a search still waiting on the input debounce right now, so
+     * Enter/Tab/Ctrl+D act on what is actually typed instead of the
+     * previous query's rows.
+     */
+    function flushPendingSearch() {
+        if (!searchTimer) return;
+        clearTimeout(searchTimer);
+        searchTimer = null;
+        const input = document.getElementById('qf-input');
+        if (input && input.value.trim() !== state.query) {
+            performSearch(input.value, ++searchToken);
+        }
+    }
+
     function performSearch(rawQuery, token) {
         const query = rawQuery.trim();
         state.query = query;
         state.showHelp = false;
         state.showSettings = false;
+        state.showSaveSearch = false;
+        state.showNoteEditor = false;
+        state.noteEditItem = null;
         // The left-hand list is about to be rebuilt; any open detail
         // pane refers to the old list's rows and must close with it.
         resetHierarchy();
@@ -6281,7 +6556,7 @@
             }
             const commandResult = runCommand(query);
             if (commandResult) {
-                if (!state.loaded) {
+                if (!state.loaded && !/^>\s*goto\b/i.test(query)) {
                     // Commands that need the index (>ghost, >dist)
                     // cannot run before it is ready. Show a help
                     // message instead of a misleading empty list.
@@ -6325,7 +6600,11 @@
         // Optional "@scope" prefix pins the search to one segment,
         // e.g. "@t Naxos" or "@alliance Donners". The prefix is
         // stripped before the actual query.
-        let segment = state.segment;
+        // The segment chip is only a filter applied on top of a full
+        // search (see applySegment); the search itself is scoped solely
+        // by an explicit "@scope" prefix, so switching chips or
+        // deleting a prefix never leaves the search stuck on one type.
+        let segment = CONFIG.DEFAULT_SEGMENT;
         let searchQuery = query;
         const scopeMatch = query.match(/^@([tpaic])\s+(.+)/);
         if (scopeMatch) {
@@ -6370,16 +6649,18 @@
                 // of showing every fuzzy near-miss. Requires the
                 // Administrator/Curator advisor, same as the in-game
                 // overviews this mirrors.
-                if (matches.length && matches[0].score === 10000 && curatorActive) {
-                    results = playerDetailRows(matches[0].data);
+                const exact = curatorActive ? matches.find((match) => match.score === 10000) : null;
+                if (exact) {
+                    results = playerDetailRows(exact.data);
                     detail = true;
                 } else {
                     results = [...matches];
                 }
             } else if (segment === 'alliance') {
                 const matches = searchAlliances(queryNorm);
-                if (matches.length && matches[0].score === 10000 && curatorActive) {
-                    results = allianceDetailRows(matches[0].data);
+                const exact = curatorActive ? matches.find((match) => match.score === 10000) : null;
+                if (exact) {
+                    results = allianceDetailRows(exact.data);
                     detail = true;
                 } else {
                     results = [...matches];
@@ -7186,6 +7467,7 @@
         overlay.querySelector('#qf-footer-export').addEventListener('click', (event) => {
             event.preventDefault();
             exportResultsBBCode();
+            focusMainInput();
         });
 
         overlay.querySelector('#qf-footer-refresh').addEventListener('click', (event) => {
@@ -7193,6 +7475,7 @@
             if (!state.loading) {
                 refreshData();
             }
+            focusMainInput();
         });
 
         overlay.querySelector('#qf-footer-help').addEventListener('click', (event) => {
@@ -7217,7 +7500,7 @@
             event.preventDefault();
             clearOriginOverride();
             showToast(translate('originCleared'));
-            renderFooter();
+            refreshAfterOriginChange();
         });
     }
 
@@ -7439,7 +7722,7 @@
      */
     function loadMoreResults() {
         const total = state.results.length;
-        if (state.visibleCount >= total) {
+        if (!state.query || isPanelOpen() || state.loading || state.visibleCount >= total) {
             return;
         }
         const results = document.getElementById('qf-results');
@@ -7742,6 +8025,7 @@
         const noteInput = container.querySelector('#qf-note-input');
         if (noteInput) {
             noteInput.addEventListener('keydown', (event) => {
+                if (event.isComposing || event.keyCode === 229) return;
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     submitNoteEditorPanel(container);
@@ -7765,8 +8049,11 @@
 
     function bindSaveSearchEvents(container) {
         const nameInput = container.querySelector('#qf-save-search-name');
-        if (nameInput) {
-            nameInput.addEventListener('keydown', (event) => {
+        const noteField = container.querySelector('#qf-save-search-note');
+        for (const field of [nameInput, noteField]) {
+            if (!field) continue;
+            field.addEventListener('keydown', (event) => {
+                if (event.isComposing || event.keyCode === 229) return;
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     submitSaveSearchPanel(container);
@@ -7885,7 +8172,7 @@
             settings.language = rawValue && LANGUAGE_NAMES[rawValue] ? rawValue : 'auto';
         } else if (key === 'hotkey') {
             const letter = String(rawValue || '').trim().toLowerCase().slice(-1);
-            settings.hotkey = /^[a-z0-9]$/.test(letter) ? letter : SETTINGS_DEFAULTS.hotkey;
+            settings.hotkey = isValidHotkey(letter) ? letter : SETTINGS_DEFAULTS.hotkey;
         } else if (key === 'conquestHistoryEnabled') {
             settings.conquestHistoryEnabled = Boolean(rawValue);
             // Enabling the toggle loads conquers.txt in the background
@@ -7955,6 +8242,10 @@
                 checkForUpdates({ force: true }).then((remoteVersion) => {
                     checkUpdatesBtn.disabled = false;
                     renderFooter();
+                    if (lastUpdateCheckFailed) {
+                        showToast(translate('updateCheckFailed'));
+                        return;
+                    }
                     showToast(remoteVersion
                         ? translate('updateAvailableToast', { version: remoteVersion })
                         : translate('updateUpToDate'));
@@ -8244,6 +8535,21 @@
                 break;
         }
 
+        if (info && item.type === 'command-suggestion') {
+            return `
+                <div class="qf-result qf-result-command${selected}" data-index="${index}"${paneAttr}>
+                    <span class="qf-result-icon">${icon}</span>
+                    <div class="qf-result-body">
+                        <div class="qf-result-line1">
+                            <span class="qf-result-name">${escapeHTML(item.name)}</span>
+                            ${badge ? `<span class="qf-badge ${badgeClass}">${escapeHTML(badge)}</span>` : ''}
+                        </div>
+                        ${meta ? `<div class="qf-result-meta">${meta}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
         if (info) {
             return `
                 <div class="qf-result-info" data-index="${index}"${paneAttr}>
@@ -8421,6 +8727,7 @@
      * input.
      */
     function handleSubInputKeydown(event) {
+        if (event.isComposing || event.keyCode === 229) return;
         const input = event.currentTarget;
         if (state.hierarchyStack.length) state.focusPane = 'detail';
         const plain = !event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey;
@@ -8441,6 +8748,10 @@
         const backOut = (event.key === 'ArrowLeft' && plain && atStart)
             || (event.key === 'ArrowLeft' && event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey)
             || (event.key === 'Backspace' && plain && input.value === '');
+        if (backOut && event.repeat) {
+            event.preventDefault();
+            return;
+        }
         if (backOut) {
             event.preventDefault();
             popHierarchyLevel();
@@ -8473,16 +8784,28 @@
      */
 
     function handleInputKeydown(event) {
+        if (event.isComposing || event.keyCode === 229) {
+            return;
+        }
+
         if (event.ctrlKey || event.metaKey) {
             const key = event.key.toLowerCase();
 
-            if (event.shiftKey && key === CONFIG.HOTKEY) {
+            if (event.shiftKey && matchesHotkeyKey(event)) {
+                return;
+            }
+
+            const ctrlShortcutKeys = [
+                CONFIG.FAV_KEY, CONFIG.REFRESH_KEY, CONFIG.BBCODE_KEY, CONFIG.INSERT_KEY, CONFIG.SUBSEARCH_KEY,
+                CONFIG.SAVE_SEARCH_KEY, CONFIG.RENAME_KEY, CONFIG.ORIGIN_KEY, CONFIG.NOTE_KEY,
+            ];
+            if (event.shiftKey && key !== CONFIG.EXPORT_KEY && ctrlShortcutKeys.includes(key)) {
                 return;
             }
 
             if (key === CONFIG.FAV_KEY) {
                 event.preventDefault();
-                toggleFavoriteSelected();
+                if (!isPanelOpen() && !state.loading) toggleFavoriteSelected();
                 return;
             }
 
@@ -8496,13 +8819,13 @@
 
             if (key === CONFIG.EXPORT_KEY && event.shiftKey) {
                 event.preventDefault();
-                exportResultsBBCode();
+                if (!isPanelOpen() && !state.loading) exportResultsBBCode();
                 return;
             }
 
             if (key === CONFIG.BBCODE_KEY) {
                 event.preventDefault();
-                sendSelectedBBCode();
+                if (!isPanelOpen() && !state.loading) sendSelectedBBCode();
                 return;
             }
 
@@ -8526,13 +8849,14 @@
 
             if (key === CONFIG.SAVE_SEARCH_KEY) {
                 event.preventDefault();
+                flushPendingSearch();
                 openSaveSearchPanel();
                 return;
             }
 
             if (key === CONFIG.RENAME_KEY) {
                 event.preventDefault();
-                const item = state.results[state.selected];
+                const item = isPanelOpen() ? null : state.results[state.selected];
                 if (item && item.type === 'saved-search') {
                     openRenameSavedSearchPanel(item);
                 }
@@ -8541,13 +8865,13 @@
 
             if (key === CONFIG.ORIGIN_KEY) {
                 event.preventDefault();
-                setOriginSelected();
+                if (!isPanelOpen() && !state.loading) setOriginSelected();
                 return;
             }
 
             if (key === CONFIG.NOTE_KEY) {
                 event.preventDefault();
-                const item = getFocusedItem();
+                const item = isPanelOpen() ? null : getFocusedItem();
                 if (item && isFavorite(item)) {
                     openNoteEditorPanel(item);
                 }
@@ -8561,16 +8885,29 @@
         // the whole section the selected row belongs to (same guard as
         // that section's "Clear" button click).
         if (event.key === 'Delete') {
+            if (isPanelOpen()) return;
             if (event.ctrlKey && event.shiftKey) {
                 event.preventDefault();
                 clearSelectedHistorySection();
                 return;
             }
             if (!event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
-                event.preventDefault();
-                removeSelectedHistoryItem();
+                const focused = getFocusedItem();
+                if (focused && (focused.section === 'recent' || focused.section === 'saved')) {
+                    event.preventDefault();
+                    removeSelectedHistoryItem();
+                }
                 return;
             }
+        }
+
+        if (isPanelOpen() && ['ArrowDown', 'ArrowUp', 'ArrowRight', 'Home', 'End', 'Enter', 'Tab'].includes(event.key)) {
+            if (event.key === 'Enter' || event.key === 'Tab') event.preventDefault();
+            return;
+        }
+
+        if (event.key === 'Enter' || event.key === 'Tab') {
+            flushPendingSearch();
         }
 
         const inDetailPane = state.focusPane === 'detail' && state.hierarchyStack.length > 0;
@@ -8599,7 +8936,11 @@
             // ArrowRight bindings exist to conflict with.
             case 'ArrowRight': {
                 const item = activeList[activeSelected];
-                if (isDrillable(item)) {
+                const target = event.target;
+                const caretAtEnd = !target || typeof target.selectionStart !== 'number'
+                    || (target.selectionEnd === target.value.length
+                        && (target.selectionStart === target.value.length || target.selectionStart === 0));
+                if (isDrillable(item) && caretAtEnd && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) {
                     event.preventDefault();
                     pushHierarchyLevel(item, inDetailPane);
                     render();
@@ -8688,15 +9029,10 @@
 
         if (event.target.closest('.qf-star')) {
             event.stopPropagation();
-            if (item && item.type !== 'info') {
+            if (item && isFavoritable(item)) {
                 toggleFavorite(item);
-                // In the history view the row set must be rebuilt so a
-                // just-unfavorited item leaves the Favorites group; a
-                // fresh token keeps this in sync with any in-flight
-                // search. Otherwise a simple re-render is enough since
-                // favorite status doesn't change search result membership.
-                if (!state.query) {
-                    performSearch('', ++searchToken);
+                if (!state.query && !isPanelOpen()) {
+                    rebuildHistoryView();
                 } else {
                     render();
                 }
@@ -8740,10 +9076,7 @@
         if (event.target.closest('.qf-origin-btn')) {
             event.stopPropagation();
             setPaneSelected(inDetailPane, index);
-            if (setOriginFromItem(item)) {
-                showToast(translate('originSet', { x: item.x, y: item.y }));
-                render();
-            }
+            setOriginSelected(item);
             return;
         }
 
@@ -8758,6 +9091,10 @@
 
         setPaneSelected(inDetailPane, index);
         activateItem(item, event);
+        if (state.open) {
+            if (inDetailPane) focusSubInput();
+            else focusMainInput();
+        }
     }
 
     /*
@@ -8767,6 +9104,9 @@
      * data-clear-section on the button tells which list to wipe.
      */
     function handleResultsMousedown(event) {
+        if (event.button !== 0) return;
+        if (isPanelOpen()) return;
+        event.preventDefault();
         const clearBtn = event.target.closest('.qf-section-clear');
         if (clearBtn) {
             event.stopPropagation();
@@ -8790,6 +9130,13 @@
      * handler instead of reusing handleResultsMousedown verbatim.
      */
     function handleDetailPaneMousedown(event) {
+        if (event.button !== 0) return;
+        if (event.target.closest('#qf-sub-input')) return;
+        event.preventDefault();
+        if (event.target.closest('.qf-detail-search')) {
+            focusSubInput();
+            return;
+        }
         const crumb = event.target.closest('.qf-breadcrumb-item[data-depth]');
         if (crumb) {
             event.stopPropagation();
@@ -8805,8 +9152,6 @@
             setLevelMode(currentHierarchyLevel(), modeChip.dataset.levelMode);
             return;
         }
-
-        if (event.target.closest('#qf-sub-input')) return;
 
         handleResultClick(event);
     }
@@ -8900,6 +9245,8 @@
         state.showHelp = false;
         state.showSettings = true;
         state.showSaveSearch = false;
+        state.showNoteEditor = false;
+        state.noteEditItem = null;
 
         const input = document.getElementById('qf-input');
         input.value = state.query || '';
@@ -9024,6 +9371,8 @@
         state.showNoteEditor = false;
         state.noteEditItem = null;
         showToast(translate('favoriteNoteSaved'));
+        const mainInput = document.getElementById('qf-input');
+        if (mainInput) mainInput.value = '';
         performSearch('', ++searchToken);
     }
 
@@ -9123,6 +9472,12 @@
      * "Ctrl+Shift+F". Used in the footer, help panel and settings
      * panel so all three stay in sync when the user customizes it.
      */
+    function matchesHotkeyKey(event) {
+        const key = String(event.key || '').toLowerCase();
+        if (key === CONFIG.HOTKEY) return true;
+        return !/^[a-z]$/.test(key) && event.code === `Key${CONFIG.HOTKEY.toUpperCase()}`;
+    }
+
     function hotkeyLabel() {
         return `Ctrl+Shift+${(CONFIG.HOTKEY || 'f').toUpperCase()}`;
     }
@@ -9160,7 +9515,7 @@
                 event.shiftKey &&
                 !event.altKey &&
                 !event.metaKey &&
-                event.key.toLowerCase() === CONFIG.HOTKEY;
+                matchesHotkeyKey(event);
 
             if (isHotkey) {
                 event.preventDefault();
@@ -10105,7 +10460,8 @@
         }
 
         #qf-origin-indicator[hidden],
-        #qf-insert-indicator[hidden] {
+        #qf-insert-indicator[hidden],
+        #qf-save-search-btn[hidden] {
             display: none;
         }
 
