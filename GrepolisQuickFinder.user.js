@@ -6948,11 +6948,11 @@
             const origin = loadOriginOverride();
             if (origin) {
                 originIndicator.hidden = false;
-                originIndicator.textContent = translate('originIndicator', { x: origin.x, y: origin.y });
+                originIndicator.innerHTML = `<span class="qf-origin-indicator-icon">${ICONS.origin}</span><span>${escapeHTML(translate('originIndicator', { x: origin.x, y: origin.y }))}</span>`;
                 originIndicator.title = translate('originIndicatorTooltip');
             } else {
                 originIndicator.hidden = true;
-                originIndicator.textContent = '';
+                originIndicator.innerHTML = '';
                 originIndicator.title = '';
             }
         }
@@ -9315,6 +9315,45 @@
         #qf-status.qf-status-error {
             color: #e08a8a;
             font-weight: 600;
+        }
+
+        /*
+         * Pinned-origin chip: same gold-on-tint language as the
+         * selection/favorite accent, sized like the footer's 10px hints.
+         * Hover shifts to the danger tone since clicking clears it.
+         */
+        #qf-origin-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 8px 2px 6px;
+            border: 1px solid rgba(215, 163, 63, .32);
+            border-radius: 7px;
+            background: rgba(215, 163, 63, .12);
+            color: #e6bd6c;
+            font: inherit;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+            cursor: pointer;
+            transition: background-color .08s ease, border-color .08s ease, color .08s ease;
+        }
+
+        #qf-origin-indicator[hidden] {
+            display: none;
+        }
+
+        #qf-origin-indicator:hover {
+            border-color: rgba(224, 138, 138, .5);
+            background: rgba(224, 138, 138, .12);
+            color: #e6a2a2;
+        }
+
+        .qf-origin-indicator-icon {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            flex: none;
         }
 
         #qf-version {
