@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder (Beta)
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.14.0-beta.2
+// @version      2.14.0-beta.3
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market. (Privacy policy: https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md)
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.14.0-beta.2';
+    const VERSION = '2.14.0-beta.3';
 
     /*
      * ============================================================
@@ -40,6 +40,7 @@
         ORIGIN_KEY: 'o',          // Ctrl+<ORIGIN_KEY> inside the palette: pin selected row as distance origin
         NOTE_KEY: 'n',            // Ctrl+<NOTE_KEY> inside the palette: edit note on selected favorite
         INSERT_KEY: 'i',          // Ctrl+<INSERT_KEY> inside the palette: toggle insert mode (BBCode typed into the focused field)
+        SUBSEARCH_KEY: 'k',       // Ctrl+<SUBSEARCH_KEY> inside the palette: focus the detail pane's sub-search field
         EXPORT_KEY: 'b',          // Ctrl+Shift+<EXPORT_KEY> inside the palette: bulk-export visible rows as BBCode
         HELP_CHAR: '?',           // typing this alone shows the shortcuts/commands panel
         COMMAND_PREFIX: '>',      // commands: >goto, >ghost, >dist, >island, >near, >ocean, >help
@@ -55,6 +56,7 @@
         CACHE_TTL: 6 * 60 * 60 * 1000, // reuse world data for at most this long
         GHOST_MIN_POINTS: 0,
         HIERARCHY_MAX_DEPTH: 2, // alliance->player->town or island->town: at most 2 pushes
+        HIERARCHY_MAX_ROWS: 200, // rows kept per detail-pane level (members/towns), sub-search included
         UPDATE_CHECK_INTERVAL_MS: 12 * 60 * 60 * 1000, // throttle the background update check
         CONQUEST_HISTORY_ENABLED: false, // opt-in: /data/conquers.txt is multi-MB, see SETTINGS
         CONQUEST_HISTORY_CACHE_TTL: 6 * 60 * 60 * 1000, // same freshness window as the main cache
@@ -284,7 +286,7 @@
             searchPlaceholder: 'Search players, alliances or towns...',
             footerNavigate: '\u2191 \u2193 navigate',
             footerOpen: 'Enter to open',
-            shortcutsEscTwoStage: 'Close panel / palette (press twice if a detail pane is open)',
+            shortcutsEscKeepsPlace: 'Close palette (keeps your place)',
             emptyTitle: 'Search Grepolis',
             emptySubtitle: 'Players \u00b7 Alliances \u00b7 Towns',
             emptyHintCoords: 'You can also enter coordinates: <strong>{example}</strong>',
@@ -425,6 +427,9 @@
             shortcutsRenameSaved: 'Rename selected saved search',
             hierarchyDrillTooltip: 'View details (→)',
             shortcutsHierarchyNav: '← → drill in/out',
+            shortcutsSubSearch: 'Search within the open section',
+            subSearchPlaceholder: 'Search in this section',
+            subSearchUnsupported: 'In a section, use: text, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'A new version ({version}) is available.',
             updateAvailableTooltip: 'New version {version} available — click to download',
             settingsCheckUpdates: 'Check for updates',
@@ -459,7 +464,7 @@
             searchPlaceholder: 'Buscar jugadores, alianzas o ciudades...',
             footerNavigate: '\u2191 \u2193 seleccionar',
             footerOpen: 'Enter abrir',
-            shortcutsEscTwoStage: 'Cerrar panel / paleta (pulsa dos veces si hay un panel de detalle abierto)',
+            shortcutsEscKeepsPlace: 'Cerrar paleta (conserva tu posición)',
             emptyTitle: 'Buscar en Grepolis',
             emptySubtitle: 'Jugadores \u00b7 Alianzas \u00b7 Ciudades',
             emptyHintCoords: 'Tambi\u00e9n puedes introducir coordenadas: <strong>{example}</strong>',
@@ -600,6 +605,9 @@
             shortcutsRenameSaved: 'Renombrar la búsqueda guardada seleccionada',
             hierarchyDrillTooltip: 'Ver detalles (→)',
             shortcutsHierarchyNav: '← → entrar/salir',
+            shortcutsSubSearch: 'Buscar dentro de la sección abierta',
+            subSearchPlaceholder: 'Buscar en esta sección',
+            subSearchUnsupported: 'En una sección usa: texto, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Hay una nueva versión disponible ({version}).',
             updateAvailableTooltip: 'Nueva versión {version} disponible — haz clic para descargar',
             settingsCheckUpdates: 'Buscar actualizaciones',
@@ -634,7 +642,7 @@
             searchPlaceholder: 'Spieler, Allianzen oder St\u00e4dte suchen...',
             footerNavigate: '\u2191 \u2193 ausw\u00e4hlen',
             footerOpen: 'Enter \u00f6ffnen',
-            shortcutsEscTwoStage: 'Panel/Palette schließen (bei geöffnetem Detailbereich zweimal drücken)',
+            shortcutsEscKeepsPlace: 'Palette schließen (Position bleibt erhalten)',
             emptyTitle: 'Grepolis durchsuchen',
             emptySubtitle: 'Spieler \u00b7 Allianzen \u00b7 St\u00e4dte',
             emptyHintCoords: 'Du kannst auch Koordinaten eingeben: <strong>{example}</strong>',
@@ -775,6 +783,9 @@
             shortcutsRenameSaved: 'Ausgewählte gespeicherte Suche umbenennen',
             hierarchyDrillTooltip: 'Details anzeigen (→)',
             shortcutsHierarchyNav: '← → rein/raus',
+            shortcutsSubSearch: 'Im geöffneten Bereich suchen',
+            subSearchPlaceholder: 'In diesem Bereich suchen',
+            subSearchUnsupported: 'In einem Bereich möglich: Text, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Eine neue Version ({version}) ist verfügbar.',
             updateAvailableTooltip: 'Neue Version {version} verfügbar — klicken zum Herunterladen',
             settingsCheckUpdates: 'Nach Updates suchen',
@@ -809,7 +820,7 @@
             searchPlaceholder: 'Rechercher des joueurs, alliances ou villes...',
             footerNavigate: '\u2191 \u2193 s\u00e9lectionner',
             footerOpen: 'Entr\u00e9e ouvrir',
-            shortcutsEscTwoStage: 'Fermer le panneau / la palette (appuyez deux fois si un panneau de détail est ouvert)',
+            shortcutsEscKeepsPlace: 'Fermer la palette (conserve votre position)',
             emptyTitle: 'Rechercher dans Grepolis',
             emptySubtitle: 'Joueurs \u00b7 Alliances \u00b7 Villes',
             emptyHintCoords: 'Vous pouvez aussi saisir des coordonn\u00e9es : <strong>{example}</strong>',
@@ -950,6 +961,9 @@
             shortcutsRenameSaved: 'Renommer la recherche enregistrée sélectionnée',
             hierarchyDrillTooltip: 'Voir les détails (→)',
             shortcutsHierarchyNav: '← → entrer/sortir',
+            shortcutsSubSearch: 'Rechercher dans la section ouverte',
+            subSearchPlaceholder: 'Rechercher dans cette section',
+            subSearchUnsupported: 'Dans une section : texte, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Une nouvelle version ({version}) est disponible.',
             updateAvailableTooltip: 'Nouvelle version {version} disponible — cliquez pour télécharger',
             settingsCheckUpdates: 'Vérifier les mises à jour',
@@ -984,7 +998,7 @@
             searchPlaceholder: 'Cerca giocatori, alleanze o citt\u00e0...',
             footerNavigate: '\u2191 \u2193 seleziona',
             footerOpen: 'Invio apri',
-            shortcutsEscTwoStage: 'Chiudi pannello / palette (premi due volte se un pannello dettagli è aperto)',
+            shortcutsEscKeepsPlace: 'Chiudi la palette (mantiene la posizione)',
             emptyTitle: 'Cerca in Grepolis',
             emptySubtitle: 'Giocatori \u00b7 Alleanze \u00b7 Citt\u00e0',
             emptyHintCoords: 'Puoi anche inserire le coordinate: <strong>{example}</strong>',
@@ -1125,6 +1139,9 @@
             shortcutsRenameSaved: 'Rinomina la ricerca salvata selezionata',
             hierarchyDrillTooltip: 'Vedi dettagli (→)',
             shortcutsHierarchyNav: '← → entra/esci',
+            shortcutsSubSearch: 'Cerca nella sezione aperta',
+            subSearchPlaceholder: 'Cerca in questa sezione',
+            subSearchUnsupported: 'In una sezione: testo, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'È disponibile una nuova versione ({version}).',
             updateAvailableTooltip: 'Nuova versione {version} disponibile — clicca per scaricare',
             settingsCheckUpdates: 'Controlla aggiornamenti',
@@ -1159,7 +1176,7 @@
             searchPlaceholder: 'Zoek spelers, allianties of steden...',
             footerNavigate: '\u2191 \u2193 selecteren',
             footerOpen: 'Enter openen',
-            shortcutsEscTwoStage: 'Paneel/palet sluiten (druk tweemaal als er een detailvenster open staat)',
+            shortcutsEscKeepsPlace: 'Palet sluiten (behoudt je positie)',
             emptyTitle: 'Zoeken in Grepolis',
             emptySubtitle: 'Spelers \u00b7 Allianties \u00b7 Steden',
             emptyHintCoords: 'Je kunt ook co\u00f6rdinaten invoeren: <strong>{example}</strong>',
@@ -1300,6 +1317,9 @@
             shortcutsRenameSaved: 'Geselecteerde opgeslagen zoekopdracht hernoemen',
             hierarchyDrillTooltip: 'Details bekijken (→)',
             shortcutsHierarchyNav: '← → in/uit',
+            shortcutsSubSearch: 'Zoeken in de geopende sectie',
+            subSearchPlaceholder: 'Zoeken in deze sectie',
+            subSearchUnsupported: 'In een sectie kun je gebruiken: tekst, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Er is een nieuwe versie ({version}) beschikbaar.',
             updateAvailableTooltip: 'Nieuwe versie {version} beschikbaar — klik om te downloaden',
             settingsCheckUpdates: 'Controleren op updates',
@@ -1334,7 +1354,7 @@
             searchPlaceholder: 'Szukaj graczy, sojuszy lub miast...',
             footerNavigate: '\u2191 \u2193 wybierz',
             footerOpen: 'Enter otw\u00f3rz',
-            shortcutsEscTwoStage: 'Zamknij panel / paletę (naciśnij dwukrotnie, jeśli otwarty jest panel szczegółów)',
+            shortcutsEscKeepsPlace: 'Zamknij paletę (zachowuje pozycję)',
             emptyTitle: 'Szukaj w Grepolis',
             emptySubtitle: 'Gracze \u00b7 Sojusze \u00b7 Miasta',
             emptyHintCoords: 'Mo\u017cesz te\u017c wpisa\u0107 wsp\u00f3\u0142rz\u0119dne: <strong>{example}</strong>',
@@ -1475,6 +1495,9 @@
             shortcutsRenameSaved: 'Zmień nazwę wybranego zapisanego wyszukiwania',
             hierarchyDrillTooltip: 'Zobacz szczegóły (→)',
             shortcutsHierarchyNav: '← → wejdź/wyjdź',
+            shortcutsSubSearch: 'Szukaj w otwartej sekcji',
+            subSearchPlaceholder: 'Szukaj w tej sekcji',
+            subSearchUnsupported: 'W sekcji użyj: tekst, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Dostępna jest nowa wersja ({version}).',
             updateAvailableTooltip: 'Dostępna nowa wersja {version} — kliknij, aby pobrać',
             settingsCheckUpdates: 'Sprawdź aktualizacje',
@@ -1509,7 +1532,7 @@
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
             footerNavigate: '\u2191 \u2193 selecionar',
             footerOpen: 'Enter abrir',
-            shortcutsEscTwoStage: 'Fechar painel / paleta (prime duas vezes se um painel de detalhe estiver aberto)',
+            shortcutsEscKeepsPlace: 'Fechar paleta (mantém a posição)',
             emptyTitle: 'Pesquisar no Grepolis',
             emptySubtitle: 'Jogadores \u00b7 Alian\u00e7as \u00b7 Cidades',
             emptyHintCoords: 'Tamb\u00e9m podes introduzir coordenadas: <strong>{example}</strong>',
@@ -1650,6 +1673,9 @@
             shortcutsRenameSaved: 'Renomear a pesquisa guardada selecionada',
             hierarchyDrillTooltip: 'Ver detalhes (→)',
             shortcutsHierarchyNav: '← → entrar/sair',
+            shortcutsSubSearch: 'Pesquisar na secção aberta',
+            subSearchPlaceholder: 'Pesquisar nesta secção',
+            subSearchUnsupported: 'Numa secção usa: texto, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Está disponível uma nova versão ({version}).',
             updateAvailableTooltip: 'Nova versão {version} disponível — clique para descarregar',
             settingsCheckUpdates: 'Procurar atualizações',
@@ -1684,7 +1710,7 @@
             searchPlaceholder: 'Pesquisar jogadores, alian\u00e7as ou cidades...',
             footerNavigate: '\u2191 \u2193 selecionar',
             footerOpen: 'Enter abrir',
-            shortcutsEscTwoStage: 'Fechar painel / paleta (pressione duas vezes se um painel de detalhes estiver aberto)',
+            shortcutsEscKeepsPlace: 'Fechar paleta (mantém sua posição)',
             emptyTitle: 'Pesquisar no Grepolis',
             emptySubtitle: 'Jogadores \u00b7 Alian\u00e7as \u00b7 Cidades',
             emptyHintCoords: 'Voc\u00ea tamb\u00e9m pode digitar coordenadas: <strong>{example}</strong>',
@@ -1825,6 +1851,9 @@
             shortcutsRenameSaved: 'Renomear a pesquisa salva selecionada',
             hierarchyDrillTooltip: 'Ver detalhes (→)',
             shortcutsHierarchyNav: '← → entrar/sair',
+            shortcutsSubSearch: 'Pesquisar na seção aberta',
+            subSearchPlaceholder: 'Pesquisar nesta seção',
+            subSearchUnsupported: 'Em uma seção use: texto, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Uma nova versão ({version}) está disponível.',
             updateAvailableTooltip: 'Nova versão {version} disponível — clique para baixar',
             settingsCheckUpdates: 'Verificar atualizações',
@@ -1859,7 +1888,7 @@
             searchPlaceholder: 'Oyuncu, ittifak veya \u015fehir ara...',
             footerNavigate: '\u2191 \u2193 se\u00e7',
             footerOpen: 'Enter a\u00e7',
-            shortcutsEscTwoStage: 'Paneli / paleti kapat (bir ayrıntı paneli açıksa iki kez basın)',
+            shortcutsEscKeepsPlace: 'Paleti kapat (konumunuzu korur)',
             emptyTitle: "Grepolis'te ara",
             emptySubtitle: 'Oyuncular \u00b7 \u0130ttifaklar \u00b7 \u015eehirler',
             emptyHintCoords: 'Koordinat da girebilirsin: <strong>{example}</strong>',
@@ -2000,6 +2029,9 @@
             shortcutsRenameSaved: 'Seçili kayıtlı aramayı yeniden adlandır',
             hierarchyDrillTooltip: 'Ayrıntıları görüntüle (→)',
             shortcutsHierarchyNav: '← → gir/çık',
+            shortcutsSubSearch: 'Açık bölümde ara',
+            subSearchPlaceholder: 'Bu bölümde ara',
+            subSearchUnsupported: 'Bir bölümde şunlar kullanılabilir: metin, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Yeni bir sürüm ({version}) mevcut.',
             updateAvailableTooltip: 'Yeni sürüm {version} mevcut — indirmek için tıklayın',
             settingsCheckUpdates: 'Güncellemeleri denetle',
@@ -2034,7 +2066,7 @@
             searchPlaceholder: '\u041f\u043e\u0438\u0441\u043a \u0438\u0433\u0440\u043e\u043a\u043e\u0432, \u0430\u043b\u044c\u044f\u043d\u0441\u043e\u0432 \u0438\u043b\u0438 \u0433\u043e\u0440\u043e\u0434\u043e\u0432...',
             footerNavigate: '\u2191 \u2193 \u0432\u044b\u0431\u0440\u0430\u0442\u044c',
             footerOpen: 'Enter \u043e\u0442\u043a\u0440\u044b\u0442\u044c',
-            shortcutsEscTwoStage: 'Закрыть панель / палитру (нажмите дважды, если открыта панель деталей)',
+            shortcutsEscKeepsPlace: 'Закрыть палитру (сохраняет текущее место)',
             emptyTitle: '\u041f\u043e\u0438\u0441\u043a \u0432 Grepolis',
             emptySubtitle: '\u0418\u0433\u0440\u043e\u043a\u0438 \u00b7 \u0410\u043b\u044c\u044f\u043d\u0441\u044b \u00b7 \u0413\u043e\u0440\u043e\u0434\u0430',
             emptyHintCoords: '\u041c\u043e\u0436\u043d\u043e \u0442\u0430\u043a\u0436\u0435 \u0432\u0432\u0435\u0441\u0442\u0438 \u043a\u043e\u043e\u0440\u0434\u0438\u043d\u0430\u0442\u044b: <strong>{example}</strong>',
@@ -2175,6 +2207,9 @@
             shortcutsRenameSaved: 'Переименовать выбранный сохранённый поиск',
             hierarchyDrillTooltip: 'Подробнее (→)',
             shortcutsHierarchyNav: '← → войти/выйти',
+            shortcutsSubSearch: 'Поиск внутри открытого раздела',
+            subSearchPlaceholder: 'Поиск в этом разделе',
+            subSearchUnsupported: 'В разделе доступны: текст, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Доступна новая версия ({version}).',
             updateAvailableTooltip: 'Доступна новая версия {version} — нажмите, чтобы скачать',
             settingsCheckUpdates: 'Проверить обновления',
@@ -2209,7 +2244,7 @@
             searchPlaceholder: '\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03c0\u03b1\u03b9\u03ba\u03c4\u03ce\u03bd, \u03c3\u03c5\u03bc\u03bc\u03b1\u03c7\u03b9\u03ce\u03bd \u03ae \u03c0\u03cc\u03bb\u03b5\u03c9\u03bd...',
             footerNavigate: '\u2191 \u2193 \u03b5\u03c0\u03b9\u03bb\u03bf\u03b3\u03ae',
             footerOpen: 'Enter \u03ac\u03bd\u03bf\u03b9\u03b3\u03bc\u03b1',
-            shortcutsEscTwoStage: 'Κλείσιμο πίνακα / παλέτας (πατήστε δύο φορές αν είναι ανοιχτό ένα πλαίσιο λεπτομερειών)',
+            shortcutsEscKeepsPlace: 'Κλείσιμο παλέτας (διατηρεί τη θέση σας)',
             emptyTitle: '\u0391\u03bd\u03b1\u03b6\u03ae\u03c4\u03b7\u03c3\u03b7 \u03c3\u03c4\u03bf Grepolis',
             emptySubtitle: '\u03a0\u03b1\u03af\u03ba\u03c4\u03b5\u03c2 \u00b7 \u03a3\u03c5\u03bc\u03bc\u03b1\u03c7\u03af\u03b5\u03c2 \u00b7 \u03a0\u03cc\u03bb\u03b5\u03b9\u03c2',
             emptyHintCoords: '\u039c\u03c0\u03bf\u03c1\u03b5\u03af\u03c2 \u03b5\u03c0\u03af\u03c3\u03b7\u03c2 \u03bd\u03b1 \u03b5\u03b9\u03c3\u03b1\u03b3\u03ac\u03b3\u03b5\u03b9\u03c2 \u03c3\u03c5\u03bd\u03c4\u03b5\u03c4\u03b1\u03b3\u03bc\u03ad\u03bd\u03b5\u03c2: <strong>{example}</strong>',
@@ -2350,6 +2385,9 @@
             shortcutsRenameSaved: 'Μετονομασία επιλεγμένης αποθηκευμένης αναζήτησης',
             hierarchyDrillTooltip: 'Προβολή λεπτομερειών (→)',
             shortcutsHierarchyNav: '← → είσοδος/έξοδος',
+            shortcutsSubSearch: 'Αναζήτηση στην ανοιχτή ενότητα',
+            subSearchPlaceholder: 'Αναζήτηση σε αυτή την ενότητα',
+            subSearchUnsupported: 'Σε μια ενότητα: κείμενο, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Διατίθεται νέα έκδοση ({version}).',
             updateAvailableTooltip: 'Διαθέσιμη νέα έκδοση {version} — κάντε κλικ για λήψη',
             settingsCheckUpdates: 'Έλεγχος για ενημερώσεις',
@@ -2384,7 +2422,7 @@
             searchPlaceholder: 'J\u00e1t\u00e9kosok, sz\u00f6vets\u00e9gek vagy v\u00e1rosok keres\u00e9se...',
             footerNavigate: '\u2191 \u2193 kiv\u00e1laszt\u00e1s',
             footerOpen: 'Enter megnyit\u00e1s',
-            shortcutsEscTwoStage: 'Panel / paletta bezárása (kattints kétszer, ha egy részletnézet nyitva van)',
+            shortcutsEscKeepsPlace: 'Paletta bezárása (megőrzi a pozíciót)',
             emptyTitle: 'Keres\u00e9s a Grepolisban',
             emptySubtitle: 'J\u00e1t\u00e9kosok \u00b7 Sz\u00f6vets\u00e9gek \u00b7 V\u00e1rosok',
             emptyHintCoords: 'Koordin\u00e1t\u00e1kat is megadhatsz: <strong>{example}</strong>',
@@ -2525,6 +2563,9 @@
             shortcutsRenameSaved: 'Kijelölt mentett keresés átnevezése',
             hierarchyDrillTooltip: 'Részletek megtekintése (→)',
             shortcutsHierarchyNav: '← → be/ki',
+            shortcutsSubSearch: 'Keresés a megnyitott szakaszban',
+            subSearchPlaceholder: 'Keresés ebben a szakaszban',
+            subSearchUnsupported: 'Egy szakaszban használható: szöveg, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Elérhető egy új verzió ({version}).',
             updateAvailableTooltip: 'Új verzió elérhető: {version} — kattints a letöltéshez',
             settingsCheckUpdates: 'Frissítések keresése',
@@ -2559,7 +2600,7 @@
             searchPlaceholder: 'Caut\u0103 juc\u0103tori, alian\u021be sau ora\u0219e...',
             footerNavigate: '\u2191 \u2193 selecteaz\u0103',
             footerOpen: 'Enter deschide',
-            shortcutsEscTwoStage: 'Închide panoul / paleta (apasă de două ori dacă un panou de detalii este deschis)',
+            shortcutsEscKeepsPlace: 'Închide paleta (păstrează poziția)',
             emptyTitle: 'Caut\u0103 \u00een Grepolis',
             emptySubtitle: 'Juc\u0103tori \u00b7 Alian\u021be \u00b7 Ora\u0219e',
             emptyHintCoords: 'Po\u021bi introduce \u0219i coordonate: <strong>{example}</strong>',
@@ -2700,6 +2741,9 @@
             shortcutsRenameSaved: 'Redenumește căutarea salvată selectată',
             hierarchyDrillTooltip: 'Vezi detalii (→)',
             shortcutsHierarchyNav: '← → intră/ieși',
+            shortcutsSubSearch: 'Caută în secțiunea deschisă',
+            subSearchPlaceholder: 'Caută în această secțiune',
+            subSearchUnsupported: 'Într-o secțiune: text, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Este disponibilă o versiune nouă ({version}).',
             updateAvailableTooltip: 'Versiune nouă {version} disponibilă — clic pentru descărcare',
             settingsCheckUpdates: 'Caută actualizări',
@@ -2734,7 +2778,7 @@
             searchPlaceholder: 'Hledat hr\u00e1\u010de, aliance nebo m\u011bsta...',
             footerNavigate: '\u2191 \u2193 vybrat',
             footerOpen: 'Enter otev\u0159\u00edt',
-            shortcutsEscTwoStage: 'Zavřít panel / paletu (stiskněte dvakrát, pokud je otevřený panel podrobností)',
+            shortcutsEscKeepsPlace: 'Zavřít paletu (zachová vaši pozici)',
             emptyTitle: 'Hledat v Grepolis',
             emptySubtitle: 'Hr\u00e1\u010di \u00b7 Aliance \u00b7 M\u011bsta',
             emptyHintCoords: 'M\u016f\u017ee\u0161 tak\u00e9 zadat sou\u0159adnice: <strong>{example}</strong>',
@@ -2875,6 +2919,9 @@
             shortcutsRenameSaved: 'Přejmenovat vybrané uložené hledání',
             hierarchyDrillTooltip: 'Zobrazit podrobnosti (→)',
             shortcutsHierarchyNav: '← → vstoupit/opustit',
+            shortcutsSubSearch: 'Hledat v otevřené sekci',
+            subSearchPlaceholder: 'Hledat v této sekci',
+            subSearchUnsupported: 'V sekci lze použít: text, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Je k dispozici nová verze ({version}).',
             updateAvailableTooltip: 'K dispozici je nová verze {version} — klikněte pro stažení',
             settingsCheckUpdates: 'Zkontrolovat aktualizace',
@@ -2909,7 +2956,7 @@
             searchPlaceholder: 'H\u013ead\u0165 hr\u00e1\u010dov, alianciu alebo mest\u00e1...',
             footerNavigate: '\u2191 \u2193 vybra\u0165',
             footerOpen: 'Enter otvori\u0165',
-            shortcutsEscTwoStage: 'Zatvoriť panel / paletu (stlačte dvakrát, ak je otvorený panel podrobností)',
+            shortcutsEscKeepsPlace: 'Zavrieť paletu (zachová vašu pozíciu)',
             emptyTitle: 'H\u013eada\u0165 v Grepolis',
             emptySubtitle: 'Hr\u00e1\u010di \u00b7 Aliancie \u00b7 Mest\u00e1',
             emptyHintCoords: 'M\u00f4\u017ee\u0161 zada\u0165 aj s\u00faradnice: <strong>{example}</strong>',
@@ -3050,6 +3097,9 @@
             shortcutsRenameSaved: 'Premenovať vybrané uložené vyhľadávanie',
             hierarchyDrillTooltip: 'Zobraziť podrobnosti (→)',
             shortcutsHierarchyNav: '← → vstúpiť/opustiť',
+            shortcutsSubSearch: 'Hľadať v otvorenej sekcii',
+            subSearchPlaceholder: 'Hľadať v tejto sekcii',
+            subSearchUnsupported: 'V sekcii možno použiť: text, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Je k dispozícii nová verzia ({version}).',
             updateAvailableTooltip: 'K dispozícii je nová verzia {version} — kliknite pre stiahnutie',
             settingsCheckUpdates: 'Skontrolovať aktualizácie',
@@ -5367,15 +5417,12 @@
         return Math.min(CONFIG.NEAR_MAX_RADIUS, Math.floor(value));
     }
 
-    function nearRows(rawArgs) {
+    function parseNearArgs(rawArgs) {
         const tokens = String(rawArgs || '').trim().split(/\s+/).filter(Boolean);
+        if (!tokens.length) return null;
+
         let origin = null;
         let radius = null;
-
-        if (!tokens.length) {
-            return [{ type: 'info', name: translate('nearNeedOrigin') }];
-        }
-
         const coordToken = tokens.find((token) => parseCoordinates(token));
         if (coordToken) {
             origin = parseCoordinates(coordToken);
@@ -5386,9 +5433,16 @@
             radius = parseRadius(tokens[0]);
         }
 
-        if (!origin || radius === null) {
+        if (!origin || radius === null) return null;
+        return { origin, radius };
+    }
+
+    function nearRows(rawArgs) {
+        const parsed = parseNearArgs(rawArgs);
+        if (!parsed) {
             return [{ type: 'info', name: translate('nearNeedOrigin') }];
         }
+        const { origin, radius } = parsed;
 
         // Only scan the grid buckets that could possibly contain a point
         // within `radius` of origin, instead of every island coordinate
@@ -6664,29 +6718,254 @@
         return Boolean(item) && (item.type === 'alliance' || item.type === 'player' || item.type === 'island');
     }
 
-    function childRowsFor(item) {
-        switch (item.type) {
+    /*
+     * Each detail-pane level lists one kind of child at a time
+     * ("mode"): an alliance can be viewed as its members or as all of
+     * its members' towns, a player or an island only ever as towns.
+     * The level's own sub-search box filters that list without
+     * touching the main query, and understands a scoped subset of the
+     * main search syntax (see subSearchRows).
+     */
+    let hierarchyLevelUid = 0;
+
+    function hierarchyModesFor(item) {
+        return item.type === 'alliance' ? ['players', 'towns'] : ['towns'];
+    }
+
+    function scopeItems(source, mode) {
+        const origin = effectiveOrigin();
+        const asTownRow = (town) => townResult(town, origin ? {
+            distance: islandDistance(origin, { x: town.islandX, y: town.islandY }),
+        } : null);
+        const byPoints = (a, b) => b.points - a.points;
+
+        switch (source.type) {
             case 'alliance': {
-                const alliance = item.data || DATA.allianceById.get(item.id);
+                const alliance = source.data || DATA.allianceById.get(source.id);
                 if (!alliance) return [];
-                return DATA.players
-                    .filter((player) => player.allianceId === alliance.id)
-                    .sort((a, b) => b.points - a.points)
-                    .map((member) => ({ type: 'player', id: member.id, name: member.name, data: member, score: member.points }));
+                const members = DATA.players.filter((player) => player.allianceId === alliance.id);
+                if (mode === 'players') {
+                    return members
+                        .slice()
+                        .sort(byPoints)
+                        .map((member) => ({ type: 'player', id: member.id, name: member.name, data: member, score: member.points }));
+                }
+                const towns = [];
+                for (const member of members) {
+                    for (const town of DATA.townsByPlayer.get(member.id) || []) towns.push(town);
+                }
+                return towns.sort(byPoints).map(asTownRow);
             }
-            case 'player': {
-                const towns = (DATA.townsByPlayer.get(item.id) || []).slice().sort((a, b) => b.points - a.points);
-                const origin = effectiveOrigin();
-                return towns.map((town) => townResult(town, origin ? {
-                    distance: islandDistance(origin, { x: town.islandX, y: town.islandY }),
-                } : null));
-            }
-            case 'island': {
-                return townsOnIsland(item.x, item.y).slice().sort((a, b) => b.points - a.points).map((town) => townResult(town));
-            }
+            case 'player':
+                return (DATA.townsByPlayer.get(source.id) || []).slice().sort(byPoints).map(asTownRow);
+            case 'island':
+                return townsOnIsland(source.x, source.y).slice().sort(byPoints).map(asTownRow);
             default:
                 return [];
         }
+    }
+
+    function itemTowns(item) {
+        if (item.type === 'town') return item.data ? [item.data] : [];
+        if (item.type === 'player') return DATA.townsByPlayer.get(item.id) || [];
+        return [];
+    }
+
+    function itemDistanceFrom(item, origin) {
+        let best = Infinity;
+        for (const town of itemTowns(item)) {
+            best = Math.min(best, islandDistance(origin, { x: town.islandX, y: town.islandY }));
+        }
+        return best;
+    }
+
+    /*
+     * Owner names also match for town rows (so typing a member's name
+     * inside an alliance's towns finds theirs), but only on a
+     * substring-or-better hit, to keep fuzzy owner matches from
+     * drowning out the town-name matches.
+     */
+    function subScore(item, queryNorm) {
+        if (item.type === 'player') return item.data ? scoreMatch(item.data.nameNorm, queryNorm) : 0;
+        if (item.type !== 'town' || !item.data) return 0;
+        const own = scoreMatch(item.data.nameNorm, queryNorm);
+        const owner = DATA.playerById.get(item.data.playerId);
+        const ownerScore = owner ? scoreMatch(owner.nameNorm, queryNorm) : 0;
+        return Math.max(own, ownerScore >= 6000 ? ownerScore - 2000 : 0);
+    }
+
+    function sortByDistance(items, origin, radius) {
+        const out = [];
+        for (const item of items) {
+            const distance = itemDistanceFrom(item, origin);
+            if (Number.isFinite(distance) && distance <= radius) {
+                out.push(Object.assign({}, item, { distance }));
+            }
+        }
+        out.sort((a, b) => a.distance - b.distance || b.score - a.score);
+        return out;
+    }
+
+    function subSearchCommand(items, mode, text) {
+        const [nameRaw, ...tokens] = text.slice(CONFIG.COMMAND_PREFIX.length).trim().split(/\s+/);
+        const name = (nameRaw || '').toLowerCase();
+        const args = tokens.join(' ');
+        const info = (key) => [{ type: 'info', name: translate(key) }];
+
+        switch (name) {
+            case 'near': {
+                const parsed = parseNearArgs(args);
+                if (!parsed) return info('nearNeedOrigin');
+                return sortByDistance(items, parsed.origin, parsed.radius);
+            }
+
+            case 'dist': {
+                const origin = parseCoordinates(args) || effectiveOrigin();
+                if (!origin) return info('distNeedOrigin');
+                return sortByDistance(items, origin, Infinity);
+            }
+
+            case 'ghost': {
+                if (mode !== 'towns') return [];
+                const near = tokens.some((token) => token.toLowerCase() === 'near');
+                const numeric = tokens.find((token) => token.toLowerCase() !== 'near' && Number.isFinite(Number(token)));
+                const minimum = numeric !== undefined ? Number(numeric) : CONFIG.GHOST_MIN_POINTS;
+                const origin = near ? effectiveOrigin() : null;
+                if (near && !origin) return info('distNeedOrigin');
+                let ghosts = items.filter((item) => item.data && item.data.playerId === 0 && item.data.points >= minimum);
+                if (origin) ghosts = sortByDistance(ghosts, origin, Infinity);
+                return ghosts.length ? ghosts : info('ghostEmpty');
+            }
+
+            case 'history': {
+                if (!args) return info('commandHistoryHelp');
+                if (!settings.conquestHistoryEnabled) return info('historyDisabled');
+                if (!CONQUEST.loaded) {
+                    loadConquestHistory();
+                    return info('historyNotLoaded');
+                }
+                const queryNorm = normalize(args);
+                let best = null;
+                let bestScore = 0;
+                for (const item of items) {
+                    const score = subScore(item, queryNorm);
+                    if (score > bestScore) {
+                        best = item;
+                        bestScore = score;
+                    }
+                }
+                if (!best) return info('noResults');
+                return best.type === 'player' ? playerHistoryRows(best.data) : townHistoryRows(best.data);
+            }
+
+            default:
+                return info('subSearchUnsupported');
+        }
+    }
+
+    function parseSubQuery(raw, modes) {
+        let text = String(raw || '').trim();
+        let mode = null;
+        const scope = text.match(/^@([tp])(?:\s+(.*))?$/i);
+        if (scope) {
+            const wanted = scope[1].toLowerCase() === 'p' ? 'players' : 'towns';
+            if (modes.includes(wanted)) mode = wanted;
+            text = (scope[2] || '').trim();
+        }
+        return { text, mode };
+    }
+
+    function subSearchRows(source, mode, text) {
+        const items = scopeItems(source, mode);
+        if (!text) return items;
+        if (text.startsWith(CONFIG.COMMAND_PREFIX)) return subSearchCommand(items, mode, text);
+
+        const coords = parseCoordinates(text);
+        if (coords) {
+            return items.filter((item) => itemTowns(item).some((town) => town.islandX === coords.x && town.islandY === coords.y));
+        }
+
+        const queryNorm = normalize(text);
+        const scored = [];
+        for (const item of items) {
+            const score = subScore(item, queryNorm);
+            if (score > 0) scored.push({ item, score });
+        }
+        scored.sort((a, b) => b.score - a.score || b.item.score - a.item.score);
+        return scored.map((entry) => entry.item);
+    }
+
+    function refreshLevel(level) {
+        const parsed = parseSubQuery(level.subQuery, level.modes);
+        if (parsed.mode) level.mode = parsed.mode;
+
+        const isHistory = /^>\s*history\b/i.test(parsed.text);
+        const counts = {};
+        let rows = [];
+        for (const mode of level.modes) {
+            if (isHistory && mode !== level.mode) continue;
+            const result = subSearchRows(level.source, mode, parsed.text);
+            counts[mode] = result.filter((item) => item.type !== 'info').length;
+            if (mode === level.mode) rows = result;
+        }
+
+        level.counts = isHistory ? null : counts;
+        level.rows = rows.slice(0, CONFIG.HIERARCHY_MAX_ROWS);
+        level.selected = 0;
+    }
+
+    function buildLevel(item, premiumBlocked) {
+        const modes = hierarchyModesFor(item);
+        const level = {
+            uid: ++hierarchyLevelUid,
+            source: item,
+            modes,
+            mode: modes[0],
+            subQuery: '',
+            counts: null,
+            rows: [],
+            selected: 0,
+            premiumBlocked,
+        };
+        if (premiumBlocked) {
+            level.rows = premiumRequiredRows();
+        } else {
+            refreshLevel(level);
+        }
+        return level;
+    }
+
+    function syncSubInput(level) {
+        const subInput = document.getElementById('qf-sub-input');
+        if (!subInput || !level) return;
+        subInput.value = level.subQuery;
+        subInput.dataset.uid = String(level.uid);
+    }
+
+    function setSubQuery(value) {
+        const level = currentHierarchyLevel();
+        if (!level || level.premiumBlocked) return;
+        level.subQuery = value;
+        refreshLevel(level);
+        const detailPane = document.getElementById('qf-detail-pane');
+        if (detailPane) renderDetailPane(detailPane);
+    }
+
+    function setLevelMode(level, mode) {
+        if (!level || level.premiumBlocked || !level.modes.includes(mode)) return;
+        level.subQuery = level.subQuery.replace(/^\s*@[tp]\b\s*/i, '');
+        level.mode = mode;
+        refreshLevel(level);
+        syncSubInput(level);
+        state.focusPane = 'detail';
+        render();
+    }
+
+    function cycleLevelMode(direction) {
+        const level = currentHierarchyLevel();
+        if (!level || level.premiumBlocked || level.modes.length < 2) return;
+        const index = level.modes.indexOf(level.mode);
+        setLevelMode(level, level.modes[(index + direction + level.modes.length) % level.modes.length]);
     }
 
     function currentHierarchyLevel() {
@@ -6720,11 +6999,11 @@
             return false;
         }
 
-        const premiumBlocked = !isCuratorActive();
-        const rows = premiumBlocked ? premiumRequiredRows() : childRowsFor(item).slice(0, CONFIG.MAX_RESULTS);
-
-        state.hierarchyStack.push({ source: item, rows, selected: 0, premiumBlocked });
+        state.hierarchyStack.push(buildLevel(item, !isCuratorActive()));
         state.focusPane = 'detail';
+        requestAnimationFrame(() => {
+            if (state.open && state.focusPane === 'detail') focusSubInput();
+        });
         return true;
     }
 
@@ -6802,7 +7081,21 @@
                 <div id="qf-segments" hidden></div>
                 <div id="qf-panes">
                     <div id="qf-results"></div>
-                    <div id="qf-detail-pane" hidden></div>
+                    <div id="qf-detail-pane" hidden>
+                        <div class="qf-detail-breadcrumb"></div>
+                        <div class="qf-detail-search">
+                            <span class="qf-detail-search-icon">${ICONS.search}</span>
+                            <input
+                                id="qf-sub-input"
+                                type="text"
+                                autocomplete="off"
+                                spellcheck="false"
+                                placeholder="${escapeHTML(translate('subSearchPlaceholder'))}"
+                            >
+                        </div>
+                        <div class="qf-detail-chips"></div>
+                        <div class="qf-detail-rows"></div>
+                    </div>
                 </div>
                 <div id="qf-footer">
                     <div id="qf-footer-shortcuts">
@@ -6830,6 +7123,9 @@
         const input = overlay.querySelector('#qf-input');
         input.addEventListener('input', (event) => scheduleSearch(event.target.value));
         input.addEventListener('keydown', handleInputKeydown);
+        input.addEventListener('focus', () => {
+            if (state.hierarchyStack.length) state.focusPane = 'list';
+        });
 
         const resultsEl = overlay.querySelector('#qf-results');
         resultsEl.addEventListener('mousedown', handleResultsMousedown);
@@ -6842,6 +7138,13 @@
 
         const detailPaneEl = overlay.querySelector('#qf-detail-pane');
         detailPaneEl.addEventListener('mousedown', handleDetailPaneMousedown);
+
+        const subInput = overlay.querySelector('#qf-sub-input');
+        subInput.addEventListener('input', (event) => setSubQuery(event.target.value));
+        subInput.addEventListener('keydown', handleSubInputKeydown);
+        subInput.addEventListener('focus', () => {
+            if (state.hierarchyStack.length) state.focusPane = 'detail';
+        });
         overlay.querySelector('#qf-segments').addEventListener('mousedown', (event) => {
             const chip = event.target.closest('.qf-chip');
             if (!chip) return;
@@ -6936,8 +7239,6 @@
         detailPane.hidden = !splitOpen;
         if (splitOpen) {
             renderDetailPane(detailPane);
-        } else {
-            detailPane.innerHTML = '';
         }
 
         // Only steal focus back to the search input when focus isn't
@@ -6947,7 +7248,11 @@
         // there would yank focus away mid-Tab-navigation from whatever
         // settings field the user just moved to.
         if (document.activeElement !== input && !overlay.contains(document.activeElement)) {
-            requestAnimationFrame(() => input.focus());
+            const restoreDetail = splitOpen && state.focusPane === 'detail';
+            requestAnimationFrame(() => {
+                if (restoreDetail && focusSubInput()) return;
+                input.focus();
+            });
         }
 
         const saveSearchBtn = document.getElementById('qf-save-search-btn');
@@ -6955,14 +7260,12 @@
             saveSearchBtn.hidden = !isSavableQuery(state.query);
         }
 
-        // Esc pops the detail pane first and only closes the whole
-        // palette on a second press when one is open — not otherwise
-        // discoverable from the static "ESC" key hint alone, so the
-        // tooltip spells it out only while that two-stage behavior
-        // is actually in play.
+        // Esc always closes the palette and keeps the open detail pane
+        // (and its sub-search) for the next open(); the tooltip only
+        // spells that out while a pane is actually open.
         const escKey = document.getElementById('qf-esc-key');
         if (escKey) {
-            escKey.title = splitOpen ? translate('shortcutsEscTwoStage') : '';
+            escKey.title = splitOpen ? translate('shortcutsEscKeepsPlace') : '';
         }
 
         // Segment chips only make sense while actively searching or
@@ -7288,7 +7591,8 @@
             ['Ctrl+E', translate('shortcutsRenameSaved')],
             ['Delete', translate('shortcutsRemoveRecent')],
             ['Ctrl+Shift+Delete', translate('shortcutsClearRecent')],
-            ['Esc', translate('shortcutsEscTwoStage')],
+            ['Esc', translate('shortcutsEscKeepsPlace')],
+            ['Ctrl+K', translate('shortcutsSubSearch')],
             ['?', translate('shortcutsHelp')],
         ];
 
@@ -7809,6 +8113,7 @@
                         `${player.points.toLocaleString()} ${translate('ptsSuffix')}`,
                     );
                     if (alliance) parts.push(escapeHTML(alliance.name));
+                    if (Number.isFinite(item.distance)) parts.push(String(item.distance));
                     meta = parts.join(' &middot; ');
                 }
                 break;
@@ -8017,10 +8322,7 @@
 
     function renderDetailPane(container) {
         const level = currentHierarchyLevel();
-        if (!level) {
-            container.innerHTML = '';
-            return;
-        }
+        if (!level) return;
 
         const breadcrumb = state.hierarchyStack
             .map((entry, depth) => {
@@ -8031,27 +8333,115 @@
                     : `<button type="button" class="qf-breadcrumb-item" data-depth="${depth}">${label}</button>`;
             })
             .join('<span class="qf-breadcrumb-sep">&rsaquo;</span>');
+        container.querySelector('.qf-detail-breadcrumb').innerHTML = breadcrumb;
 
-        let rowsHTML;
+        const subInput = container.querySelector('#qf-sub-input');
+        if (subInput.dataset.uid !== String(level.uid)) {
+            syncSubInput(level);
+        }
+        subInput.disabled = level.premiumBlocked;
+        container.querySelector('.qf-detail-search').hidden = level.premiumBlocked;
+
+        const chipsEl = container.querySelector('.qf-detail-chips');
+        const showChips = !level.premiumBlocked && level.modes.length > 1;
+        chipsEl.hidden = !showChips;
+        chipsEl.innerHTML = showChips
+            ? level.modes.map((mode) => {
+                const active = mode === level.mode ? ' qf-chip-active' : '';
+                const count = level.counts && level.counts[mode] !== undefined
+                    ? `<span class="qf-chip-count">${level.counts[mode]}</span>`
+                    : '';
+                return (
+                    `<span class="qf-chip${active}" data-level-mode="${mode}">` +
+                    `${escapeHTML(translate(mode === 'players' ? 'segmentPlayers' : 'segmentTowns'))}${count}` +
+                    `</span>`
+                );
+            }).join('')
+            : '';
+
+        const rowsEl = container.querySelector('.qf-detail-rows');
         if (!level.rows.length) {
-            rowsHTML = `
+            rowsEl.innerHTML = `
                 <div class="qf-empty">
                     <div class="qf-empty-title">${escapeHTML(translate('noResults'))}</div>
                 </div>
             `;
         } else {
-            rowsHTML = level.rows.map((item, index) => renderResult(item, index, 'detail', level.selected)).join('');
+            rowsEl.innerHTML = level.rows.map((item, index) => renderResult(item, index, 'detail', level.selected)).join('');
         }
 
-        container.innerHTML = `
-            <div class="qf-detail-breadcrumb">${breadcrumb}</div>
-            <div class="qf-detail-rows">${rowsHTML}</div>
-        `;
-
-        const selectedEl = container.querySelector('.qf-selected');
+        const selectedEl = rowsEl.querySelector('.qf-selected');
         if (selectedEl) {
             selectedEl.scrollIntoView({ block: 'nearest' });
         }
+    }
+
+    function focusMainInput() {
+        const input = document.getElementById('qf-input');
+        if (input) input.focus();
+    }
+
+    function focusSubInput() {
+        const level = currentHierarchyLevel();
+        const subInput = document.getElementById('qf-sub-input');
+        if (!level || level.premiumBlocked || !subInput) return false;
+        state.focusPane = 'detail';
+        subInput.focus();
+        const end = subInput.value.length;
+        subInput.setSelectionRange(end, end);
+        return true;
+    }
+
+    /*
+     * The sub-search box only owns the keys a text field needs
+     * natively (caret movement, Backspace/Delete, Home/End); every
+     * other shortcut is forwarded to the palette's main handler,
+     * which already routes to the detail pane while it has focus.
+     * ArrowLeft at the very start of the field (nothing left to move
+     * over) steps back out of the level, mirroring the mouse
+     * breadcrumb and keeping Left/Right symmetrical with the main
+     * input.
+     */
+    function handleSubInputKeydown(event) {
+        const input = event.currentTarget;
+        if (state.hierarchyStack.length) state.focusPane = 'detail';
+        const plain = !event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey;
+
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            close();
+            return;
+        }
+
+        if (event.key === 'Tab') {
+            event.preventDefault();
+            cycleLevelMode(event.shiftKey ? -1 : 1);
+            return;
+        }
+
+        if (event.key === 'ArrowLeft' && plain && input.selectionStart === 0 && input.selectionEnd === 0) {
+            event.preventDefault();
+            popHierarchyLevel();
+            render();
+            if (state.hierarchyStack.length) {
+                focusSubInput();
+            } else {
+                focusMainInput();
+            }
+            return;
+        }
+
+        const atEnd = input.selectionStart === input.value.length && input.selectionEnd === input.value.length;
+        if (event.key === 'ArrowRight' && plain && atEnd) {
+            handleInputKeydown(event);
+            return;
+        }
+
+        if (['ArrowLeft', 'ArrowRight', 'Home', 'End', 'Backspace', 'Delete'].includes(event.key)) {
+            return;
+        }
+
+        handleInputKeydown(event);
     }
 
     /*
@@ -8093,6 +8483,12 @@
             if (key === CONFIG.INSERT_KEY) {
                 event.preventDefault();
                 if (state.insertTarget) disableInsertMode();
+                return;
+            }
+
+            if (key === CONFIG.SUBSEARCH_KEY) {
+                event.preventDefault();
+                if (state.hierarchyStack.length) focusSubInput();
                 return;
             }
 
@@ -8189,7 +8585,9 @@
 
             case 'Tab':
                 event.preventDefault();
-                if (state.query) {
+                if (inDetailPane && currentHierarchyLevel().modes.length > 1) {
+                    cycleLevelMode(event.shiftKey ? -1 : 1);
+                } else if (state.query) {
                     cycleSegment(event.shiftKey ? -1 : 1);
                 } else {
                     cycleHistorySegment(event.shiftKey ? -1 : 1);
@@ -8219,16 +8617,7 @@
 
             case 'Escape':
                 event.preventDefault();
-                // First Esc only backs out of an open detail pane (pop
-                // every level at once, back to the left-hand list);
-                // a second Esc then closes the whole overlay, same as
-                // when no pane was ever open.
-                if (state.hierarchyStack.length) {
-                    resetHierarchy();
-                    render();
-                } else {
-                    close();
-                }
+                close();
                 break;
         }
     }
@@ -8376,6 +8765,17 @@
             render();
             return;
         }
+
+        const modeChip = event.target.closest('.qf-chip[data-level-mode]');
+        if (modeChip) {
+            event.preventDefault();
+            event.stopPropagation();
+            setLevelMode(currentHierarchyLevel(), modeChip.dataset.levelMode);
+            return;
+        }
+
+        if (event.target.closest('#qf-sub-input')) return;
+
         handleResultClick(event);
     }
 
@@ -8403,7 +8803,9 @@
         if (state.query) {
             input.value = state.query;
             render();
+            const restoreDetail = state.hierarchyStack.length > 0 && state.focusPane === 'detail';
             requestAnimationFrame(() => {
+                if (restoreDetail && focusSubInput()) return;
                 input.focus();
                 input.select();
             });
@@ -8736,18 +9138,7 @@
 
             if (state.open && event.key === 'Escape') {
                 event.preventDefault();
-                // Mirrors handleInputKeydown's own Escape case (see
-                // there for why): this listener only fires this branch
-                // when the input itself isn't focused (e.g. focus is on
-                // a settings field, or nowhere in particular), so the
-                // two-stage pop-then-close behavior must stay in sync
-                // between both handlers.
-                if (state.hierarchyStack.length) {
-                    resetHierarchy();
-                    render();
-                } else {
-                    close();
-                }
+                close();
             }
         },
         false
@@ -9052,6 +9443,67 @@
         .qf-breadcrumb-sep {
             color: rgba(255, 255, 255, .25);
             font-size: 12px;
+        }
+
+        .qf-detail-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 2px 20px 6px;
+            padding: 0 10px;
+            height: 32px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 7px;
+            background: rgba(255, 255, 255, .03);
+            transition: border-color .08s ease, background-color .08s ease;
+        }
+
+        .qf-detail-search[hidden] {
+            display: none;
+        }
+
+        .qf-detail-search:focus-within {
+            border-color: #d7a33f;
+            background: rgba(255, 255, 255, .06);
+        }
+
+        .qf-detail-search-icon {
+            flex: 0 0 auto;
+            display: flex;
+            width: 14px;
+            height: 14px;
+            color: rgba(255, 255, 255, .42);
+        }
+
+        .qf-detail-search:focus-within .qf-detail-search-icon {
+            color: #d7a33f;
+        }
+
+        #qf-sub-input {
+            flex: 1;
+            min-width: 0;
+            height: 100%;
+            padding: 0;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: #fdfdfd;
+            font-size: 13px;
+        }
+
+        #qf-sub-input::placeholder {
+            color: rgba(255, 255, 255, .32);
+        }
+
+        .qf-detail-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            padding: 2px 20px 8px;
+        }
+
+        .qf-detail-chips[hidden] {
+            display: none;
         }
 
         .qf-chevron {
