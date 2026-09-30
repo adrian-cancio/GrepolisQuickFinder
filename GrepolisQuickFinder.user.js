@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.14.0-beta.1
+// @version      2.14.0-beta.2
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market. (Privacy policy: https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md)
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.14.0-beta.1';
+    const VERSION = '2.14.0-beta.2';
 
     /*
      * ============================================================
@@ -39,6 +39,7 @@
         RENAME_KEY: 'e',          // Ctrl+<RENAME_KEY> inside the palette: rename selected saved search
         ORIGIN_KEY: 'o',          // Ctrl+<ORIGIN_KEY> inside the palette: pin selected row as distance origin
         NOTE_KEY: 'n',            // Ctrl+<NOTE_KEY> inside the palette: edit note on selected favorite
+        INSERT_KEY: 'i',          // Ctrl+<INSERT_KEY> inside the palette: toggle insert mode (BBCode typed into the focused field)
         EXPORT_KEY: 'b',          // Ctrl+Shift+<EXPORT_KEY> inside the palette: bulk-export visible rows as BBCode
         HELP_CHAR: '?',           // typing this alone shows the shortcuts/commands panel
         COMMAND_PREFIX: '>',      // commands: >goto, >ghost, >dist, >island, >near, >ocean, >help
@@ -318,6 +319,7 @@
             footerExport: 'Export list',
             exportEmpty: 'Nothing to export in the current list.',
             exportCopied: 'Copied {n} BBCode entries',
+            exportInserted: 'Inserted {n} BBCode entries',
             bbcodeCopied: 'Copied',
             footerRefresh: 'Ctrl+R refresh',
             footerHelp: '? help',
@@ -352,6 +354,11 @@
             originCleared: 'Origin cleared',
             originIndicator: 'Origin {x}:{y}',
             originIndicatorTooltip: 'Click to clear the pinned origin',
+            bbcodeInserted: 'Inserted',
+            insertModeIndicator: 'Insert mode',
+            insertModeTooltip: 'Inserting BBCode into the focused field. Click to turn off (Shift+Enter opens a result normally).',
+            shortcutsOpenNormally: 'Open result normally (insert mode)',
+            bbButtonTooltip: 'QuickFinder: insert BBCode ({hotkey})',
             shortcutsSetOrigin: 'Set as distance origin',
             favoriteNoteTooltip: 'Edit note (Ctrl+N)',
             favoriteNoteTitle: 'Note for {name}',
@@ -487,6 +494,7 @@
             footerExport: 'Exportar lista',
             exportEmpty: 'Nada que exportar en la lista actual.',
             exportCopied: 'Copiadas {n} entradas BBCode',
+            exportInserted: 'Insertadas {n} entradas BBCode',
             bbcodeCopied: 'Copiado',
             footerRefresh: 'Ctrl+R recargar',
             footerHelp: '? ayuda',
@@ -521,6 +529,11 @@
             originCleared: 'Origen eliminado',
             originIndicator: 'Origen {x}:{y}',
             originIndicatorTooltip: 'Haz clic para eliminar el origen fijado',
+            bbcodeInserted: 'Insertado',
+            insertModeIndicator: 'Modo inserci\u00f3n',
+            insertModeTooltip: 'Insertando BBCode en el campo activo. Haz clic para desactivarlo (Shift+Enter abre el resultado normalmente).',
+            shortcutsOpenNormally: 'Abrir resultado normalmente (modo inserci\u00f3n)',
+            bbButtonTooltip: 'QuickFinder: insertar BBCode ({hotkey})',
             shortcutsSetOrigin: 'Fijar como origen de distancia',
             favoriteNoteTooltip: 'Editar nota (Ctrl+N)',
             favoriteNoteTitle: 'Nota para {name}',
@@ -656,6 +669,7 @@
             footerExport: 'Liste exportieren',
             exportEmpty: 'Nichts zu exportieren in der aktuellen Liste.',
             exportCopied: '{n} BBCode-Eintr\u00e4ge kopiert',
+            exportInserted: '{n} BBCode-Eintr\u00e4ge eingef\u00fcgt',
             bbcodeCopied: 'Kopiert',
             footerRefresh: 'Strg+R aktualisieren',
             footerHelp: '? Hilfe',
@@ -687,6 +701,11 @@
             originCleared: 'Ursprung entfernt',
             originIndicator: 'Ursprung {x}:{y}',
             originIndicatorTooltip: 'Klicken, um den festgelegten Ursprung zu entfernen',
+            bbcodeInserted: 'Eingef\u00fcgt',
+            insertModeIndicator: 'Einf\u00fcgemodus',
+            insertModeTooltip: 'BBCode wird in das aktive Feld eingef\u00fcgt. Zum Deaktivieren klicken (Shift+Enter \u00f6ffnet das Ergebnis normal).',
+            shortcutsOpenNormally: 'Ergebnis normal \u00f6ffnen (Einf\u00fcgemodus)',
+            bbButtonTooltip: 'QuickFinder: BBCode einf\u00fcgen ({hotkey})',
             shortcutsSetOrigin: 'Als Distanz-Ursprung festlegen',
             favoriteNoteTooltip: 'Notiz bearbeiten (Strg+N)',
             favoriteNoteTitle: 'Notiz f\u00fcr {name}',
@@ -825,6 +844,7 @@
             footerExport: 'Exporter la liste',
             exportEmpty: 'Rien \u00e0 exporter dans la liste actuelle.',
             exportCopied: '{n} entr\u00e9es BBCode copi\u00e9es',
+            exportInserted: '{n} entr\u00e9es BBCode ins\u00e9r\u00e9es',
             bbcodeCopied: 'Copi\u00e9',
             footerRefresh: 'Ctrl+R actualiser',
             footerHelp: '? aide',
@@ -856,6 +876,11 @@
             originCleared: 'Origine effac\u00e9e',
             originIndicator: 'Origine {x}:{y}',
             originIndicatorTooltip: 'Cliquez pour effacer l\u2019origine \u00e9pingl\u00e9e',
+            bbcodeInserted: 'Ins\u00e9r\u00e9',
+            insertModeIndicator: 'Mode insertion',
+            insertModeTooltip: 'Le BBCode est ins\u00e9r\u00e9 dans le champ actif. Cliquez pour d\u00e9sactiver (Shift+Enter ouvre le r\u00e9sultat normalement).',
+            shortcutsOpenNormally: 'Ouvrir le r\u00e9sultat normalement (mode insertion)',
+            bbButtonTooltip: 'QuickFinder : ins\u00e9rer le BBCode ({hotkey})',
             shortcutsSetOrigin: 'D\u00e9finir comme origine de distance',
             favoriteNoteTooltip: 'Modifier la note (Ctrl+N)',
             favoriteNoteTitle: 'Note pour {name}',
@@ -994,6 +1019,7 @@
             footerExport: 'Esporta lista',
             exportEmpty: 'Niente da esportare nella lista attuale.',
             exportCopied: '{n} voci BBCode copiate',
+            exportInserted: 'Inserite {n} voci BBCode',
             bbcodeCopied: 'Copiato',
             footerRefresh: 'Ctrl+R aggiorna',
             footerHelp: '? aiuto',
@@ -1025,6 +1051,11 @@
             originCleared: 'Origine rimossa',
             originIndicator: 'Origine {x}:{y}',
             originIndicatorTooltip: 'Clicca per rimuovere l\u2019origine impostata',
+            bbcodeInserted: 'Inserito',
+            insertModeIndicator: 'Modalit\u00e0 inserimento',
+            insertModeTooltip: 'Il BBCode viene inserito nel campo attivo. Clicca per disattivare (Shift+Invio apre il risultato normalmente).',
+            shortcutsOpenNormally: 'Apri il risultato normalmente (modalit\u00e0 inserimento)',
+            bbButtonTooltip: 'QuickFinder: inserisci BBCode ({hotkey})',
             shortcutsSetOrigin: 'Imposta come origine per la distanza',
             favoriteNoteTooltip: 'Modifica nota (Ctrl+N)',
             favoriteNoteTitle: 'Nota per {name}',
@@ -1163,6 +1194,7 @@
             footerExport: 'Lijst exporteren',
             exportEmpty: 'Niets te exporteren in de huidige lijst.',
             exportCopied: '{n} BBCode-items gekopieerd',
+            exportInserted: '{n} BBCode-items ingevoegd',
             bbcodeCopied: 'Gekopieerd',
             footerRefresh: 'Ctrl+R verversen',
             footerHelp: '? help',
@@ -1194,6 +1226,11 @@
             originCleared: 'Startpunt gewist',
             originIndicator: 'Startpunt {x}:{y}',
             originIndicatorTooltip: 'Klik om het vastgezette startpunt te wissen',
+            bbcodeInserted: 'Ingevoegd',
+            insertModeIndicator: 'Invoegmodus',
+            insertModeTooltip: 'BBCode wordt in het actieve veld ingevoegd. Klik om uit te schakelen (Shift+Enter opent het resultaat normaal).',
+            shortcutsOpenNormally: 'Resultaat normaal openen (invoegmodus)',
+            bbButtonTooltip: 'QuickFinder: BBCode invoegen ({hotkey})',
             shortcutsSetOrigin: 'Instellen als afstandsstartpunt',
             favoriteNoteTooltip: 'Notitie bewerken (Ctrl+N)',
             favoriteNoteTitle: 'Notitie voor {name}',
@@ -1332,6 +1369,7 @@
             footerExport: 'Eksportuj list\u0119',
             exportEmpty: 'Nic do wyeksportowania na bie\u017c\u0105cej li\u015bcie.',
             exportCopied: 'Skopiowano {n} wpis\u00f3w BBCode',
+            exportInserted: 'Wstawiono {n} wpis\u00f3w BBCode',
             bbcodeCopied: 'Skopiowano',
             footerRefresh: 'Ctrl+R od\u015bwie\u017c',
             footerHelp: '? pomoc',
@@ -1363,6 +1401,11 @@
             originCleared: 'Usuni\u0119to punkt pocz\u0105tkowy',
             originIndicator: 'Punkt pocz\u0105tkowy {x}:{y}',
             originIndicatorTooltip: 'Kliknij, aby usun\u0105\u0107 przypi\u0119ty punkt pocz\u0105tkowy',
+            bbcodeInserted: 'Wstawiono',
+            insertModeIndicator: 'Tryb wstawiania',
+            insertModeTooltip: 'BBCode jest wstawiany do aktywnego pola. Kliknij, aby wy\u0142\u0105czy\u0107 (Shift+Enter otwiera wynik normalnie).',
+            shortcutsOpenNormally: 'Otw\u00f3rz wynik normalnie (tryb wstawiania)',
+            bbButtonTooltip: 'QuickFinder: wstaw BBCode ({hotkey})',
             shortcutsSetOrigin: 'Ustaw jako punkt pocz\u0105tkowy odleg\u0142o\u015bci',
             favoriteNoteTooltip: 'Edytuj notatk\u0119 (Ctrl+N)',
             favoriteNoteTitle: 'Notatka dla {name}',
@@ -1501,6 +1544,7 @@
             footerExport: 'Exportar lista',
             exportEmpty: 'Nada para exportar na lista atual.',
             exportCopied: '{n} entradas BBCode copiadas',
+            exportInserted: '{n} entradas BBCode inseridas',
             bbcodeCopied: 'Copiado',
             footerRefresh: 'Ctrl+R atualizar',
             footerHelp: '? ajuda',
@@ -1532,6 +1576,11 @@
             originCleared: 'Origem removida',
             originIndicator: 'Origem {x}:{y}',
             originIndicatorTooltip: 'Clique para remover a origem fixada',
+            bbcodeInserted: 'Inserido',
+            insertModeIndicator: 'Modo de inser\u00e7\u00e3o',
+            insertModeTooltip: 'A inserir BBCode no campo ativo. Clica para desativar (Shift+Enter abre o resultado normalmente).',
+            shortcutsOpenNormally: 'Abrir resultado normalmente (modo de inser\u00e7\u00e3o)',
+            bbButtonTooltip: 'QuickFinder: inserir BBCode ({hotkey})',
             shortcutsSetOrigin: 'Definir como origem de dist\u00e2ncia',
             favoriteNoteTooltip: 'Editar nota (Ctrl+N)',
             favoriteNoteTitle: 'Nota para {name}',
@@ -1670,6 +1719,7 @@
             footerExport: 'Exportar lista',
             exportEmpty: 'Nada para exportar na lista atual.',
             exportCopied: '{n} entradas BBCode copiadas',
+            exportInserted: '{n} entradas BBCode inseridas',
             bbcodeCopied: 'Copiado',
             footerRefresh: 'Ctrl+R atualizar',
             footerHelp: '? ajuda',
@@ -1701,6 +1751,11 @@
             originCleared: 'Origem removida',
             originIndicator: 'Origem {x}:{y}',
             originIndicatorTooltip: 'Clique para remover a origem fixada',
+            bbcodeInserted: 'Inserido',
+            insertModeIndicator: 'Modo de inser\u00e7\u00e3o',
+            insertModeTooltip: 'Inserindo BBCode no campo ativo. Clique para desativar (Shift+Enter abre o resultado normalmente).',
+            shortcutsOpenNormally: 'Abrir resultado normalmente (modo de inser\u00e7\u00e3o)',
+            bbButtonTooltip: 'QuickFinder: inserir BBCode ({hotkey})',
             shortcutsSetOrigin: 'Definir como origem de dist\u00e2ncia',
             favoriteNoteTooltip: 'Editar nota (Ctrl+N)',
             favoriteNoteTitle: 'Nota para {name}',
@@ -1839,6 +1894,7 @@
             footerExport: 'Listeyi d\u0131\u015fa aktar',
             exportEmpty: 'Mevcut listede d\u0131\u015fa aktar\u0131lacak bir \u015fey yok.',
             exportCopied: '{n} BBCode kayd\u0131 kopyaland\u0131',
+            exportInserted: '{n} BBCode kayd\u0131 eklendi',
             bbcodeCopied: 'Kopyaland\u0131',
             footerRefresh: 'Ctrl+R yenile',
             footerHelp: '? yard\u0131m',
@@ -1870,6 +1926,11 @@
             originCleared: 'Ba\u015flang\u0131\u00e7 noktas\u0131 temizlendi',
             originIndicator: 'Ba\u015flang\u0131\u00e7 {x}:{y}',
             originIndicatorTooltip: 'Sabitlenmi\u015f ba\u015flang\u0131\u00e7 noktas\u0131n\u0131 temizlemek i\u00e7in t\u0131kla',
+            bbcodeInserted: 'Eklendi',
+            insertModeIndicator: 'Ekleme modu',
+            insertModeTooltip: 'BBCode etkin alana ekleniyor. Kapatmak i\u00e7in t\u0131kla (Shift+Enter sonucu normal \u015fekilde a\u00e7ar).',
+            shortcutsOpenNormally: 'Sonucu normal a\u00e7 (ekleme modu)',
+            bbButtonTooltip: 'QuickFinder: BBCode ekle ({hotkey})',
             shortcutsSetOrigin: 'Mesafe ba\u015flang\u0131\u00e7 noktas\u0131 olarak ayarla',
             favoriteNoteTooltip: 'Notu d\u00fczenle (Ctrl+N)',
             favoriteNoteTitle: '{name} i\u00e7in not',
@@ -2008,6 +2069,7 @@
             footerExport: '\u042d\u043a\u0441\u043f\u043e\u0440\u0442 \u0441\u043f\u0438\u0441\u043a\u0430',
             exportEmpty: '\u041d\u0435\u0447\u0435\u0433\u043e \u044d\u043a\u0441\u043f\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0442\u0435\u043a\u0443\u0449\u0435\u043c \u0441\u043f\u0438\u0441\u043a\u0435.',
             exportCopied: '\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0437\u0430\u043f\u0438\u0441\u0435\u0439 BBCode: {n}',
+            exportInserted: '\u0412\u0441\u0442\u0430\u0432\u043b\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0441\u0435\u0439 BBCode: {n}',
             bbcodeCopied: '\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e',
             footerRefresh: 'Ctrl+R \u043e\u0431\u043d\u043e\u0432\u0438\u0442\u044c',
             footerHelp: '? \u0441\u043f\u0440\u0430\u0432\u043a\u0430',
@@ -2039,6 +2101,11 @@
             originCleared: '\u0422\u043e\u0447\u043a\u0430 \u043e\u0442\u0441\u0447\u0451\u0442\u0430 \u0441\u0431\u0440\u043e\u0448\u0435\u043d\u0430',
             originIndicator: '\u0422\u043e\u0447\u043a\u0430 \u043e\u0442\u0441\u0447\u0451\u0442\u0430 {x}:{y}',
             originIndicatorTooltip: '\u041d\u0430\u0436\u043c\u0438\u0442\u0435, \u0447\u0442\u043e\u0431\u044b \u0441\u0431\u0440\u043e\u0441\u0438\u0442\u044c \u0437\u0430\u043a\u0440\u0435\u043f\u043b\u0451\u043d\u043d\u0443\u044e \u0442\u043e\u0447\u043a\u0443 \u043e\u0442\u0441\u0447\u0451\u0442\u0430',
+            bbcodeInserted: '\u0412\u0441\u0442\u0430\u0432\u043b\u0435\u043d\u043e',
+            insertModeIndicator: '\u0420\u0435\u0436\u0438\u043c \u0432\u0441\u0442\u0430\u0432\u043a\u0438',
+            insertModeTooltip: 'BBCode \u0432\u0441\u0442\u0430\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u0432 \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0435 \u043f\u043e\u043b\u0435. \u041d\u0430\u0436\u043c\u0438\u0442\u0435, \u0447\u0442\u043e\u0431\u044b \u043e\u0442\u043a\u043b\u044e\u0447\u0438\u0442\u044c (Shift+Enter \u043e\u0442\u043a\u0440\u044b\u0432\u0430\u0435\u0442 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u043a\u0430\u043a \u043e\u0431\u044b\u0447\u043d\u043e).',
+            shortcutsOpenNormally: '\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u043a\u0430\u043a \u043e\u0431\u044b\u0447\u043d\u043e (\u0440\u0435\u0436\u0438\u043c \u0432\u0441\u0442\u0430\u0432\u043a\u0438)',
+            bbButtonTooltip: 'QuickFinder: \u0432\u0441\u0442\u0430\u0432\u0438\u0442\u044c BBCode ({hotkey})',
             shortcutsSetOrigin: '\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u043a\u0430\u043a \u0442\u043e\u0447\u043a\u0443 \u043e\u0442\u0441\u0447\u0451\u0442\u0430 \u0440\u0430\u0441\u0441\u0442\u043e\u044f\u043d\u0438\u044f',
             favoriteNoteTooltip: '\u0418\u0437\u043c\u0435\u043d\u0438\u0442\u044c \u0437\u0430\u043c\u0435\u0442\u043a\u0443 (Ctrl+N)',
             favoriteNoteTitle: '\u0417\u0430\u043c\u0435\u0442\u043a\u0430 \u0434\u043b\u044f {name}',
@@ -2177,6 +2244,7 @@
             footerExport: '\u0395\u03be\u03b1\u03b3\u03c9\u03b3\u03ae \u03bb\u03af\u03c3\u03c4\u03b1\u03c2',
             exportEmpty: '\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03b5\u03b9 \u03c4\u03af\u03c0\u03bf\u03c4\u03b1 \u03b3\u03b9\u03b1 \u03b5\u03be\u03b1\u03b3\u03c9\u03b3\u03ae \u03c3\u03c4\u03b7\u03bd \u03c4\u03c1\u03ad\u03c7\u03bf\u03c5\u03c3\u03b1 \u03bb\u03af\u03c3\u03c4\u03b1.',
             exportCopied: '\u0391\u03bd\u03c4\u03b9\u03b3\u03c1\u03ac\u03c6\u03b7\u03ba\u03b1\u03bd {n} \u03ba\u03b1\u03c4\u03b1\u03c7\u03c9\u03c1\u03ae\u03c3\u03b5\u03b9\u03c2 BBCode',
+            exportInserted: '\u0395\u03b9\u03c3\u03ae\u03c7\u03b8\u03b7\u03c3\u03b1\u03bd {n} \u03ba\u03b1\u03c4\u03b1\u03c7\u03c9\u03c1\u03ae\u03c3\u03b5\u03b9\u03c2 BBCode',
             bbcodeCopied: '\u0391\u03bd\u03c4\u03b9\u03b3\u03c1\u03ac\u03c6\u03b7\u03ba\u03b5',
             footerRefresh: 'Ctrl+R \u03b1\u03bd\u03ac\u03ba\u03c4\u03b7\u03c3\u03b7',
             footerHelp: '? \u03b2\u03bf\u03ae\u03b8\u03b5\u03b9\u03b1',
@@ -2208,6 +2276,11 @@
             originCleared: '\u03a4\u03bf \u03c3\u03b7\u03bc\u03b5\u03af\u03bf \u03b5\u03ba\u03ba\u03af\u03bd\u03b7\u03c3\u03b7\u03c2 \u03b4\u03b9\u03b1\u03b3\u03c1\u03ac\u03c6\u03b7\u03ba\u03b5',
             originIndicator: '\u03a3\u03b7\u03bc\u03b5\u03af\u03bf \u03b5\u03ba\u03ba\u03af\u03bd\u03b7\u03c3\u03b7\u03c2 {x}:{y}',
             originIndicatorTooltip: '\u039a\u03ac\u03bd\u03c4\u03b5 \u03ba\u03bb\u03b9\u03ba \u03b3\u03b9\u03b1 \u03b4\u03b9\u03b1\u03b3\u03c1\u03b1\u03c6\u03ae \u03c4\u03bf\u03c5 \u03ba\u03b1\u03c1\u03c6\u03b9\u03c4\u03c9\u03bc\u03ad\u03bd\u03bf\u03c5 \u03c3\u03b7\u03bc\u03b5\u03af\u03bf\u03c5',
+            bbcodeInserted: '\u0395\u03b9\u03c3\u03ae\u03c7\u03b8\u03b7',
+            insertModeIndicator: '\u039b\u03b5\u03b9\u03c4\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03b5\u03b9\u03c3\u03b1\u03b3\u03c9\u03b3\u03ae\u03c2',
+            insertModeTooltip: '\u03a4\u03bf BBCode \u03b5\u03b9\u03c3\u03ac\u03b3\u03b5\u03c4\u03b1\u03b9 \u03c3\u03c4\u03bf \u03b5\u03bd\u03b5\u03c1\u03b3\u03cc \u03c0\u03b5\u03b4\u03af\u03bf. \u039a\u03ac\u03bd\u03c4\u03b5 \u03ba\u03bb\u03b9\u03ba \u03b3\u03b9\u03b1 \u03b1\u03c0\u03b5\u03bd\u03b5\u03c1\u03b3\u03bf\u03c0\u03bf\u03af\u03b7\u03c3\u03b7 (\u03c4\u03bf Shift+Enter \u03b1\u03bd\u03bf\u03af\u03b3\u03b5\u03b9 \u03ba\u03b1\u03bd\u03bf\u03bd\u03b9\u03ba\u03ac \u03c4\u03bf \u03b1\u03c0\u03bf\u03c4\u03ad\u03bb\u03b5\u03c3\u03bc\u03b1).',
+            shortcutsOpenNormally: '\u039a\u03b1\u03bd\u03bf\u03bd\u03b9\u03ba\u03cc \u03ac\u03bd\u03bf\u03b9\u03b3\u03bc\u03b1 \u03b1\u03c0\u03bf\u03c4\u03b5\u03bb\u03ad\u03c3\u03bc\u03b1\u03c4\u03bf\u03c2 (\u03bb\u03b5\u03b9\u03c4\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03b5\u03b9\u03c3\u03b1\u03b3\u03c9\u03b3\u03ae\u03c2)',
+            bbButtonTooltip: 'QuickFinder: \u03b5\u03b9\u03c3\u03b1\u03b3\u03c9\u03b3\u03ae BBCode ({hotkey})',
             shortcutsSetOrigin: '\u039f\u03c1\u03b9\u03c3\u03bc\u03cc\u03c2 \u03c9\u03c2 \u03c3\u03b7\u03bc\u03b5\u03af\u03bf \u03b5\u03ba\u03ba\u03af\u03bd\u03b7\u03c3\u03b7\u03c2 \u03b1\u03c0\u03cc\u03c3\u03c4\u03b1\u03c3\u03b7\u03c2',
             favoriteNoteTooltip: '\u0395\u03c0\u03b5\u03be\u03b5\u03c1\u03b3\u03b1\u03c3\u03af\u03b1 \u03c3\u03b7\u03bc\u03b5\u03af\u03c9\u03c3\u03b7\u03c2 (Ctrl+N)',
             favoriteNoteTitle: '\u03a3\u03b7\u03bc\u03b5\u03af\u03c9\u03c3\u03b7 \u03b3\u03b9\u03b1 {name}',
@@ -2346,6 +2419,7 @@
             footerExport: 'Lista export\u00e1l\u00e1sa',
             exportEmpty: 'Nincs mit export\u00e1lni az aktu\u00e1lis list\u00e1ban.',
             exportCopied: '{n} BBCode bejegyz\u00e9s m\u00e1solva',
+            exportInserted: '{n} BBCode bejegyz\u00e9s beillesztve',
             bbcodeCopied: 'M\u00e1solva',
             footerRefresh: 'Ctrl+R friss\u00edt\u00e9s',
             footerHelp: '? s\u00fag\u00f3',
@@ -2377,6 +2451,11 @@
             originCleared: 'Kiindul\u00f3pont t\u00f6r\u00f6lve',
             originIndicator: 'Kiindul\u00f3pont {x}:{y}',
             originIndicatorTooltip: 'Kattints a kit\u0171z\u00f6tt kiindul\u00f3pont t\u00f6rl\u00e9s\u00e9hez',
+            bbcodeInserted: 'Beillesztve',
+            insertModeIndicator: 'Beilleszt\u00e9si m\u00f3d',
+            insertModeTooltip: 'A BBCode az akt\u00edv mez\u0151be ker\u00fcl. Kattints a kikapcsol\u00e1shoz (a Shift+Enter norm\u00e1lisan megnyitja az eredm\u00e9nyt).',
+            shortcutsOpenNormally: 'Tal\u00e1lat megnyit\u00e1sa norm\u00e1lisan (beilleszt\u00e9si m\u00f3d)',
+            bbButtonTooltip: 'QuickFinder: BBCode beilleszt\u00e9se ({hotkey})',
             shortcutsSetOrigin: 'Be\u00e1ll\u00edt\u00e1s t\u00e1vols\u00e1g-kiindul\u00f3pontk\u00e9nt',
             favoriteNoteTooltip: 'Jegyzet szerkeszt\u00e9se (Ctrl+N)',
             favoriteNoteTitle: 'Jegyzet ehhez: {name}',
@@ -2515,6 +2594,7 @@
             footerExport: 'Exporta lista',
             exportEmpty: 'Nimic de exportat \u00een lista curent\u0103.',
             exportCopied: '{n} intr\u0103ri BBCode copiate',
+            exportInserted: '{n} intr\u0103ri BBCode inserate',
             bbcodeCopied: 'Copiat',
             footerRefresh: 'Ctrl+R re\u00eencarc\u0103',
             footerHelp: '? ajutor',
@@ -2546,6 +2626,11 @@
             originCleared: 'Origine \u0219tears\u0103',
             originIndicator: 'Origine {x}:{y}',
             originIndicatorTooltip: 'Apas\u0103 pentru a \u0219terge originea fixat\u0103',
+            bbcodeInserted: 'Inserat',
+            insertModeIndicator: 'Mod inserare',
+            insertModeTooltip: 'BBCode este inserat \u00een c\u00e2mpul activ. Apas\u0103 pentru a dezactiva (Shift+Enter deschide rezultatul normal).',
+            shortcutsOpenNormally: 'Deschide rezultatul normal (mod inserare)',
+            bbButtonTooltip: 'QuickFinder: insereaz\u0103 BBCode ({hotkey})',
             shortcutsSetOrigin: 'Seteaz\u0103 ca origine de distan\u021b\u0103',
             favoriteNoteTooltip: 'Editeaz\u0103 nota (Ctrl+N)',
             favoriteNoteTitle: 'Not\u0103 pentru {name}',
@@ -2684,6 +2769,7 @@
             footerExport: 'Exportovat seznam',
             exportEmpty: 'V aktu\u00e1ln\u00edm seznamu nen\u00ed nic k exportu.',
             exportCopied: 'Zkop\u00edrov\u00e1no {n} polo\u017eek BBCode',
+            exportInserted: 'Vlo\u017eeno {n} polo\u017eek BBCode',
             bbcodeCopied: 'Zkop\u00edrov\u00e1no',
             footerRefresh: 'Ctrl+R obnovit',
             footerHelp: '? n\u00e1pov\u011bda',
@@ -2715,6 +2801,11 @@
             originCleared: 'Po\u010d\u00e1tek zru\u0161en',
             originIndicator: 'Po\u010d\u00e1tek {x}:{y}',
             originIndicatorTooltip: 'Kliknut\u00edm zru\u0161\u00edte p\u0159ipnut\u00fd po\u010d\u00e1tek',
+            bbcodeInserted: 'Vlo\u017eeno',
+            insertModeIndicator: 'Re\u017eim vkl\u00e1d\u00e1n\u00ed',
+            insertModeTooltip: 'BBCode se vkl\u00e1d\u00e1 do aktivn\u00edho pole. Kliknut\u00edm vypnete (Shift+Enter otev\u0159e v\u00fdsledek norm\u00e1ln\u011b).',
+            shortcutsOpenNormally: 'Otev\u0159\u00edt v\u00fdsledek norm\u00e1ln\u011b (re\u017eim vkl\u00e1d\u00e1n\u00ed)',
+            bbButtonTooltip: 'QuickFinder: vlo\u017eit BBCode ({hotkey})',
             shortcutsSetOrigin: 'Nastavit jako po\u010d\u00e1tek vzd\u00e1lenosti',
             favoriteNoteTooltip: 'Upravit pozn\u00e1mku (Ctrl+N)',
             favoriteNoteTitle: 'Pozn\u00e1mka pro {name}',
@@ -2853,6 +2944,7 @@
             footerExport: 'Exportova\u0165 zoznam',
             exportEmpty: 'V aktu\u00e1lnom zozname nie je ni\u010d na export.',
             exportCopied: 'Skop\u00edrovan\u00fdch {n} polo\u017eiek BBCode',
+            exportInserted: 'Vlo\u017een\u00fdch {n} polo\u017eiek BBCode',
             bbcodeCopied: 'Skop\u00edrovan\u00e9',
             footerRefresh: 'Ctrl+R obnovi\u0165',
             footerHelp: '? pomoc',
@@ -2884,6 +2976,11 @@
             originCleared: 'Po\u010diatok zru\u0161en\u00fd',
             originIndicator: 'Po\u010diatok {x}:{y}',
             originIndicatorTooltip: 'Kliknut\u00edm zru\u0161\u00edte pripnut\u00fd po\u010diatok',
+            bbcodeInserted: 'Vlo\u017een\u00e9',
+            insertModeIndicator: 'Re\u017eim vkladania',
+            insertModeTooltip: 'BBCode sa vklad\u00e1 do akt\u00edvneho po\u013ea. Kliknut\u00edm vypnete (Shift+Enter otvor\u00ed v\u00fdsledok norm\u00e1lne).',
+            shortcutsOpenNormally: 'Otvori\u0165 v\u00fdsledok norm\u00e1lne (re\u017eim vkladania)',
+            bbButtonTooltip: 'QuickFinder: vlo\u017ei\u0165 BBCode ({hotkey})',
             shortcutsSetOrigin: 'Nastavi\u0165 ako po\u010diatok vzdialenosti',
             favoriteNoteTooltip: 'Upravi\u0165 pozn\u00e1mku (Ctrl+N)',
             favoriteNoteTitle: 'Pozn\u00e1mka pre {name}',
@@ -3187,6 +3284,10 @@
         // build available for this install's channel, else null. Drives
         // the footer version badge and the one-time-per-version toast.
         updateAvailable: null,
+        // Editable field (forum/message/note textarea...) that was focused
+        // when the palette was opened; while set and still valid, picking a
+        // row inserts its BBCode there instead of navigating.
+        insertTarget: null,
     };
 
     /*
@@ -5886,27 +5987,162 @@
     }
 
     /*
-     * Copies the BBCode for a given result and closes the palette,
-     * mirroring Enter's "act on the selection, then close" behavior.
-     * Silently no-ops for rows without a BBCode equivalent instead of
-     * copying nothing useful or throwing. Shared by the Ctrl+B
-     * shortcut and the per-row BBCode icon (see handleResultClick),
-     * so both input methods behave identically.
+     * INSERT MODE: when the palette is opened while an editable field
+     * (forum post, message, note...) has focus, choosing a row types
+     * its BBCode straight into that field instead of navigating, so
+     * the clipboard is never touched. Shift+Enter / Shift+click opens
+     * the result normally; Ctrl+I or the footer chip turns it off.
      */
-    function copyBBCode(item) {
-        const code = bbcodeFor(item);
-        if (!code) {
-            return;
+    function isEditableElement(el) {
+        if (!el || el.nodeType !== 1) return false;
+        if (el.closest('#qf-overlay')) return false;
+        if (el.disabled || el.readOnly) return false;
+        if (el.tagName === 'TEXTAREA') return true;
+        if (el.tagName === 'INPUT') {
+            const type = (el.getAttribute('type') || 'text').toLowerCase();
+            return type === 'text' || type === 'search' || type === 'url' || type === 'tel';
         }
-        copyToClipboard(code).then(() => {
-            addHistory(item);
+        return el.isContentEditable === true;
+    }
+
+    function getFocusedEditable() {
+        const el = document.activeElement;
+        return isEditableElement(el) ? el : null;
+    }
+
+    function getInsertTarget() {
+        const el = state.insertTarget;
+        return el && el.isConnected && isEditableElement(el) ? el : null;
+    }
+
+    function disableInsertMode() {
+        state.insertTarget = null;
+        renderFooter();
+    }
+
+    function insertTextIntoElement(el, text) {
+        el.focus();
+        let done = false;
+        try {
+            done = document.execCommand('insertText', false, text);
+        } catch (_) {
+            done = false;
+        }
+        if (!done && typeof el.setRangeText === 'function') {
+            el.setRangeText(text, el.selectionStart, el.selectionEnd, 'end');
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            done = true;
+        }
+        if (done) {
+            // Grepolis' character counter may listen to keyup rather than input.
+            el.dispatchEvent(new Event('keyup', { bubbles: true }));
+        }
+        return done;
+    }
+
+    /*
+     * SINGLE OUTPUT POINT for every BBCode the palette produces
+     * (Ctrl+B, the per-row icon, Enter in insert mode, bulk export,
+     * and anything added in the future): call this instead of
+     * copyToClipboard/insertTextIntoElement directly so insert mode is
+     * honored everywhere. With an insert target it types the text into
+     * the field and closes the palette (focus goes back to the field);
+     * otherwise it copies. If typing fails it falls back to copying so
+     * the text is never lost.
+     *
+     * Options:
+     *   bulk        - several entries (toast shows a count, not the code)
+     *   count       - number of entries, for the bulk toast
+     *   historyItem - result to record in Recent (single-item flows)
+     *
+     * Copying a single item closes the palette (like Enter); copying a
+     * bulk export leaves it open ("keep working"). Inserting always
+     * closes, since the user wants to see what landed in the field.
+     */
+    function deliverBBCode(text, { bulk = false, count = 1, historyItem = null } = {}) {
+        const target = getInsertTarget();
+        const toastCode = bulk ? undefined : text;
+        const label = (inserted) => {
+            if (bulk) return translate(inserted ? 'exportInserted' : 'exportCopied', { n: count });
+            return translate(inserted ? 'bbcodeInserted' : 'bbcodeCopied');
+        };
+
+        if (target && insertTextIntoElement(target, text)) {
+            if (historyItem) addHistory(historyItem);
             close();
-            showToast(translate('bbcodeCopied'), code);
+            showToast(label(true), toastCode);
+            return Promise.resolve(true);
+        }
+
+        return copyToClipboard(text).then(() => {
+            if (historyItem) addHistory(historyItem);
+            if (!bulk) close();
+            showToast(label(false), toastCode);
+            return true;
         });
     }
 
-    function copySelectedBBCode() {
-        copyBBCode(getFocusedItem());
+    /*
+     * Sends one result's BBCode through deliverBBCode. Silently no-ops
+     * for rows without a BBCode equivalent. Shared by the Ctrl+B
+     * shortcut and the per-row BBCode icon (see handleResultClick), so
+     * both input methods behave identically.
+     */
+    function sendBBCode(item) {
+        const code = bbcodeFor(item);
+        if (!code) return;
+        deliverBBCode(code, { historyItem: item });
+    }
+
+    function sendSelectedBBCode() {
+        sendBBCode(getFocusedItem());
+    }
+
+    function activateItem(item, event) {
+        const forceOpen = Boolean(event && event.shiftKey);
+        if (!forceOpen && getInsertTarget() && bbcodeFor(item)) {
+            sendBBCode(item);
+            return true;
+        }
+        return openResult(item);
+    }
+
+    /*
+     * Adds a QuickFinder button to every Grepolis BBCode toolbar
+     * (forum, messages, notes). The toolbar is rebuilt whenever such an
+     * editor opens, so this runs on the same 1s tick as the menu item.
+     * The target field is looked up from the toolbar itself because
+     * clicking a link moves focus away from the textarea.
+     */
+    function findBBToolbarTarget(wrapper) {
+        let node = wrapper.parentElement;
+        for (let depth = 0; node && depth < 4; depth++, node = node.parentElement) {
+            const field = node.querySelector('textarea');
+            if (field && isEditableElement(field)) return field;
+        }
+        return null;
+    }
+
+    function injectBBButtons() {
+        document.querySelectorAll('.bb_button_wrapper').forEach((wrapper) => {
+            if (wrapper.querySelector('.qf-bb-button')) return;
+            const options = wrapper.querySelectorAll('a.bbcode_option');
+            const last = options[options.length - 1];
+            if (!last) return;
+
+            const button = document.createElement('a');
+            button.href = '#';
+            button.className = 'qf-bb-button';
+            button.title = translate('bbButtonTooltip', { hotkey: hotkeyLabel() });
+            button.innerHTML = ICONS.search;
+            button.addEventListener('mousedown', (event) => event.preventDefault());
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                open(findBBToolbarTarget(wrapper));
+            });
+            last.after(button);
+        });
     }
 
     /*
@@ -5916,9 +6152,10 @@
      * list or an open detail pane (see state.focusPane) — instead of
      * only the single selected row like Ctrl+B. Rows without a BBCode
      * equivalent (info rows, coordinates, saved searches...) are
-     * skipped rather than producing empty lines. Does not close the
-     * palette, since exporting a whole list is a "keep working" action
-     * unlike opening/copying a single result.
+     * skipped rather than producing empty lines. Goes through
+     * deliverBBCode, so in insert mode the whole list is typed into
+     * the focused field; when copying, the palette stays open, since
+     * exporting a whole list is a "keep working" action.
      */
     function exportResultsBBCode() {
         const inDetailPane = state.focusPane === 'detail' && state.hierarchyStack.length > 0;
@@ -5928,10 +6165,7 @@
             showToast(translate('exportEmpty'));
             return;
         }
-        const text = codes.join('\n');
-        copyToClipboard(text).then(() => {
-            showToast(translate('exportCopied', { n: codes.length }));
-        });
+        deliverBBCode(codes.join('\n'), { bulk: true, count: codes.length });
     }
 
     let searchTimer = null;
@@ -6580,6 +6814,7 @@
                         <button type="button" id="qf-footer-help" class="qf-footer-action">${escapeHTML(translate('footerHelp'))}</button>
                     </div>
                     <div id="qf-footer-meta">
+                        <button type="button" id="qf-insert-indicator" hidden></button>
                         <button type="button" id="qf-origin-indicator" hidden></button>
                         <span id="qf-status"></span>
                         <button type="button" id="qf-version">v${VERSION}</button>
@@ -6651,6 +6886,11 @@
                 const url = getUpdateCheckUrl();
                 if (url) window.open(url, '_blank', 'noopener');
             }
+        });
+
+        overlay.querySelector('#qf-insert-indicator').addEventListener('click', (event) => {
+            event.preventDefault();
+            disableInsertMode();
         });
 
         overlay.querySelector('#qf-origin-indicator').addEventListener('click', (event) => {
@@ -6943,6 +7183,19 @@
                 : '';
         }
 
+        const insertIndicator = document.getElementById('qf-insert-indicator');
+        if (insertIndicator) {
+            if (getInsertTarget()) {
+                insertIndicator.hidden = false;
+                insertIndicator.innerHTML = `<span class="qf-chip-icon">${ICONS.bbcode}</span><span>${escapeHTML(translate('insertModeIndicator'))}</span>`;
+                insertIndicator.title = translate('insertModeTooltip');
+            } else {
+                insertIndicator.hidden = true;
+                insertIndicator.innerHTML = '';
+                insertIndicator.title = '';
+            }
+        }
+
         const originIndicator = document.getElementById('qf-origin-indicator');
         if (originIndicator) {
             const origin = loadOriginOverride();
@@ -7025,6 +7278,8 @@
             ['Home / End', translate('shortcutsFirstLast')],
             ['Ctrl+F', translate('footerFav')],
             ['Ctrl+B', translate('footerBBCode')],
+            ['Ctrl+I', translate('insertModeIndicator')],
+            ['Shift+Enter', translate('shortcutsOpenNormally')],
             ['Ctrl+O', translate('shortcutsSetOrigin')],
             ['Ctrl+N', translate('shortcutsEditNote')],
             ['Ctrl+Shift+B', translate('footerExport')],
@@ -7831,7 +8086,13 @@
 
             if (key === CONFIG.BBCODE_KEY) {
                 event.preventDefault();
-                copySelectedBBCode();
+                sendSelectedBBCode();
+                return;
+            }
+
+            if (key === CONFIG.INSERT_KEY) {
+                event.preventDefault();
+                if (state.insertTarget) disableInsertMode();
                 return;
             }
 
@@ -7953,7 +8214,7 @@
 
             case 'Enter':
                 event.preventDefault();
-                openResult(activeList[activeSelected]);
+                activateItem(activeList[activeSelected], event);
                 break;
 
             case 'Escape':
@@ -8051,7 +8312,7 @@
 
         if (event.target.closest('.qf-bbcode-btn')) {
             event.stopPropagation();
-            copyBBCode(item);
+            sendBBCode(item);
             return;
         }
 
@@ -8075,7 +8336,7 @@
         }
 
         setPaneSelected(inDetailPane, index);
-        openResult(item);
+        activateItem(item, event);
     }
 
     /*
@@ -8124,10 +8385,11 @@
      * ============================================================
      */
 
-    function open() {
+    function open(insertTarget = getFocusedEditable()) {
         createUI();
 
         state.open = true;
+        state.insertTarget = insertTarget || null;
         // Deliberately NOT resetHierarchy() here: closing the palette
         // (Enter on a result, Esc, Ctrl+Shift+F, or the menu button)
         // never touches state.hierarchyStack/focusPane, so reopening
@@ -8370,6 +8632,7 @@
                 </span>
             `;
 
+            qfLi.addEventListener('mousedown', (event) => event.preventDefault());
             qfLi.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -9318,42 +9581,72 @@
         }
 
         /*
-         * Pinned-origin chip: same gold-on-tint language as the
-         * selection/favorite accent, sized like the footer's 10px hints.
-         * Hover shifts to the danger tone since clicking clears it.
+         * Footer state indicators (pinned origin, insert mode): kept as
+         * light as the surrounding 10px hints — no box at rest, just a
+         * small gold icon + text — and only gain a faint tint on hover,
+         * where the danger tone signals that clicking turns them off.
          */
-        #qf-origin-indicator {
+        #qf-origin-indicator,
+        #qf-insert-indicator {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 2px 8px 2px 6px;
-            border: 1px solid rgba(215, 163, 63, .32);
-            border-radius: 7px;
-            background: rgba(215, 163, 63, .12);
-            color: #e6bd6c;
+            gap: 4px;
+            padding: 1px 5px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            background: transparent;
+            color: rgba(215, 163, 63, .78);
             font: inherit;
             font-size: 10px;
-            font-weight: 600;
-            line-height: 1.4;
+            font-weight: 500;
+            line-height: 1.3;
             cursor: pointer;
             transition: background-color .08s ease, border-color .08s ease, color .08s ease;
         }
 
-        #qf-origin-indicator[hidden] {
+        #qf-origin-indicator[hidden],
+        #qf-insert-indicator[hidden] {
             display: none;
         }
 
-        #qf-origin-indicator:hover {
-            border-color: rgba(224, 138, 138, .5);
-            background: rgba(224, 138, 138, .12);
+        #qf-origin-indicator:hover,
+        #qf-insert-indicator:hover {
+            border-color: rgba(224, 138, 138, .3);
+            background: rgba(224, 138, 138, .08);
             color: #e6a2a2;
         }
 
+        .qf-chip-icon,
         .qf-origin-indicator-icon {
             display: inline-block;
-            width: 11px;
-            height: 11px;
+            width: 10px;
+            height: 10px;
             flex: none;
+        }
+
+        /*
+         * QuickFinder button appended to Grepolis' own BBCode toolbar
+         * (.bb_button_wrapper). Floats/sizes like the native 22x23
+         * .bbcode_option links so it sits in the same row.
+         */
+        .bb_button_wrapper .qf-bb-button {
+            float: left;
+            box-sizing: border-box;
+            width: 22px;
+            height: 23px;
+            margin: 0 3px 0 0;
+            padding: 4px;
+            border: 1px solid rgba(255, 255, 255, .16);
+            border-radius: 4px;
+            background: linear-gradient(180deg, #2c2c2c, #1a1a1a);
+            color: #e6bd6c;
+            cursor: pointer;
+            transition: border-color .08s ease, color .08s ease;
+        }
+
+        .bb_button_wrapper .qf-bb-button:hover {
+            border-color: #d7a33f;
+            color: #fff;
         }
 
         #qf-version {
@@ -9611,7 +9904,10 @@
         syncFavorites();
         createUI();
         injectMainMenuItem();
-        setInterval(injectMainMenuItem, 1000);
+        setInterval(() => {
+            injectMainMenuItem();
+            injectBBButtons();
+        }, 1000);
         loadAll();
         if (CONFIG.CONQUEST_HISTORY_ENABLED) {
             loadConquestHistory();
