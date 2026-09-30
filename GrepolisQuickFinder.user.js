@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Grepolis Quick Finder (Beta)
 // @namespace    https://github.com/adrian-cancio/GrepolisQuickFinder
-// @version      2.14.0-beta.3
+// @version      2.14.0-beta.4
 // @description  Quick palette (Ctrl+Shift+F) to search players, alliances and towns in Grepolis, with real in-game navigation, segments, commands, history/favorites and a local cache. Automatically localized based on the current world/market. (Privacy policy: https://github.com/adrian-cancio/GrepolisQuickFinder/blob/master/PRIVACY.md)
 // @author       adrian-cancio
 // @match        https://*.grepolis.com/game/*
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.14.0-beta.3';
+    const VERSION = '2.14.0-beta.4';
 
     /*
      * ============================================================
@@ -428,6 +428,7 @@
             hierarchyDrillTooltip: 'View details (→)',
             shortcutsHierarchyNav: '← → drill in/out',
             shortcutsSubSearch: 'Search within the open section',
+            shortcutsSubBack: 'Step back out of the section (also Backspace on an empty box)',
             subSearchPlaceholder: 'Search in this section',
             subSearchUnsupported: 'In a section, use: text, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'A new version ({version}) is available.',
@@ -606,6 +607,7 @@
             hierarchyDrillTooltip: 'Ver detalles (→)',
             shortcutsHierarchyNav: '← → entrar/salir',
             shortcutsSubSearch: 'Buscar dentro de la sección abierta',
+            shortcutsSubBack: 'Salir de la sección (también Retroceso con el cuadro vacío)',
             subSearchPlaceholder: 'Buscar en esta sección',
             subSearchUnsupported: 'En una sección usa: texto, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Hay una nueva versión disponible ({version}).',
@@ -784,6 +786,7 @@
             hierarchyDrillTooltip: 'Details anzeigen (→)',
             shortcutsHierarchyNav: '← → rein/raus',
             shortcutsSubSearch: 'Im geöffneten Bereich suchen',
+            shortcutsSubBack: 'Aus dem Bereich zurück (auch Rücktaste bei leerem Feld)',
             subSearchPlaceholder: 'In diesem Bereich suchen',
             subSearchUnsupported: 'In einem Bereich möglich: Text, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Eine neue Version ({version}) ist verfügbar.',
@@ -962,6 +965,7 @@
             hierarchyDrillTooltip: 'Voir les détails (→)',
             shortcutsHierarchyNav: '← → entrer/sortir',
             shortcutsSubSearch: 'Rechercher dans la section ouverte',
+            shortcutsSubBack: 'Sortir de la section (aussi Retour arrière si le champ est vide)',
             subSearchPlaceholder: 'Rechercher dans cette section',
             subSearchUnsupported: 'Dans une section : texte, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Une nouvelle version ({version}) est disponible.',
@@ -1140,6 +1144,7 @@
             hierarchyDrillTooltip: 'Vedi dettagli (→)',
             shortcutsHierarchyNav: '← → entra/esci',
             shortcutsSubSearch: 'Cerca nella sezione aperta',
+            shortcutsSubBack: 'Esci dalla sezione (anche Backspace con il campo vuoto)',
             subSearchPlaceholder: 'Cerca in questa sezione',
             subSearchUnsupported: 'In una sezione: testo, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'È disponibile una nuova versione ({version}).',
@@ -1318,6 +1323,7 @@
             hierarchyDrillTooltip: 'Details bekijken (→)',
             shortcutsHierarchyNav: '← → in/uit',
             shortcutsSubSearch: 'Zoeken in de geopende sectie',
+            shortcutsSubBack: 'Terug uit de sectie (ook Backspace bij een leeg veld)',
             subSearchPlaceholder: 'Zoeken in deze sectie',
             subSearchUnsupported: 'In een sectie kun je gebruiken: tekst, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Er is een nieuwe versie ({version}) beschikbaar.',
@@ -1496,6 +1502,7 @@
             hierarchyDrillTooltip: 'Zobacz szczegóły (→)',
             shortcutsHierarchyNav: '← → wejdź/wyjdź',
             shortcutsSubSearch: 'Szukaj w otwartej sekcji',
+            shortcutsSubBack: 'Wyjdź z sekcji (także Backspace przy pustym polu)',
             subSearchPlaceholder: 'Szukaj w tej sekcji',
             subSearchUnsupported: 'W sekcji użyj: tekst, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Dostępna jest nowa wersja ({version}).',
@@ -1674,6 +1681,7 @@
             hierarchyDrillTooltip: 'Ver detalhes (→)',
             shortcutsHierarchyNav: '← → entrar/sair',
             shortcutsSubSearch: 'Pesquisar na secção aberta',
+            shortcutsSubBack: 'Sair da secção (também Backspace com a caixa vazia)',
             subSearchPlaceholder: 'Pesquisar nesta secção',
             subSearchUnsupported: 'Numa secção usa: texto, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Está disponível uma nova versão ({version}).',
@@ -1852,6 +1860,7 @@
             hierarchyDrillTooltip: 'Ver detalhes (→)',
             shortcutsHierarchyNav: '← → entrar/sair',
             shortcutsSubSearch: 'Pesquisar na seção aberta',
+            shortcutsSubBack: 'Sair da seção (também Backspace com a caixa vazia)',
             subSearchPlaceholder: 'Pesquisar nesta seção',
             subSearchUnsupported: 'Em uma seção use: texto, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Uma nova versão ({version}) está disponível.',
@@ -2030,6 +2039,7 @@
             hierarchyDrillTooltip: 'Ayrıntıları görüntüle (→)',
             shortcutsHierarchyNav: '← → gir/çık',
             shortcutsSubSearch: 'Açık bölümde ara',
+            shortcutsSubBack: 'Bölümden çık (boş kutuda Backspace de çalışır)',
             subSearchPlaceholder: 'Bu bölümde ara',
             subSearchUnsupported: 'Bir bölümde şunlar kullanılabilir: metin, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Yeni bir sürüm ({version}) mevcut.',
@@ -2208,6 +2218,7 @@
             hierarchyDrillTooltip: 'Подробнее (→)',
             shortcutsHierarchyNav: '← → войти/выйти',
             shortcutsSubSearch: 'Поиск внутри открытого раздела',
+            shortcutsSubBack: 'Выйти из раздела (также Backspace в пустом поле)',
             subSearchPlaceholder: 'Поиск в этом разделе',
             subSearchUnsupported: 'В разделе доступны: текст, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Доступна новая версия ({version}).',
@@ -2386,6 +2397,7 @@
             hierarchyDrillTooltip: 'Προβολή λεπτομερειών (→)',
             shortcutsHierarchyNav: '← → είσοδος/έξοδος',
             shortcutsSubSearch: 'Αναζήτηση στην ανοιχτή ενότητα',
+            shortcutsSubBack: 'Έξοδος από την ενότητα (και Backspace σε κενό πεδίο)',
             subSearchPlaceholder: 'Αναζήτηση σε αυτή την ενότητα',
             subSearchUnsupported: 'Σε μια ενότητα: κείμενο, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Διατίθεται νέα έκδοση ({version}).',
@@ -2564,6 +2576,7 @@
             hierarchyDrillTooltip: 'Részletek megtekintése (→)',
             shortcutsHierarchyNav: '← → be/ki',
             shortcutsSubSearch: 'Keresés a megnyitott szakaszban',
+            shortcutsSubBack: 'Kilépés a szakaszból (üres mezőben a Backspace is)',
             subSearchPlaceholder: 'Keresés ebben a szakaszban',
             subSearchUnsupported: 'Egy szakaszban használható: szöveg, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Elérhető egy új verzió ({version}).',
@@ -2742,6 +2755,7 @@
             hierarchyDrillTooltip: 'Vezi detalii (→)',
             shortcutsHierarchyNav: '← → intră/ieși',
             shortcutsSubSearch: 'Caută în secțiunea deschisă',
+            shortcutsSubBack: 'Ieși din secțiune (și Backspace pe un câmp gol)',
             subSearchPlaceholder: 'Caută în această secțiune',
             subSearchUnsupported: 'Într-o secțiune: text, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Este disponibilă o versiune nouă ({version}).',
@@ -2920,6 +2934,7 @@
             hierarchyDrillTooltip: 'Zobrazit podrobnosti (→)',
             shortcutsHierarchyNav: '← → vstoupit/opustit',
             shortcutsSubSearch: 'Hledat v otevřené sekci',
+            shortcutsSubBack: 'Zpět ze sekce (také Backspace v prázdném poli)',
             subSearchPlaceholder: 'Hledat v této sekci',
             subSearchUnsupported: 'V sekci lze použít: text, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Je k dispozici nová verze ({version}).',
@@ -3098,6 +3113,7 @@
             hierarchyDrillTooltip: 'Zobraziť podrobnosti (→)',
             shortcutsHierarchyNav: '← → vstúpiť/opustiť',
             shortcutsSubSearch: 'Hľadať v otvorenej sekcii',
+            shortcutsSubBack: 'Späť zo sekcie (aj Backspace v prázdnom poli)',
             subSearchPlaceholder: 'Hľadať v tejto sekcii',
             subSearchUnsupported: 'V sekcii možno použiť: text, X:Y, @t, @p, >near, >dist, >ghost, >history.',
             updateAvailableToast: 'Je k dispozícii nová verzia ({version}).',
@@ -7092,6 +7108,7 @@
                                 spellcheck="false"
                                 placeholder="${escapeHTML(translate('subSearchPlaceholder'))}"
                             >
+                            <kbd class="qf-detail-search-key">Ctrl+K</kbd>
                         </div>
                         <div class="qf-detail-chips"></div>
                         <div class="qf-detail-rows"></div>
@@ -7593,6 +7610,7 @@
             ['Ctrl+Shift+Delete', translate('shortcutsClearRecent')],
             ['Esc', translate('shortcutsEscKeepsPlace')],
             ['Ctrl+K', translate('shortcutsSubSearch')],
+            ['Alt+\u2190', translate('shortcutsSubBack')],
             ['?', translate('shortcutsHelp')],
         ];
 
@@ -8419,7 +8437,11 @@
             return;
         }
 
-        if (event.key === 'ArrowLeft' && plain && input.selectionStart === 0 && input.selectionEnd === 0) {
+        const atStart = input.selectionStart === 0 && input.selectionEnd === 0;
+        const backOut = (event.key === 'ArrowLeft' && plain && atStart)
+            || (event.key === 'ArrowLeft' && event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey)
+            || (event.key === 'Backspace' && plain && input.value === '');
+        if (backOut) {
             event.preventDefault();
             popHierarchyLevel();
             render();
@@ -8453,6 +8475,10 @@
     function handleInputKeydown(event) {
         if (event.ctrlKey || event.metaKey) {
             const key = event.key.toLowerCase();
+
+            if (event.shiftKey && key === CONFIG.HOTKEY) {
+                return;
+            }
 
             if (key === CONFIG.FAV_KEY) {
                 event.preventDefault();
@@ -8488,7 +8514,13 @@
 
             if (key === CONFIG.SUBSEARCH_KEY) {
                 event.preventDefault();
-                if (state.hierarchyStack.length) focusSubInput();
+                if (!state.hierarchyStack.length) return;
+                if (document.activeElement && document.activeElement.id === 'qf-sub-input') {
+                    state.focusPane = 'list';
+                    focusMainInput();
+                } else {
+                    focusSubInput();
+                }
                 return;
             }
 
@@ -9465,6 +9497,22 @@
         .qf-detail-search:focus-within {
             border-color: #d7a33f;
             background: rgba(255, 255, 255, .06);
+        }
+
+        .qf-detail-search-key {
+            flex: 0 0 auto;
+            padding: 2px 6px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, .04);
+            color: rgba(255, 255, 255, .42);
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .qf-detail-search:focus-within .qf-detail-search-key {
+            color: rgba(255, 255, 255, .3);
         }
 
         .qf-detail-search-icon {
