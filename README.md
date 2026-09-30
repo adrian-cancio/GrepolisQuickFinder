@@ -113,7 +113,7 @@ Grepolis worlds are hosted on subdomains shaped like `<market><number>.grepolis.
 - `Ctrl+Shift+F` (customizable in Settings), the **QuickFinder** menu item, or the gear icon — open the palette / open settings.
 - `Tab` / `Shift+Tab` — cycle result category filters (All / Players / Alliances / Towns / Islands / Coordinates).
 - `→` (or a row's `›` chevron) — open the hierarchy detail pane for an alliance/player/island result (Alliance → Player → Town, Island → Town); `←` (or a breadcrumb segment) steps back out.
-- `Ctrl+K` — focus the detail pane's own search box; `Tab`/`Shift+Tab` (or the Players/Towns chips) switch an alliance between members and towns.
+- `Ctrl+K` — jump between the main search and the detail pane's own search box (each section remembers its own text); `Alt+←` or `Backspace` on an empty box steps back out of a section without erasing what you typed; `Tab`/`Shift+Tab` (or the Players/Towns chips) switch an alliance between members and towns.
 - `Ctrl+B` (or the per-row BBCode icon) — copy BBCode for selected result.
 - `Ctrl+I` (or the footer "Insert mode" chip) — stop inserting BBCode into the field that was focused when the palette opened; `Shift+Enter` / `Shift+click` opens a result normally while insert mode is on.
 - `Ctrl+F` — toggle favorite on selected result.

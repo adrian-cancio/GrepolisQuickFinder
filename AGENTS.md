@@ -105,7 +105,10 @@ backdoor. To verify changes:
    chain via a coordinate search that resolves to a multi-town island.
    Then test sub-search: the pane's own box (`#qf-sub-input`) is focused
    automatically when the pane opens, and `Ctrl+K` refocuses it from the
-   main input. With an alliance open, confirm the *Players | Towns* chips
+   main input (and again from the box to jump back to the main input). `Alt+←`
+   and `Backspace` on an empty box must pop a level without touching the
+   text; `Ctrl+Shift+F` must close the palette from either input; the box
+   keeps its text per level across close/reopen. With an alliance open, confirm the *Players | Towns* chips
    appear (only for alliances; players/islands have towns only), that
    `Tab`/`Shift+Tab` and a chip click switch modes, and that the main
    query in `#qf-input` is never modified. In the box, try free text (a
