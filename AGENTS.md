@@ -97,13 +97,27 @@ backdoor. To verify changes:
    (left list or right detail pane) currently has focus, and that
    `Enter`/click on a town row in the detail pane still opens the native
    town-info window and closes the whole palette, exactly like a town row
-   in the left-hand list. Press `Esc` once to close only the detail pane
-   (palette stays open, window narrows back down); press `Esc` again to
-   close the whole palette. Repeat the same alliance/player search with
+   in the left-hand list. Press `Esc` once: it must close the whole
+   palette while keeping the pane, so reopening restores it. Repeat the same alliance/player search with
    the Curator stub returning `false`: the chevron must still be visible,
    but pressing `→` should open the pane showing the `premiumRequired`
    message instead of the member/town list. Also test an `Island → Town`
    chain via a coordinate search that resolves to a multi-town island.
+   Then test sub-search: the pane's own box (`#qf-sub-input`) is focused
+   automatically when the pane opens, and `Ctrl+K` refocuses it from the
+   main input. With an alliance open, confirm the *Players | Towns* chips
+   appear (only for alliances; players/islands have towns only), that
+   `Tab`/`Shift+Tab` and a chip click switch modes, and that the main
+   query in `#qf-input` is never modified. In the box, try free text (a
+   town name, then a member's name on the Towns chip), `X:Y`, `@p`/`@t`
+   (should switch the chip), `>near 500:500 10`, `>dist` (sorted by
+   distance from the pinned/active origin), `>ghost` (towns mode only)
+   and `>history <name>` (needs conquest history enabled; the rest work
+   without it). Unknown commands show `subSearchUnsupported`. `ArrowLeft`
+   at column 0 of the box must pop a level; `ArrowUp`/`ArrowDown`/`Enter`
+   from the box act on the pane's rows. With the Curator stub returning
+   `false` the box and chips must be hidden and only `premiumRequired`
+   shown.
 9. To test that closing preserves state: with a detail pane open (from
    step 8), close the palette both ways — pressing `Ctrl+Shift+F` again,
    and pressing `Enter` on a row so it navigates away and closes on its
@@ -234,11 +248,13 @@ these three constraints in mind for every change:
    drill-down (`playerDetailRows`/`allianceDetailRows`), the multi-town
    island row for a coordinate search, and the hierarchy detail pane's
    Alliance→Player, Player→Town, and Island→Town levels
-   (`pushHierarchyLevel`/`childRowsFor`, search `HIERARCHY DRILL-DOWN`) —
+   (`pushHierarchyLevel`/`buildLevel`, search `HIERARCHY DRILL-DOWN`) —
    the `›` chevron itself is always shown (discoverability, same as
    `>ghost`/`>island` always appearing in `>help`), but drilling in without
    Curator active fills the pane with `premiumRequiredRows()` instead of
-   the actual children.    **Features that resolve to exactly one item are
+   the actual children; the pane's sub-search box and Players/Towns chips
+   are hidden in that state, so it can't be used to list anything either.
+   **Features that resolve to exactly one item are
    exempt** (single player/alliance/town lookup by name, a single-town
    coordinate, `>goto`, `>dist` between two given coordinates) — those
    aren't overviews, they're direct lookups of public per-entity data
@@ -297,7 +313,9 @@ When adding a new action inside the overlay:
   to), the bookmark icon (save current query) has `Ctrl+D`, a saved
   search's pencil icon (rename) has `Ctrl+E`, and a row's `›` chevron
   (open the hierarchy detail pane) has `→`, with a breadcrumb segment
-  click as the mouse equivalent of `←` to step back out.
+  click as the mouse equivalent of `←` to step back out. The detail pane's
+  Players/Towns chips (click) mirror `Tab`/`Shift+Tab`, and clicking the
+  pane's search box mirrors `Ctrl+K`.
 - **Keyboard-first features need a clickable control.** e.g. the footer
   "refresh" and "help" entries are `<button>` elements (not plain `<span>`)
   so `Ctrl+R` and `?` both have a mouse equivalent; the settings gear icon
