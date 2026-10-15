@@ -70,6 +70,165 @@ backdoor. To verify changes:
    the same commands show the `premiumRequired` message instead, and a
    multi-town coordinate falls back to a plain "open on map" row instead of
    an island breakdown.
+7. To test saved searches: type any query, save it with `Ctrl+D` or the
+   bookmark icon, confirm the inline panel precharges the name field with
+   the query text and `Enter` saves it (toast + returns to the empty-query
+   view with the input cleared); confirm `Esc` inside that panel cancels it
+   without closing the whole palette. Open the palette with an empty query,
+   confirm the "Saved searches" section appears above Favorites/Recent, and
+   that `Tab`/`Shift+Tab` cycle the *All/Saved/Favorites/Recent* chips.
+   Selecting a saved-search row and pressing `Enter` (or clicking it) must
+   re-run the stored query verbatim without closing the palette. Test
+   rename (`Ctrl+E` or the pencil icon), single removal (`Delete` or the
+   trash icon), and clearing the whole list (`Ctrl+Shift+Delete` or the
+   section's "Clear" button) — with both a saved search and a recent entry
+   present, confirm `Ctrl+Shift+Delete` only clears the section the
+   currently selected row belongs to.
+8. To test the hierarchy drill-down pane: with the Curator stub (see step
+   6) returning `true`, search an alliance with several members and press
+   `→` (or click the row's `›` chevron) — the palette window should widen
+   and a right-hand pane should open listing that alliance's members, with
+   a breadcrumb showing the alliance name. Press `→` again on a member row
+   to drill one level deeper into that player's towns (breadcrumb now
+   shows `Alliance › Player`); confirm a third `→` on a town row does
+   nothing (towns are leaves). Press `←` to pop back one level, then click
+   the alliance's breadcrumb segment to jump straight back to it from two
+   levels deep. Confirm `↑`/`↓`/`Ctrl+F`/`Ctrl+B` act on whichever pane
+   (left list or right detail pane) currently has focus, and that
+   `Enter`/click on a town row in the detail pane still opens the native
+   town-info window and closes the whole palette, exactly like a town row
+   in the left-hand list. Press `Esc` once: it must close the whole
+   palette while keeping the pane, so reopening restores it. Repeat the same alliance/player search with
+   the Curator stub returning `false`: the chevron must still be visible,
+   but pressing `→` should open the pane showing the `premiumRequired`
+   message instead of the member/town list. Also test an `Island → Town`
+   chain via a coordinate search that resolves to a multi-town island.
+   Then test sub-search: the pane's own box (`#qf-sub-input`) is focused
+   automatically when the pane opens, and `Ctrl+K` refocuses it from the
+   main input (and again from the box to jump back to the main input). `Alt+←`
+   and `Backspace` on an empty box must pop a level without touching the
+   text; `Ctrl+Shift+F` must close the palette from either input; the box
+   keeps its text per level across close/reopen. With an alliance open, confirm the *Players | Towns* chips
+   appear (only for alliances; players/islands have towns only), that
+   `Tab`/`Shift+Tab` and a chip click switch modes, and that the main
+   query in `#qf-input` is never modified. In the box, try free text (a
+   town name, then a member's name on the Towns chip), `X:Y`, `@p`/`@t`
+   (should switch the chip), `>near 500:500 10`, `>dist` (sorted by
+   distance from the pinned/active origin), `>ghost` (towns mode only)
+   and `>history <name>` (needs conquest history enabled; the rest work
+   without it). Unknown commands show `subSearchUnsupported`. `ArrowLeft`
+   at column 0 of the box must pop a level; `ArrowUp`/`ArrowDown`/`Enter`
+   from the box act on the pane's rows. With the Curator stub returning
+   `false` the box and chips must be hidden and only `premiumRequired`
+   shown.
+9. To test that closing preserves state: with a detail pane open (from
+   step 8), close the palette both ways — pressing `Ctrl+Shift+F` again,
+   and pressing `Enter` on a row so it navigates away and closes on its
+   own — then reopen with `Ctrl+Shift+F` (or the menu button) each time.
+   The palette must reopen with the exact same query, split window, and
+   breadcrumb/rows still showing, instead of resetting to the empty-query
+   history view.
+10. To test the update checker without waiting for the ~12h throttle or
+    installing via a real userscript manager (which `GM_info` needs to
+    report a channel URL — see "Release process" below), evaluate
+    `unsafeWindow.GM_info = { script: { downloadURL: 'https://raw.githubusercontent.com/adrian-cancio/GrepolisQuickFinder/release/beta/GrepolisQuickFinder.user.js' } };`
+    in the page context **before** the script loads, then reload/re-inject.
+    Open Settings and click "Check for updates": since that URL currently
+    serves an older `@version` than whatever you're testing, you should
+    see the "already up to date" toast. To simulate an actual update being
+    available, temporarily edit the `remoteVersion` comparison locally
+    (or point the stub at a URL serving a real file with a higher
+    `@version`) and confirm: a toast appears once, the footer's version
+    button gains the gold pulse/badge and becomes clickable (opens the
+    URL in a new tab), and re-running `>settings` → "Check for updates"
+    reports the new version again without re-showing the toast a second
+    time in the same tab session. Clear `qf:updateCheck` from
+    `localStorage` between runs to bypass the throttle.
+11. To test conquest history (`/data/conquers.txt`, opt-in): open
+    Settings, enable "conquest history", and confirm the console logs
+    `[QF] Conquest history loaded: N events across M towns.` once the
+    background fetch finishes (this file is several MB, give it a
+    moment on a busy world). Run `>history <a town or player name>`
+    and confirm it lists that single entity's own timeline (dates,
+    from → to, points) — this is ungated even without the Curator
+    stub, since it's a single-entity lookup, not an aggregate. Run
+    `>history` with no args (shows the usage hint) and with the
+    setting disabled (shows the "enable it in Settings" message
+    instead of silently failing). Search a town/coordinate that has
+    changed hands in the last 3 days and confirm its row shows a
+    "conquered Nd ago" hint in a muted red tone; search a long-held
+    ghost town and confirm it shows "last activity Nd ago" instead
+    (ghost towns have no "abandoned" event in conquers.txt, only the
+    last real conquest — the wording must reflect that, not claim the
+    town has been a ghost for that long). Also confirm player/alliance
+    rows now show a `#rank` prefix (from the existing players.txt/
+    alliances.txt data, always available regardless of this setting),
+    and that an `>island`/`>near`/coordinate island row shows
+    `current/capacity` towns (e.g. `14/20 towns`) instead of just the
+    current count.
+
+## Release process
+
+This project publishes two installable channels from two source branches,
+plus two lightweight `release/*` branches that only `scripts/publish.mjs`
+ever writes to. See `scripts/publish.mjs` for the full mechanics; this is
+the human-readable summary of which branch to use for what.
+
+| Branch           | Purpose                                              | Edited by                          | Directly installable? |
+| ---------------- | ----------------------------------------------------- | ------------------------------------ | :--------------------: |
+| `master`         | Stable channel source, in active development          | Normal commits/PRs                   | No                      |
+| `develop`        | Beta channel source, one step ahead of `master`        | Normal commits/PRs                   | No                      |
+| `release/stable` | Published Stable build (`.user.js` only)               | **Only** `scripts/publish.mjs stable` | Yes — Stable install URL |
+| `release/beta`   | Published Beta build (`.user.js` only)                 | **Only** `scripts/publish.mjs beta`   | Yes — Beta install URL   |
+
+Mental model: **`master`/`develop` are where you code. `release/*` are what
+people install.** Never edit or `git push` to `release/*` by hand.
+
+### Day-to-day development
+
+- New features keep going into `develop`, exactly as before this system
+  existed.
+- Bump `@version` (script header) and `const VERSION` together on any
+  `develop` commit you want the Beta update checker to eventually notice,
+  using a `-beta.N` suffix: `2.12.0-beta.1`, then `-beta.2` on the next
+  commit worth publishing, etc. You don't need to bump on every commit —
+  only when you're about to publish a new Beta build (see below).
+- `GrepolisQuickFinder.user.js`'s header (`@name`/`@updateURL`/
+  `@downloadURL`) stays identical on both `master` and `develop` at all
+  times — always the generic Stable identity shown in the file. Only
+  `scripts/publish.mjs` ever rewrites it, on a throwaway copy, when
+  publishing to a `release/*` branch. This means merging `develop` →
+  `master` only ever conflicts on the `@version`/`VERSION` line (resolved
+  by dropping the `-beta.N` suffix), never on identity/URLs.
+
+### Publishing a build (separate step from merging/pushing)
+
+Publishing is a deliberate, manual action — pushing to `develop`/`master`
+never publishes anything by itself.
+
+```sh
+git checkout develop && node scripts/publish.mjs beta    # ship current develop to Beta testers
+git checkout master  && node scripts/publish.mjs stable  # ship current master to everyone
+```
+
+The script: verifies you're on the matching branch with a clean working
+tree, rewrites only the 3 header lines for the target channel, runs
+`node --check` as a sanity check, refuses to republish an unchanged
+`@version` unless you pass `--force`, and pushes the result to
+`release/<channel>` via a temporary `git worktree` (your `master`/`develop`
+checkout is never touched). `release/<channel>` intentionally contains
+nothing but `GrepolisQuickFinder.user.js` and a short generated README —
+it is bootstrapped as an orphan branch on first publish.
+
+### Merging `develop` → `master`
+
+1. Make sure `develop`'s `@version`/`VERSION` no longer carries a
+   `-beta.N` suffix (drop it in the last relevant commit before merging —
+   that's the version `master` will ship as).
+2. Merge normally. The only expected conflict is the single
+   `@version`/`VERSION` line if `master` had also moved since the branches
+   diverged; header/identity never conflicts (see above).
+3. Optionally publish immediately after: `node scripts/publish.mjs stable`.
 
 ## Premium gating & policy compliance (Grepolis marketplace rules)
 
@@ -89,12 +248,24 @@ these three constraints in mind for every change:
    `premiumRequiredRows()` (command output) or a plain single-item result
    (search/coordinate paths) when it returns `false`. This currently covers:
    `>ghost`, `>island`, `>near`, `>ocean`, the player/alliance town
-   drill-down (`playerDetailRows`/`allianceDetailRows`), and the multi-town
-   island row for a coordinate search. **Features that resolve to exactly
-   one item are exempt** (single player/alliance/town lookup by name, a
-   single-town coordinate, `>goto`, `>dist` between two given coordinates) —
-   those aren't overviews, they're direct lookups of public per-entity data
-   from `/data/*.txt`, same as clicking a name in-game.
+   drill-down (`playerDetailRows`/`allianceDetailRows`), the multi-town
+   island row for a coordinate search, and the hierarchy detail pane's
+   Alliance→Player, Player→Town, and Island→Town levels
+   (`pushHierarchyLevel`/`buildLevel`, search `HIERARCHY DRILL-DOWN`) —
+   the `›` chevron itself is always shown (discoverability, same as
+   `>ghost`/`>island` always appearing in `>help`), but drilling in without
+   Curator active fills the pane with `premiumRequiredRows()` instead of
+   the actual children; the pane's sub-search box and Players/Towns chips
+   are hidden in that state, so it can't be used to list anything either.
+   **Features that resolve to exactly one item are
+   exempt** (single player/alliance/town lookup by name, a single-town
+   coordinate, `>goto`, `>dist` between two given coordinates) — those
+   aren't overviews, they're direct lookups of public per-entity data
+   from `/data/*.txt`, same as clicking a name in-game. `>history` is
+   also exempt on the same grounds: it shows one town's or one
+   player's own conquest timeline (sourced from `/data/conquers.txt`,
+   itself a public same-origin dump), never a cross-entity listing of
+   *other* players'/towns' history.
    When adding a new command or drill-down, ask: *"does this list/aggregate
    more than one town/city in a single result?"* — if yes, gate it the same
    way; if no (a single exact match, a single coordinate, a distance between
@@ -139,8 +310,15 @@ When adding a new action inside the overlay:
 
 - **Mouse-first features need a keyboard shortcut.** e.g. the per-row
   favorite star has `Ctrl+F`, the per-row BBCode icon has `Ctrl+B`, the
-  per-row Recent trash icon has `Delete`, the "Clear" button on the Recent
-  section header has `Ctrl+Shift+Delete`.
+  per-row Recent/Saved-searches trash icon has `Delete`, the "Clear" button
+  on a history section header has `Ctrl+Shift+Delete` (scoped to whichever
+  section — Recent or Saved searches — the currently selected row belongs
+  to), the bookmark icon (save current query) has `Ctrl+D`, a saved
+  search's pencil icon (rename) has `Ctrl+E`, and a row's `›` chevron
+  (open the hierarchy detail pane) has `→`, with a breadcrumb segment
+  click as the mouse equivalent of `←` to step back out. The detail pane's
+  Players/Towns chips (click) mirror `Tab`/`Shift+Tab`, and clicking the
+  pane's search box mirrors `Ctrl+K`.
 - **Keyboard-first features need a clickable control.** e.g. the footer
   "refresh" and "help" entries are `<button>` elements (not plain `<span>`)
   so `Ctrl+R` and `?` both have a mouse equivalent; the settings gear icon

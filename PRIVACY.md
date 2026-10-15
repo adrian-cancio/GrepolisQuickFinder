@@ -19,32 +19,46 @@ or first-party backend involved.
 
 ## External network requests
 
-The only network requests that reach outside `*.grepolis.com` are the ones
-your userscript manager (Tampermonkey/Violentmonkey/Greasemonkey) performs on
-its own, using the `@updateURL`/`@downloadURL` metadata in the script header,
-to check for and download script updates from:
+Network requests that reach outside `*.grepolis.com` all target the same
+host, GitHub's raw content CDN (`raw.githubusercontent.com`), and come from
+two independent sources:
 
-```
-https://raw.githubusercontent.com/adrian-cancio/GrepolisQuickFinder/master/GrepolisQuickFinder.user.js
-```
+1. **Your userscript manager's own update check.** Tampermonkey/
+   Violentmonkey/Greasemonkey use the `@updateURL`/`@downloadURL` metadata in
+   the script header to periodically check for and download script updates,
+   on whatever schedule the manager uses (typically once every 24 hours),
+   entirely outside this script's control. The URL depends on which channel
+   you installed (Stable or Beta — see the README), e.g.:
 
-This is a plain, unauthenticated HTTPS GET request to GitHub's raw content
-CDN. Like any HTTP request, it inherently exposes standard network-level
-metadata to GitHub and any network intermediary (e.g. your IP address, user
-agent, and request timestamp) — the same metadata every HTTPS request on the
-web exposes. The script itself does not add any identifying information,
-query parameters, or payload to this request; it is entirely managed by your
-userscript manager's built-in update mechanism, on whatever schedule it uses
-(typically once every 24 hours), not by code in this script.
+   ```
+   https://raw.githubusercontent.com/adrian-cancio/GrepolisQuickFinder/release/stable/GrepolisQuickFinder.user.js
+   ```
+
+2. **The script's own in-app update checker.** In addition to the manager's
+   check above, the script itself performs a plain `fetch()` against the
+   same URL your install came from (read via `GM_info`, never hardcoded), at
+   most once every ~12 hours, plus whenever you press the "Check for
+   updates" button in Settings. It reads only the `@version` line from the
+   response to decide whether to show the "update available" toast/badge —
+   nothing else in the response is used, and no request body/query
+   parameters/identifying data are added by this script.
+
+Both are plain, unauthenticated HTTPS GET requests. Like any HTTP request,
+they inherently expose standard network-level metadata to GitHub and any
+network intermediary (e.g. your IP address, user agent, and request
+timestamp) — the same metadata every HTTPS request on the web exposes.
 
 See GitHub's own privacy statement for how it handles requests to
 `raw.githubusercontent.com`: https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement
 
 ## Third-party requests initiated by the script itself
 
-None, beyond the same-origin `/data/*.txt` requests described above, which
-stay within the Grepolis world's own domain and carry no more information
-than any other page load on that world already does.
+None, beyond the same-origin `/data/*.txt` requests and the update-checker
+request described above. The update-checker request stays limited to
+`raw.githubusercontent.com` and carries no payload beyond a standard GET;
+the `/data/*.txt` requests stay within the Grepolis world's own domain and
+carry no more information than any other page load on that world already
+does.
 
 ## Contact
 
